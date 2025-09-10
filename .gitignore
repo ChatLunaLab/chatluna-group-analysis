@@ -6,6 +6,11 @@ lib/
 dist/
 coverage/
 
+# Unused / temp asset folders
+svgtopng/
+svgtopng (1)/
+assets/icons/
+
 # Logs
 logs/
 *.log

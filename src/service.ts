@@ -289,7 +289,8 @@ export class AnalysisService extends Service {
     const path = await import('path');
     const imgToBase64 = (relativePath: string) => {
       try {
-        const imgPath = path.resolve(__dirname, '..', relativePath);
+        // 使用与源码一起打包到 lib 的资源路径
+        const imgPath = path.resolve(__dirname, relativePath);
         const imgData = fs.readFileSync(imgPath);
         return `data:image/png;base64,${Buffer.from(imgData).toString('base64')}`;
       } catch (err) {
@@ -307,6 +308,12 @@ export class AnalysisService extends Service {
       const capIconPng = imgToBase64('academic-cap.png');
       for (const mt of memberTitles) {
         (mt as any).icon = capIconPng;
+      }
+    }
+    if (groupBible?.length) {
+      const bibleIconPng = imgToBase64('document-text.png');
+      for (const gb of groupBible) {
+        (gb as any).icon = bibleIconPng;
       }
     }
     // 找到最活跃的时段
