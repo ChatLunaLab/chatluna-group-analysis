@@ -88,17 +88,6 @@ export class RendererService extends Service {
       }
 
       const templatePath = path.resolve(__dirname, './report.html');
-      // 读取 msyh.ttf 并转换为 base64
-      const fontPath = path.resolve(__dirname, '../lib/msyh.ttf');
-      let base64Font = '';
-      try {
-        const fontBuffer = await fs.readFile(fontPath);
-        base64Font = fontBuffer.toString('base64');
-        this.ctx.logger.info(`字体文件已加载: ${fontPath}`);
-      } catch (err) {
-        this.ctx.logger.warn(`字体文件加载失败: ${fontPath}，将使用系统默认字体。`);
-      }
-
       const filledHtml = (await fs.readFile(templatePath, 'utf-8'))
         .replace('{{totalMessages}}', data.totalMessages.toString())
         .replace('{{totalParticipants}}', data.totalParticipants.toString())
@@ -107,34 +96,15 @@ export class RendererService extends Service {
         .replace('{{userStats}}', this.formatUserStats(data.userStats))
         .replace('{{topics}}', this.formatTopics(data.topics))
         .replace('{{memberTitles}}', this.formatMemberTitles(data.memberTitles || []))
-        .replace('{{groupBible}}', this.formatGroupBible(data.groupBible || []))
-        .replace('{{embeddedFont}}', base64Font || '');
+        .replace('{{groupBible}}', this.formatGroupBible(data.groupBible || []));
 
       this.ctx.logger.info('HTML 模板填充完成，正在调用 Puppeteer 进行渲染...');
 
       const page = await this.ctx.puppeteer.page();
 
-      // 将 HTML 字符串转换为 Base64（字体不直接注入 HTML，而是在 Puppeteer 中注入）
+      // 将 HTML 字符串转换为 Base64
       const base64Html = Buffer.from(filledHtml).toString('base64');
       const dataUri = `data:text/html;base64,${base64Html}`;
-
-      // 使用 goto 加载 Data URI
-      await page.goto(dataUri, { waitUntil: 'networkidle0' });
-
-      // 在 Puppeteer 中注入字体
-      if (base64Font) {
-        await page.addStyleTag({
-          content: `
-            @font-face {
-              font-family: 'CustomMSYH';
-              src: url(data:font/ttf;base64,${base64Font}) format('truetype');
-              font-weight: normal;
-              font-style: normal;
-            }
-            body { font-family: 'CustomMSYH', sans-serif !important; }
-          `
-        });
-      }
 
       // 使用 goto 加载 Data URI
       await page.goto(dataUri, { waitUntil: 'networkidle0' });
