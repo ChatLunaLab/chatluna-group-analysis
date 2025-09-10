@@ -114,26 +114,27 @@ export class RendererService extends Service {
 
       const page = await this.ctx.puppeteer.page();
 
-      // 将字体注入 HTML
-      let htmlWithFont = filledHtml;
-      if (base64Font) {
-        const fontFace = `
-          <style>
-          @font-face {
-            font-family: 'CustomMSYH';
-            src: url(data:font/ttf;base64,${base64Font}) format('truetype');
-            font-weight: normal;
-            font-style: normal;
-          }
-          body { font-family: 'CustomMSYH', sans-serif !important; }
-          </style>
-        `;
-        htmlWithFont = htmlWithFont.replace('</head>', `${fontFace}</head>`);
-      }
-
-      // 将 HTML 字符串转换为 Base64
-      const base64Html = Buffer.from(htmlWithFont).toString('base64');
+      // 将 HTML 字符串转换为 Base64（字体不直接注入 HTML，而是在 Puppeteer 中注入）
+      const base64Html = Buffer.from(filledHtml).toString('base64');
       const dataUri = `data:text/html;base64,${base64Html}`;
+
+      // 使用 goto 加载 Data URI
+      await page.goto(dataUri, { waitUntil: 'networkidle0' });
+
+      // 在 Puppeteer 中注入字体
+      if (base64Font) {
+        await page.addStyleTag({
+          content: `
+            @font-face {
+              font-family: 'CustomMSYH';
+              src: url(data:font/ttf;base64,${base64Font}) format('truetype');
+              font-weight: normal;
+              font-style: normal;
+            }
+            body { font-family: 'CustomMSYH', sans-serif !important; }
+          `
+        });
+      }
 
       // 使用 goto 加载 Data URI
       await page.goto(dataUri, { waitUntil: 'networkidle0' });
