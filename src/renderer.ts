@@ -58,7 +58,7 @@ export class RendererService extends Service {
           <img src="${title.avatar}" alt="头像" style="width:40px;height:40px;border-radius:50%;margin-right:10px;">
           <div class="details">
             <div class="nickname">${title.name}</div>
-            <div class="message-count">${title.title} | ${title.mbti}</div>
+            <div class="message-count">${title.mbti && title.mbti !== 'N/A' ? `${title.title} | ${title.mbti}` : title.title}</div>
           </div>
         </div>
         <div class="topic-detail">${title.reason}</div>
@@ -88,22 +88,6 @@ export class RendererService extends Service {
       }
 
       const templatePath = path.resolve(__dirname, './report.html');
-      const template = await fs.readFile(templatePath, 'utf-8');
-
-      const filledHtml = template
-        .replace('{{totalMessages}}', data.totalMessages.toString())
-        .replace('{{totalParticipants}}', data.totalParticipants.toString())
-        .replace('{{totalChars}}', data.totalChars.toString())
-        .replace('{{mostActivePeriod}}', data.mostActivePeriod)
-        .replace('{{userStats}}', this.formatUserStats(data.userStats))
-        .replace('{{topics}}', this.formatTopics(data.topics))
-        .replace('{{memberTitles}}', this.formatMemberTitles(data.memberTitles || []))
-        .replace('{{groupBible}}', this.formatGroupBible(data.groupBible || []));
-
-      this.ctx.logger.info('HTML 模板填充完成，正在调用 Puppeteer 进行渲染...');
-
-      const page = await this.ctx.puppeteer.page();
-
       // 读取 msyh.ttf 并转换为 base64
       const fontPath = path.resolve(__dirname, '../lib/msyh.ttf');
       let base64Font = '';
@@ -114,6 +98,21 @@ export class RendererService extends Service {
       } catch (err) {
         this.ctx.logger.warn(`字体文件加载失败: ${fontPath}，将使用系统默认字体。`);
       }
+
+      const filledHtml = (await fs.readFile(templatePath, 'utf-8'))
+        .replace('{{totalMessages}}', data.totalMessages.toString())
+        .replace('{{totalParticipants}}', data.totalParticipants.toString())
+        .replace('{{totalChars}}', data.totalChars.toString())
+        .replace('{{mostActivePeriod}}', data.mostActivePeriod)
+        .replace('{{userStats}}', this.formatUserStats(data.userStats))
+        .replace('{{topics}}', this.formatTopics(data.topics))
+        .replace('{{memberTitles}}', this.formatMemberTitles(data.memberTitles || []))
+        .replace('{{groupBible}}', this.formatGroupBible(data.groupBible || []))
+        .replace('{{embeddedFont}}', base64Font || '');
+
+      this.ctx.logger.info('HTML 模板填充完成，正在调用 Puppeteer 进行渲染...');
+
+      const page = await this.ctx.puppeteer.page();
 
       // 将字体注入 HTML
       let htmlWithFont = filledHtml;
