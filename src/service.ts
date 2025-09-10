@@ -289,8 +289,8 @@ export class AnalysisService extends Service {
     const path = await import('path');
     const imgToBase64 = (relativePath: string) => {
       try {
-        // 使用与源码一起打包到 lib 的资源路径
-        const imgPath = path.resolve(__dirname, relativePath);
+        // 无论安装到哪里，都从插件自身目录的 icons 子目录读取
+        const imgPath = path.join(__dirname, 'icons', relativePath)
         const imgData = fs.readFileSync(imgPath);
         return `data:image/png;base64,${Buffer.from(imgData).toString('base64')}`;
       } catch (err) {
