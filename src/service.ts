@@ -287,26 +287,26 @@ export class AnalysisService extends Service {
     // 给热门话题与群友称号前添加外部SVG图标（base64内联）
     const fs = await import('fs');
     const path = await import('path');
-    const svgInline = (p: string) => {
+    const imgToBase64 = (relativePath: string) => {
       try {
-        const svgPath = path.resolve(__dirname, '../24', p);
-        // 直接读取SVG源码并返回字符串（内联模式）
-        return fs.readFileSync(svgPath, 'utf-8');
+        const imgPath = path.resolve(__dirname, '..', relativePath);
+        const imgData = fs.readFileSync(imgPath);
+        return `data:image/png;base64,${Buffer.from(imgData).toString('base64')}`;
       } catch (err) {
-        this.ctx.logger('AnalysisService').warn(`读取SVG失败 ${p}: ${err}`);
+        this.ctx.logger('AnalysisService').warn(`读取图片失败 ${relativePath}: ${err}`);
         return '';
       }
     };
     if (topics?.length) {
-      const fireIconSvg = svgInline('outline/fire.svg');
+      const fireIconPng = imgToBase64('fire.png');
       for (const topic of topics) {
-        (topic as any).icon = fireIconSvg; // 内联SVG源码
+        (topic as any).icon = fireIconPng;
       }
     }
     if (memberTitles?.length) {
-      const capIconSvg = svgInline('outline/academic-cap.svg');
+      const capIconPng = imgToBase64('academic-cap.png');
       for (const mt of memberTitles) {
-        (mt as any).icon = capIconSvg; // 内联SVG源码
+        (mt as any).icon = capIconPng;
       }
     }
     // 找到最活跃的时段
