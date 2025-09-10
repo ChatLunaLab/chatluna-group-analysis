@@ -4,7 +4,7 @@
   "description": "一个分析QQ群聊历史并生成精美报告的Koishi插件",
   "main": "lib/index.js",
   "scripts": {
-    "build": "tsc && copyfiles -u 1 src/*.html lib/"
+    "build": "tsc && copyfiles -u 1 src/*.html lib/ && copyfiles -u 2 src/icons/* lib/icons/"
   },
   "keywords": [
     "koishi",
