@@ -159,6 +159,9 @@ export class AnalysisService extends Service {
     const allMessagesText: string[] = [];
 
 
+    // 用于群圣经去重的集合
+    const bibleSet = new Set<string>();
+
     for (const msg of messages) {
       // 只处理纯文本和CQ表情，过滤掉图片、文件等
       if (msg.raw_message && !msg.raw_message.includes('[CQ:image,') && !msg.raw_message.includes('[CQ:record,')) {
@@ -195,7 +198,7 @@ export class AnalysisService extends Service {
             const hour = new Date(msg.time * 1000).getHours();
             activeHours[hour]++;
             
-            // 群圣经筛选逻辑（去掉异常字符，限6条，过滤奇怪Unicode）
+            // 群圣经筛选逻辑（去掉异常字符，过滤奇怪Unicode，去重，限6条）
             const cleanMsg = msg.raw_message
               // 移除[?]占位符
               .replace(/\[\?\]/g, '')
@@ -208,15 +211,23 @@ export class AnalysisService extends Service {
               // 移除非法控制字符
               .replace(/[\uFFFD\u0000-\u001F]+/g, '')
               .trim()
-            if (cleanMsg && cleanMsg.length > 15 && !cleanMsg.includes('[CQ:')) {
-              groupBible.push({
-                content: cleanMsg,
-                sender: msg.sender.nickname || String(msg.sender.user_id),
-                reason: '高质量消息'
-              });
-              if (groupBible.length >= 6) {
-                break
-              }
+            if (!cleanMsg || cleanMsg.length <= 15 || cleanMsg.includes('[CQ:')) {
+              // 不符合内容质量要求
+              continue
+            }
+            // 去重逻辑
+            const normalized = cleanMsg.replace(/\s+/g, ' ').toLowerCase()
+            if (bibleSet.has(normalized)) {
+              continue
+            }
+            bibleSet.add(normalized)
+            groupBible.push({
+              content: cleanMsg,
+              sender: msg.sender.nickname || String(msg.sender.user_id),
+              reason: '高质量消息'
+            })
+            if (groupBible.length >= 6) {
+              break
             }
     }
 
@@ -289,12 +300,18 @@ export class AnalysisService extends Service {
     const path = await import('path');
     const imgToBase64 = (relativePath: string) => {
       try {
-        // 无论安装到哪里，都从插件自身目录的 icons 子目录读取
-        const imgPath = path.join(__dirname, 'icons', relativePath)
+        const sharp = require('sharp');
+        const imgPath = path.join(__dirname, 'icons', relativePath);
         const imgData = fs.readFileSync(imgPath);
-        return `data:image/png;base64,${Buffer.from(imgData).toString('base64')}`;
+        // 使用 sharp 添加浅灰背景以防在 Puppeteer 白色背景下难以识别
+        // flatten 会将透明像素填充为指定背景色
+        return `data:image/png;base64,${sharp(imgData)
+          .flatten({ background: { r: 204, g: 204, b: 204 } })
+          .png()
+          .toBufferSync()
+          .toString('base64')}`;
       } catch (err) {
-        this.ctx.logger('AnalysisService').warn(`读取图片失败 ${relativePath}: ${err}`);
+        this.ctx.logger('AnalysisService').warn(`读取或处理图片失败 ${relativePath}: ${err}`);
         return '';
       }
     };

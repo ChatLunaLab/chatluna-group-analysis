@@ -48,12 +48,17 @@
             color: #343a40;
         }
         .section-title {
-            font-size: 1.5em;
-            color: #495057;
+            font-size: 1.3em;
+            font-weight: 600;
             margin-top: 30px;
             margin-bottom: 15px;
-            border-bottom: 1px solid #e9ecef;
-            padding-bottom: 5px;
+            color: #4a5568;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
         }
         .user-list, .topic-list {
             list-style: none;
@@ -135,7 +140,7 @@
             {{topics}}
         </ul>
 
-        <div class="section-title"><img src="{{memberTitlesIcon}}" style="height:1em;width:1em;vertical-align:middle;margin-right:5px;">群友称号</div>
+        <div class="section-title"><img src="{{memberTitlesIcon}}" style="height:20px;width:20px;vertical-align:middle;margin-right:5px;background-color:#ccc;border-radius:3px;">群友称号</div>
         <ul class="user-list">
             {{memberTitles}}
         </ul>

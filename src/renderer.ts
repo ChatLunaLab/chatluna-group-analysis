@@ -104,8 +104,36 @@ export class RendererService extends Service {
 
       const page = await this.ctx.puppeteer.page();
 
+      // 读取 msyh.ttf 并转换为 base64
+      const fontPath = path.resolve(__dirname, '../lib/msyh.ttf');
+      let base64Font = '';
+      try {
+        const fontBuffer = await fs.readFile(fontPath);
+        base64Font = fontBuffer.toString('base64');
+        this.ctx.logger.info(`字体文件已加载: ${fontPath}`);
+      } catch (err) {
+        this.ctx.logger.warn(`字体文件加载失败: ${fontPath}，将使用系统默认字体。`);
+      }
+
+      // 将字体注入 HTML
+      let htmlWithFont = filledHtml;
+      if (base64Font) {
+        const fontFace = `
+          <style>
+          @font-face {
+            font-family: 'CustomMSYH';
+            src: url(data:font/ttf;base64,${base64Font}) format('truetype');
+            font-weight: normal;
+            font-style: normal;
+          }
+          body { font-family: 'CustomMSYH', sans-serif !important; }
+          </style>
+        `;
+        htmlWithFont = htmlWithFont.replace('</head>', `${fontFace}</head>`);
+      }
+
       // 将 HTML 字符串转换为 Base64
-      const base64Html = Buffer.from(filledHtml).toString('base64');
+      const base64Html = Buffer.from(htmlWithFont).toString('base64');
       const dataUri = `data:text/html;base64,${base64Html}`;
 
       // 使用 goto 加载 Data URI
