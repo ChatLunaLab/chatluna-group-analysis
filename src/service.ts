@@ -287,26 +287,26 @@ export class AnalysisService extends Service {
     // 给热门话题与群友称号前添加外部SVG图标（base64内联）
     const fs = await import('fs');
     const path = await import('path');
-    const svgToBase64 = (p: string) => {
+    const svgInline = (p: string) => {
       try {
         const svgPath = path.resolve(__dirname, '../24', p);
-        const svgData = fs.readFileSync(svgPath, 'utf-8');
-        return `data:image/svg+xml;base64,${Buffer.from(svgData).toString('base64')}`;
+        // 直接读取SVG源码并返回字符串（内联模式）
+        return fs.readFileSync(svgPath, 'utf-8');
       } catch (err) {
         this.ctx.logger('AnalysisService').warn(`读取SVG失败 ${p}: ${err}`);
         return '';
       }
     };
     if (topics?.length) {
-      const fireIcon = svgToBase64('outline/fire.svg');
+      const fireIconSvg = svgInline('outline/fire.svg');
       for (const topic of topics) {
-        (topic as any).icon = fireIcon;
+        (topic as any).icon = fireIconSvg; // 内联SVG源码
       }
     }
     if (memberTitles?.length) {
-      const capIcon = svgToBase64('outline/academic-cap.svg');
+      const capIconSvg = svgInline('outline/academic-cap.svg');
       for (const mt of memberTitles) {
-        (mt as any).icon = capIcon;
+        (mt as any).icon = capIconSvg; // 内联SVG源码
       }
     }
     // 找到最活跃的时段
