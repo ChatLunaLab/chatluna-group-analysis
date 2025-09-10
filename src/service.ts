@@ -197,7 +197,15 @@ export class AnalysisService extends Service {
             
             // 群圣经筛选逻辑（去掉异常字符，限6条，过滤奇怪Unicode）
             const cleanMsg = msg.raw_message
+              // 移除[?]占位符
               .replace(/\[\?\]/g, '')
+              // 移除常见emoji字符
+              .replace(/[\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{1F1E6}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+              // 移除SVG标签
+              .replace(/<svg[^>]*>.*?<\/svg>/gis, '')
+              // 移除img标签
+              .replace(/<img[^>]*>/gi, '')
+              // 移除非法控制字符
               .replace(/[\uFFFD\u0000-\u001F]+/g, '')
               .trim()
             if (cleanMsg && cleanMsg.length > 15 && !cleanMsg.includes('[CQ:')) {
@@ -276,35 +284,15 @@ export class AnalysisService extends Service {
       assignedCount++
     }
 
-    // 热门话题/群友称号标题前的图片符号替换为 heroicons 图标 base64
-    const heroicons = {
-      hotTopic: 'https://raw.githubusercontent.com/tailwindlabs/heroicons/master/24/solid/fire.svg',
-      memberTitle: 'https://raw.githubusercontent.com/tailwindlabs/heroicons/master/24/solid/user-circle.svg'
-    }
-    const fetchSvgAsBase64 = async (url: string) => {
-      try {
-        const res = await fetch(url)
-        const buffer = await res.arrayBuffer()
-        return `data:image/svg+xml;base64,${Buffer.from(buffer).toString('base64')}`
-      } catch (e) {
-        this.ctx.logger('AnalysisService').warn(`获取SVG失败 ${url}: ${e}`)
-        return ''
-      }
-    }
-    const topicIconsBase64: string[] = []
+    // 移除热门话题与群友称号前的SVG，仅保留文字展示
     if (topics?.length) {
-      const fireIconBase64 = await fetchSvgAsBase64(heroicons.hotTopic)
       for (const topic of topics) {
-        ;(topic as any).icon = fireIconBase64
-        topicIconsBase64.push(fireIconBase64)
+        if ((topic as any).icon) delete (topic as any).icon
       }
     }
-    // 给所有 memberTitles 添加 icon 字段
-    const memberIconBase64 = await fetchSvgAsBase64(heroicons.memberTitle)
     for (const mt of memberTitles) {
-      (mt as any).icon = memberIconBase64
+      if ((mt as any).icon) delete (mt as any).icon
     }
-    
     // 找到最活跃的时段
     const mostActiveHourEntry = Object.entries(activeHours).sort((a, b) => b[1] - a[1])[0];
     const mostActiveHour = mostActiveHourEntry ? mostActiveHourEntry[0] : 'N/A';
@@ -316,7 +304,7 @@ export class AnalysisService extends Service {
       emojiCount: emojiCount,
       mostActiveUser: sortedUsers[0] || null,
       mostActivePeriod: mostActiveHour !== 'N/A' ? `${mostActiveHour.padStart(2, '0')}:00 - ${mostActiveHour.padStart(2, '0')}:59` : 'N/A',
-      userStats: [], // 移除用户统计数据功能，但保留字段以满足类型要求
+      userStats: [], // 移除用户统计部分
       topics: topics,
       memberTitles,
       groupBible,
