@@ -13,7 +13,6 @@
 *   **图片报告**: 将分析结果渲染成美观的图片报告，直观易读。
 *   **灵活触发**: 支持通过“群分析”命令手动触发，也支持通过 CRON 表达式定时自动发送。
 *   **高度可配置**:
-    *   支持自定义 LLM API（默认使用 Gemini）。
     *   支持配置群组白名单，精确控制插件生效范围。
     *   支持自定义定时任务。
 
@@ -25,10 +24,6 @@
     *   `allowedGroups`: 允许使用此插件的群号列表。
     *   `cronSchedule`: 定时发送报告的 CRON 表达式。
     *   `cronAnalysisDays`: 定时任务分析的天数。
-*   **LLM 设置**:
-    *   `llmApiEndpoint`: LLM 的 API 接入点。
-    *   `llmApiKey`: 您的 API Key。
-    *   `llmModel`: 使用的模型名称。
 *   **高级设置**:
     *   `promptTopic`: 用于话题总结的 Prompt 模板。
 
