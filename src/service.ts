@@ -284,14 +284,30 @@ export class AnalysisService extends Service {
       assignedCount++
     }
 
-    // 移除热门话题与群友称号前的SVG，仅保留文字展示
+    // 给热门话题与群友称号前添加外部SVG图标（base64内联）
+    const fs = await import('fs');
+    const path = await import('path');
+    const svgToBase64 = (p: string) => {
+      try {
+        const svgPath = path.resolve(__dirname, '../24', p);
+        const svgData = fs.readFileSync(svgPath, 'utf-8');
+        return `data:image/svg+xml;base64,${Buffer.from(svgData).toString('base64')}`;
+      } catch (err) {
+        this.ctx.logger('AnalysisService').warn(`读取SVG失败 ${p}: ${err}`);
+        return '';
+      }
+    };
     if (topics?.length) {
+      const fireIcon = svgToBase64('outline/fire.svg');
       for (const topic of topics) {
-        if ((topic as any).icon) delete (topic as any).icon
+        (topic as any).icon = fireIcon;
       }
     }
-    for (const mt of memberTitles) {
-      if ((mt as any).icon) delete (mt as any).icon
+    if (memberTitles?.length) {
+      const capIcon = svgToBase64('outline/academic-cap.svg');
+      for (const mt of memberTitles) {
+        (mt as any).icon = capIcon;
+      }
     }
     // 找到最活跃的时段
     const mostActiveHourEntry = Object.entries(activeHours).sort((a, b) => b[1] - a[1])[0];
