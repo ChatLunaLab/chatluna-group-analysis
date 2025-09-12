@@ -30,14 +30,18 @@ export class AnalysisService extends Service {
     startTime.setDate(startTime.getDate() - days);
     startTime.setHours(0, 0, 0, 0);
 
-    let messageSeq = 0;
+    let nextMessageId: number | undefined = undefined;
     let queryRounds = 0;
     let consecutiveFailures = 0;
     const maxFailures = 3; // 连续失败3次则停止
 
     while (messages.length < this.config.maxMessages && queryRounds < 50) { // 最多查询50轮
       try {
-        const result = await bot.internal.getGroupMsgHistory(Number(guildId), messageSeq);
+        const result: { messages: OneBotMessage[] } = await bot.internal.getGroupMsgHistory({
+          group_id: Number(guildId),
+          message_id: nextMessageId,
+          count: 200
+        });
 
         if (!result?.messages?.length) {
           logger.info(`群 ${guildId} 没有更多消息。`);
@@ -45,8 +49,8 @@ export class AnalysisService extends Service {
         }
         
         consecutiveFailures = 0;
-        const roundMessages = result.messages.reverse(); // 返回的是倒序消息
-        const oldestMsg = roundMessages[0];
+        const roundMessages: OneBotMessage[] = result.messages; // OneBot API按时间倒序或正序
+        const oldestMsg: OneBotMessage = roundMessages[roundMessages.length - 1];
         
         logger.info(`群 ${guildId} [第 ${++queryRounds} 轮] 获取了 ${roundMessages.length} 条消息。`);
 
@@ -60,7 +64,7 @@ export class AnalysisService extends Service {
           break;
         }
 
-        messageSeq = oldestMsg.message_seq;
+        nextMessageId = oldestMsg.message_id;
         await new Promise(res => setTimeout(res, 500)); // 避免请求过快
 
       } catch (err) {
