@@ -30,25 +30,31 @@ export class AnalysisService extends Service {
     startTime.setDate(startTime.getDate() - days);
     startTime.setHours(0, 0, 0, 0);
 
-    let nextSeq: number | undefined = undefined;
+    let messageSeq: number = 0;
     let queryRounds = 0;
     let consecutiveFailures = 0;
     const maxFailures = 3; // 连续失败3次则停止
 
-    while (messages.length < this.config.maxMessages && queryRounds < 50) { // 最多查询50轮
-      try {
-        // 参考 koishi-plugin-adapter-onebot 调用方式：getGroupMsgHistory(group_id, message_seq?)
-        const result: { messages: OneBotMessage[] } = nextSeq
-          ? await bot.internal.getGroupMsgHistory(Number(guildId), nextSeq)
-          : await bot.internal.getGroupMsgHistory(Number(guildId));
+    const maxRounds = 50;
+    const maxMessages = this.config.maxMessages;
 
-        if (!result?.messages?.length) {
+    while (messages.length < maxMessages && queryRounds < maxRounds) {
+      try {
+        const payload = {
+          group_id: Number(guildId),
+          message_seq: messageSeq,
+          count: 200,
+          reverseOrder: true,
+        };
+        const result: any = await (bot as any).internal.getGroupMsgHistory(payload);
+
+        if (!result || !result.messages?.length) {
           logger.info(`群 ${guildId} 没有更多消息。`);
           break;
         }
-        
+
         consecutiveFailures = 0;
-        const roundMessages: OneBotMessage[] = result.messages; // OneBot API按时间倒序或正序
+        const roundMessages: OneBotMessage[] = result.messages;
         const oldestMsg: OneBotMessage = roundMessages[roundMessages.length - 1];
         
         logger.info(`群 ${guildId} [第 ${++queryRounds} 轮] 获取了 ${roundMessages.length} 条消息。`);
@@ -57,13 +63,13 @@ export class AnalysisService extends Service {
           ...msg,
           raw_message: msg.raw_message || '',
         })));
-        
+
         if (new Date(oldestMsg.time * 1000) < startTime) {
           logger.info(`群 ${guildId} 已获取到时间范围外的消息。`);
           break;
         }
 
-        nextSeq = oldestMsg.message_seq;
+        messageSeq = roundMessages[0].message_id;
         await new Promise(res => setTimeout(res, 500)); // 避免请求过快
 
       } catch (err) {
@@ -72,7 +78,7 @@ export class AnalysisService extends Service {
           logger.error(`群 ${guildId} 连续失败次数过多，停止获取。`);
           break;
         }
-        await new Promise(res => setTimeout(res, 3000)); // 失败后等待更长时间
+        await new Promise(res => setTimeout(res, 3000));
       }
     }
     
