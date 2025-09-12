@@ -2,36 +2,62 @@ import { Context, h } from 'koishi'
 import { AnalysisService } from './service'
 import { RendererService } from './renderer'
 
-export const name = 'GroupAnalysisCommands'
+export const name = 'group-analysis-commands'
 
 // 插件依赖的服务
-export const inject = ['analysis', 'renderer']
+export const inject = ['analysis', 'database']
+
+declare module 'koishi' {
+  interface Context {
+    analysis: AnalysisService
+    renderer: RendererService
+  }
+}
 
 export function apply(ctx: Context) {
-  const logger = ctx.logger('GroupAnalysisCmd');
+  const logger = ctx.logger('group-analysis-cmd');
+  logger.info('正在加载群分析命令...');
 
-  ctx.command('群分析 [days:number]', '分析群聊近期活动')
-    .option('maxMessages', '-m <count:number> 设置最大分析消息数量', { fallback: 1000 })
-    .action(async ({ session, options = {} }, days = 1) => {
-      const config = ctx.config;
-      if (!session || !session.guildId) {
-        return '请在群聊中使用此命令。'
-      }
+  ctx.command('群分析 [days:number]', '分析本群的近期聊天记录', { authority: 1 })
+    .alias('qunfenxi')
+    .action(async ({ session }, days) => {
+      if (!session?.guildId) return '请在群聊中使用此命令。'
+      
+      const analysisDays = days || ctx.config.cronAnalysisDays;
+      if (analysisDays > 7) return '出于性能考虑，最多只能分析 7 天的数据。'
 
-      // 检查是否在允许的群组列表中
-      if (config.allowedGroups && config.allowedGroups.length > 0 && !config.allowedGroups.includes(session.guildId)) {
-        logger.info(`群组 ${session.guildId} 未被授权，已忽略。`);
-        return; // 静默失败，不回复任何消息
-      }
-
-      // 先发送一个提示消息，表示任务已开始
       await session.send('👌 分析任务已开始，请稍候...');
 
-      // 异步执行，这样不会阻塞 Koishi 的其他操作
-      ctx.analysis.executeAnalysis(session.guildId, days, options.maxMessages || 1000)
+      ctx.analysis.executeAnalysis(session.guildId, analysisDays)
         .catch(err => logger.error('执行分析时发生未捕获的错误:', err));
-
-      // 命令立即返回，实际结果由 executeAnalysis 异步发送
+      
       return;
-    })
+    });
+
+  const settings = ctx.command('分析设置', '管理群聊分析功能', { authority: 3 });
+
+  settings.subcommand('.enable', '启用本群的分析功能')
+    .action(async ({ session }) => {
+      if (!session?.guildId) return '请在群聊中使用此命令。'
+      if (!ctx.database) return '数据库服务未启用。'
+      await ctx.database.upsert('group_analysis_settings', [{ guildId: session.guildId, enabled: true }], 'guildId');
+      return '✅ 已为当前群启用日常分析功能。'
+    });
+
+  settings.subcommand('.disable', '禁用本群的分析功能')
+    .action(async ({ session }) => {
+      if (!session?.guildId) return '请在群聊中使用此命令。'
+      if (!ctx.database) return '数据库服务未启用。'
+      await ctx.database.upsert('group_analysis_settings', [{ guildId: session.guildId, enabled: false }], 'guildId');
+      return '✅ 已为当前群禁用日常分析功能。'
+    });
+
+  settings.subcommand('.status', '查看当前分析设置')
+    .action(async ({ session }) => {
+      if (!session?.guildId) return '请在群聊中使用此命令。'
+      if (!ctx.database) return '数据库服务未启用。'
+      const setting = await ctx.database.get('group_analysis_settings', { guildId: session.guildId });
+      const enabled = setting[0]?.enabled ? '已启用' : '未启用';
+      return `📊 当前群分析功能状态: ${enabled}`;
+    });
 }

@@ -2,17 +2,17 @@
  * 本文件定义了插件所需的所有数据结构
  */
 
-// OneBot v11 消息对象（简化版，仅包含所需字段）
+// OneBot v11 消息对象（简化版）
 export interface OneBotMessage {
   message_id: number;
   message_seq: number;
   time: number;
-  message: string | any[]; // Koishi 可能会将其解析为元素数组
+  message: string | any[];
   raw_message: string;
   sender: {
     user_id: number;
     nickname: string;
-    card?: string; // 群名片
+    card?: string;
   };
 }
 
@@ -23,7 +23,15 @@ export interface UserStats {
   messageCount: number;
   charCount: number;
   lastActive: Date;
-  avatar?: string; // 添加用户头像
+  avatar?: string;
+  replyCount: number;
+  atCount: number;
+  emojiStats: Record<string, number>;
+  nightRatio: number;
+  avgChars: number;
+  replyRatio: number;
+  nightMessages: number;
+  activeHours: Record<number, number>;
 }
 
 // 话题总结
@@ -32,6 +40,30 @@ export interface SummaryTopic {
   contributors: string[];
   detail: string;
 }
+
+// 用户称号
+export interface UserTitle {
+  name: string;
+  qq: number;
+  title: string;
+  mbti: string;
+  reason: string;
+  avatar?: string;
+}
+
+// 金句
+export interface GoldenQuote {
+  content: string;
+  sender: string;
+  reason: string;
+}
+
+export interface TokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
 
 // 最终的群聊分析报告数据结构
 export interface GroupAnalysisResult {
@@ -43,17 +75,10 @@ export interface GroupAnalysisResult {
   mostActivePeriod: string;
   userStats: UserStats[];
   topics: SummaryTopic[];
-  memberTitles: any[]; // 添加群友称号
-  groupBible: any[]; // 添加群圣经
-}
-
-// 数据库存储的消息记录模型
-export interface GroupMessage {
-  id: number;
-  guildId: string;
-  userId: string;
-  username: string;
-  messageId: string;
-  content: string;
-  timestamp: Date;
+  userTitles: UserTitle[];
+  goldenQuotes: GoldenQuote[];
+  activeHoursChart: string;
+  analysisDate: string;
+  groupName: string;
+  tokenUsage: TokenUsage;
 }
