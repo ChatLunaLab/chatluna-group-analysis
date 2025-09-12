@@ -18,7 +18,7 @@ export function apply(ctx: Context) {
   const logger = ctx.logger('group-analysis-cmd');
   logger.info('正在加载群分析命令...');
 
-  ctx.command('群分析 [days:number]', '分析本群的近期聊天记录', { authority: 1 })
+  ctx.command('群分析 [days:number]', '分析本群的近期聊天记录')
     .alias('qunfenxi')
     .action(async ({ session }, days) => {
       if (!session?.guildId) return '请在群聊中使用此命令。'
