@@ -4,8 +4,6 @@ import { RendererService } from './renderer'
 
 export const name = 'group-analysis-commands'
 
- // 移除 inject 依赖，避免 Koishi 在 service 未加载前阻止命令注册
- // 原先是 export const inject = ['analysis']
 
 declare module 'koishi' {
   interface Context {
@@ -13,6 +11,9 @@ declare module 'koishi' {
     renderer: RendererService
   }
 }
+
+
+export const inject = ['analysis']
 
 export function apply(ctx: Context) {
   const logger = ctx.logger('group-analysis-cmd');
