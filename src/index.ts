@@ -9,10 +9,11 @@ import {} from 'koishi-plugin-schedule'
 
 export const name = 'group-analysis'
 
-// 声明插件依赖的服务
+ // 声明插件依赖的服务
+ // 将 scheduler 从必需依赖移动到可选依赖，避免未启用时插件变黄灯
 export const inject = {
-  required: ['puppeteer', 'chatluna', 'scheduler'],
-  optional: ['database'],
+  required: ['puppeteer', 'chatluna'],
+  optional: ['database', 'scheduler'],
 }
 
 // 插件的配置项
