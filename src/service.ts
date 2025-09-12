@@ -40,13 +40,11 @@ export class AnalysisService extends Service {
 
     while (messages.length < maxMessages && queryRounds < maxRounds) {
       try {
-        const payload = {
-          group_id: Number(guildId),
-          message_seq: messageSeq,
-          count: 200,
-          reverseOrder: true,
-        };
-        const result: any = await (bot as any).internal.getGroupMsgHistory(payload);
+        // 参考 AstrBot 的 Napcat / OneBot V11 调用方式：直接传递参数键值，不嵌套 group_id
+        const result: any = await (bot as any).internal.getGroupMsgHistory(
+          Number(guildId),
+          messageSeq || undefined
+        );
 
         if (!result || !result.messages?.length) {
           logger.info(`群 ${guildId} 没有更多消息。`);
