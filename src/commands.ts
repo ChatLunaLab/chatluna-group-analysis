@@ -33,8 +33,12 @@ export function apply(ctx: Context) {
         return '❌ 分析服务不可用，请联系管理员安装并启用 AnalysisService。';
       }
 
-      ctx.analysis.executeAnalysis(session.guildId, analysisDays)
-        .catch(err => logger.error('执行分析时发生未捕获的错误:', err));
+      try {
+        await ctx.analysis.executeAnalysis(session.guildId, analysisDays);
+      } catch (err) {
+        logger.error('执行分析时发生未捕获的错误:', err);
+        return '❌ 群分析执行失败，请检查日志。';
+      }
       return;
     });
 
