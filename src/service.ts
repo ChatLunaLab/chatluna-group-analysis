@@ -30,18 +30,17 @@ export class AnalysisService extends Service {
     startTime.setDate(startTime.getDate() - days);
     startTime.setHours(0, 0, 0, 0);
 
-    let nextMessageId: number | undefined = undefined;
+    let nextSeq: number | undefined = undefined;
     let queryRounds = 0;
     let consecutiveFailures = 0;
     const maxFailures = 3; // 连续失败3次则停止
 
     while (messages.length < this.config.maxMessages && queryRounds < 50) { // 最多查询50轮
       try {
-        const result: { messages: OneBotMessage[] } = await bot.internal.getGroupMsgHistory({
-          group_id: Number(guildId),
-          message_id: nextMessageId,
-          count: 200
-        });
+        // 参考 koishi-plugin-adapter-onebot 调用方式：getGroupMsgHistory(group_id, message_seq?)
+        const result: { messages: OneBotMessage[] } = nextSeq
+          ? await bot.internal.getGroupMsgHistory(Number(guildId), nextSeq)
+          : await bot.internal.getGroupMsgHistory(Number(guildId));
 
         if (!result?.messages?.length) {
           logger.info(`群 ${guildId} 没有更多消息。`);
@@ -64,7 +63,7 @@ export class AnalysisService extends Service {
           break;
         }
 
-        nextMessageId = oldestMsg.message_id;
+        nextSeq = oldestMsg.message_seq;
         await new Promise(res => setTimeout(res, 500)); // 避免请求过快
 
       } catch (err) {
