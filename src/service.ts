@@ -41,10 +41,11 @@ export class AnalysisService extends Service {
     while (messages.length < maxMessages && queryRounds < maxRounds) {
       try {
         // 参考 AstrBot 的 Napcat / OneBot V11 调用方式：直接传递参数键值，不嵌套 group_id
-        const result: any = await (bot as any).internal.getGroupMsgHistory(
-          Number(guildId),
-          messageSeq || undefined
-        );
+        // HACK: 直接调用 internal._get 以确保参数结构正确，避免 adapter 的自动转换问题
+        const result: any = await (bot as any).internal._get('get_group_msg_history', {
+          group_id: Number(guildId),
+          message_seq: messageSeq || 0,
+        });
 
         if (!result || !result.messages?.length) {
           logger.info(`群 ${guildId} 没有更多消息。`);
@@ -54,8 +55,9 @@ export class AnalysisService extends Service {
         consecutiveFailures = 0;
         const roundMessages: OneBotMessage[] = result.messages;
         const oldestMsg: OneBotMessage = roundMessages[roundMessages.length - 1];
+        queryRounds++; // 只有在成功获取后才增加轮数
         
-        logger.info(`群 ${guildId} [第 ${++queryRounds} 轮] 获取了 ${roundMessages.length} 条消息。`);
+        logger.info(`群 ${guildId} [第 ${queryRounds} 轮] 获取了 ${roundMessages.length} 条消息。最旧消息: ${new Date(oldestMsg.time * 1000).toLocaleString()}`);
 
         messages.push(...roundMessages.map((msg: OneBotMessage) => ({
           ...msg,
@@ -67,8 +69,10 @@ export class AnalysisService extends Service {
           break;
         }
 
-        messageSeq = roundMessages[0].message_id;
-        await new Promise(res => setTimeout(res, 500)); // 避免请求过快
+        // 将 message_seq 设置为当前批次中最旧的消息 ID，为下一次迭代做准备
+        messageSeq = oldestMsg.message_id;
+        
+        await new Promise(res => setTimeout(res, this.config.apiCallDelay || 800)); // 避免请求过快
 
       } catch (err) {
         logger.error(`群 ${guildId} 获取消息失败（第 ${queryRounds + 1} 轮）:`, err);

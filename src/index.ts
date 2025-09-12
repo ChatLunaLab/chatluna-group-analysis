@@ -32,6 +32,7 @@ export interface Config {
   userTitleAnalysis: boolean
   cronSchedule: string
   cronAnalysisDays: number
+  apiCallDelay: number
   debug?: boolean
 }
 
@@ -45,6 +46,7 @@ export const Config: Schema<Config> = Schema.intersect([
     userTitleAnalysis: Schema.boolean().description('是否启用用户称号分析（需要消耗更多 Token）。').default(true),
     cronSchedule: Schema.string().description('定时发送分析报告的 CRON 表达式。留空则禁用。例如 "0 22 * * *" 表示每天22点。'),
     cronAnalysisDays: Schema.number().description('定时任务分析的默认天数。').default(1),
+    apiCallDelay: Schema.number().description('每次调用 OneBot History API 之间的延迟（毫秒），以避免过于频繁的请求。').default(800),
   }).description('基础设置'),
   Schema.object({
     model: Schema.dynamic('model').description('ChatLuna 模型名称').required(),
