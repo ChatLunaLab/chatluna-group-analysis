@@ -109,20 +109,14 @@ export const Config: Schema<Config> = Schema.intersect([
 群聊记录：
 {messages}
 
-重要：必须返回标准JSON格式，严格遵守以下规则：
-1. 只使用英文双引号 " 不要使用中文引号 " "
-2. 字符串内容中的引号必须转义为 \\"
-3. 多个对象之间用逗号分隔
-4. 不要在JSON外添加任何文字说明
-
-请严格按照以下JSON格式返回，确保可以被标准JSON解析器解析：
-[
-  {{
-    "topic": "话题名称",
-    "contributors": ["用户1", "用户2"],
-    "detail": "话题描述内容"
-  }}
-]`
+请严格按照以下 YAML 格式返回，放在 markdown 代码块中：
+\`\`\`yaml
+- topic: 话题名称
+  contributors:
+    - 用户1
+    - 用户2
+  detail: 话题描述内容
+\`\`\``
             ),
         promptUserTitles: Schema.string()
             .description('用户称号分析的提示词模板。')
@@ -144,16 +138,14 @@ export const Config: Schema<Config> = Schema.intersect([
 用户数据：
 {users}
 
-请以JSON格式返回，格式如下：
-[
-  {{
-    "name": "用户名",
-    "qq": 123456789,
-    "title": "称号",
-    "mbti": "MBTI类型",
-    "reason": "获得此称号的原因"
-  }}
-]`
+请严格按照以下 YAML 格式返回，放在 markdown 代码块中：
+\`\`\`yaml
+- name: 用户名
+  qq: 123456789
+  title: 称号
+  mbti: MBTI类型
+  reason: 获得此称号的原因
+\`\`\``
             ),
         promptGoldenQuotes: Schema.string()
             .description('金句分析的提示词模板。')
@@ -175,14 +167,12 @@ export const Config: Schema<Config> = Schema.intersect([
 群聊记录：
 {messages}
 
-请以JSON格式返回，格式如下：
-[
-  {{
-    "content": "金句原文",
-    "sender": "发言人昵称",
-    "reason": "选择这句话的理由（需明确说明逆天特质）"
-  }}
-]`
+请严格按照以下 YAML 格式返回，放在 markdown 代码块中：
+\`\`\`yaml
+- content: 金句原文
+  sender: 发言人昵称
+  reason: 选择这句话的理由（需明确说明逆天特质）
+\`\`\``
             )
     }).description('高级设置')
 ])

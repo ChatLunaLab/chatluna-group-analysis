@@ -4,6 +4,7 @@ import { GoldenQuote, SummaryTopic, UserStats, UserTitle } from '../types'
 import { ComputedRef } from 'koishi-plugin-chatluna'
 import { ChatLunaChatModel } from 'koishi-plugin-chatluna/llm-core/platform/model'
 import { getMessageContent } from 'koishi-plugin-chatluna/utils/string'
+import { load } from 'js-yaml'
 
 export class LLMService extends Service {
     static readonly inject = ['chatluna']
@@ -45,21 +46,22 @@ export class LLMService extends Service {
 
             logger.info(`LLM 原始响应: ${rawContent || '[空响应]'}`)
 
-            const jsonMatch = rawContent.match(/\[.*\]/s)
-            if (!jsonMatch) {
-                logger.warn(`未找到 JSON 数组，无法解析。`)
+            // Extract YAML from markdown code block (supports both yaml and yml)
+            const yamlMatch = rawContent.match(/```ya?ml\s*([\s\S]*?)\s*```/)
+            if (!yamlMatch) {
+                logger.warn(`未找到 YAML 代码块，无法解析。`)
                 return []
             }
 
             try {
-                const data = JSON.parse(jsonMatch[0]) as T[]
+                const data = load(yamlMatch[1]) as T[]
                 logger.info(`成功解析 ${data.length} 条结果。`)
                 return data
             } catch (err) {
-                logger.error('解析 JSON 失败:', err)
+                logger.error('解析 YAML 失败:', err)
                 logger.debug(
-                    '待解析的 JSON 字符串:',
-                    jsonMatch[0] || '[空字符串]'
+                    '待解析的 YAML 字符串:',
+                    yamlMatch[1] || '[空字符串]'
                 )
                 return []
             }
