@@ -1,35 +1,107 @@
 {
   "name": "koishi-plugin-group-analysis",
-  "version": "1.1.20",
   "description": "一个分析QQ群聊历史并生成精美报告的Koishi插件",
-  "main": "lib/index.js",
-  "scripts": {
-    "build": "tsc && copyfiles -u 1 src/*.html lib/ && copyfiles -u 2 src/icons/* lib/icons/ && copyfiles -f src/msyh.ttf lib/"
+  "version": "1.0.0",
+  "type": "module",
+  "main": "lib/index.cjs",
+  "module": "lib/index.mjs",
+  "typings": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.mjs",
+      "require": "./lib/index.cjs"
+    },
+    "./package.json": "./package.json"
   },
+  "files": [
+    "lib",
+    "dist",
+    "resources"
+  ],
+  "license": "AGPL-3.0",
   "keywords": [
+    "chatbot",
     "koishi",
     "plugin",
-    "qq",
-    "chat",
-    "analysis"
+    "service",
+    "chatgpt",
+    "chatluna",
+    "preset",
+    "actions"
   ],
-  "author": "Kilo Code",
-  "license": "MIT",
+  "contributors": [
+    "lumia1998 <694807782@qq.com>",
+    "dingyi222666 <dingyi222666@foxmail.com>"
+  ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lumia1998/koishi-plugin-group-analysis.git"
+    "url": "https://github.com/ChatLunaLab/chatluna-group-analysis.git",
+    "directory": "."
   },
-  "peerDependencies": {
-    "koishi": "^4.0.0",
-    "koishi-plugin-chatluna": "*",
-    "koishi-plugin-puppeteer": "*",
-    "koishi-plugin-schedule": "*"
+  "bugs": {
+    "url": "https://github.com/ChatLunaLab/chatluna-group-analysis/issues"
+  },
+  "homepage": "https://github.com/ChatLunaLab/chatluna-group-analysis#readme",
+  "dependencies": {
+    "@langchain/core": "0.3.62"
+  },
+  "resolutions": {
+    "@langchain/core": "0.3.62",
+    "js-tiktoken": "npm:@dingyi222666/js-tiktoken@^1.0.21"
+  },
+  "overrides": {
+    "@langchain/core": "0.3.62",
+    "js-tiktoken": "npm:@dingyi222666/js-tiktoken@^1.0.21"
+  },
+  "pnpm": {
+    "overrides": {
+      "@langchain/core": "0.3.62",
+      "js-tiktoken": "npm:@dingyi222666/js-tiktoken@^1.0.21"
+    }
   },
   "devDependencies": {
-    "copyfiles": "^2.4.1",
-    "koishi-plugin-puppeteer": "^3.0.0",
-    "koishi-plugin-schedule": "^5.0.1",
-    "typescript": "^5.0.0",
-    "axios": "^1.0.0"
+    "@typescript-eslint/eslint-plugin": "^7.18.1-alpha.3",
+    "@typescript-eslint/parser": "^8.29.1-alpha.3",
+    "atsc": "^1.2.2",
+    "esbuild": "^0.25.2",
+    "esbuild-register": "^3.6.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-prettier": "^5.2.6",
+    "eslint-plugin-promise": "^7.2.1",
+    "koishi": "^4.18.7",
+    "yakumo": "^1.0.0",
+    "yakumo-esbuild": "^1.0.0",
+    "yakumo-mocha": "^1.0.0",
+    "yakumo-tsc": "^1.0.0"
+  },
+  "peerDependencies": {
+    "koishi": "^4.18.7",
+    "koishi-plugin-chatluna": "^1.3.0-alpha.42"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "yarn yakumo build",
+    "bump": "yarn yakumo version",
+    "dep": "yarn yakumo upgrade",
+    "pub": "yarn yakumo publish",
+    "lint": "yarn eslint src --ext=ts",
+    "lint-fix": "yarn eslint src --ext=ts --fix"
+  },
+  "koishi": {
+    "description": {
+      "zh": "ChatLuna 群分析插件，用户画像等"
+    },
+    "service": {
+      "required": [
+        "chatluna"
+      ]
+    }
   }
 }
