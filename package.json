@@ -1,5 +1,5 @@
 {
-  "name": "koishi-plugin-group-analysis",
+  "name": "koishi-plugin-chatluna-group-analysis",
   "description": "一个分析QQ群聊历史并生成精美报告的Koishi插件",
   "version": "1.0.0",
   "type": "module",
