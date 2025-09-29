@@ -18,7 +18,8 @@ export function apply(ctx: Context, config: Config) {
     ctx.plugin(AnalysisService, config)
     ctx.plugin(LLMService, config)
     ctx.plugin(RendererService, config)
-    ctx.plugin(commands)
+
+    ctx.plugin(commands, config)
 
     ctx.inject(['scheduler'], (ctx) => {
         if (!config.cronSchedule && !ctx.cron) {

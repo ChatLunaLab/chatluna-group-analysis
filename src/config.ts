@@ -32,7 +32,7 @@ export interface Config {
     userTitleAnalysis: boolean
     cronSchedule: string
     cronAnalysisDays: number
-    apiCallDelay: number
+
     debug?: boolean
 }
 
@@ -40,8 +40,8 @@ export const Config: Schema<Config> = Schema.intersect([
     Schema.object({
         listenerGroups: Schema.array(GroupListener)
             .role('table')
-            .description('分析规则列表。'),
-
+            .description('数据库监听规则列表。')
+            .default([]),
         cronSchedule: Schema.string().description(
             '定时发送分析报告的 CRON 表达式。留空则禁用。例如 "0 22 * * *" 表示每天22点。'
         ),
@@ -72,12 +72,7 @@ export const Config: Schema<Config> = Schema.intersect([
         ),
         cronAnalysisDays: Schema.number()
             .description('定时任务分析的默认天数。')
-            .default(1),
-        apiCallDelay: Schema.number()
-            .description(
-                '每次调用 OneBot History API 之间的延迟（毫秒），以避免过于频繁的请求。'
-            )
-            .default(800)
+            .default(1)
     }).description('分析渲染设置'),
     Schema.object({
         model: Schema.dynamic('model')
@@ -99,7 +94,7 @@ export const Config: Schema<Config> = Schema.intersect([
             .role('textarea')
             .default(
                 `你是一个帮我进行群聊信息总结的助手，生成总结内容时，你需要严格遵守下面的几个准则：
-请分析接下来提供的群聊记录，提取出最多{maxTopics}个主要话题。
+请分析接下来提供的群聊记录，提取出最多{maxTopics}个主要话题。根据你自己的价值观判断需要的主要话题。越逆天越好。
 
 对于每个话题，请提供：
 1. 话题名称（突出主题内容，尽量简明扼要）
@@ -195,6 +190,6 @@ export const Config: Schema<Config> = Schema.intersect([
 export const name = 'chatluna-group-analysis'
 
 export const inject = {
-    required: ['puppeteer', 'chatluna'],
+    required: ['puppeteer', 'chatluna', 'database'],
     optional: ['scheduler']
 }

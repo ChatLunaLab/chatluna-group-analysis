@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { Context } from 'koishi'
 import { AnalysisService } from './service/analysis'
 import { RendererService } from './service/renderer'
@@ -12,7 +13,13 @@ declare module 'koishi' {
     }
 }
 
-export function apply(ctx: Context) {
+export const inject = {
+    chatluna_group_analysis: {
+        required: true
+    }
+}
+
+export function apply(ctx: Context, config: Config) {
     ctx.command('群分析 [days:number]', '分析本群的近期聊天记录')
         .usage(
             '本功能会分析本群的近期聊天记录，并生成一份报告。\n' +
@@ -22,31 +29,21 @@ export function apply(ctx: Context) {
         )
         .alias('group-analysis')
         .action(async ({ session }, days) => {
-            if (!session.isDirect) return '请在群聊中使用此命令。'
+            if (session.isDirect) return '请在群聊中使用此命令。'
 
             const analysisDays = days || ctx.config?.cronAnalysisDays || 1
             if (analysisDays > 7)
                 return '出于性能考虑，最多只能分析 7 天的数据。'
 
-            await session.send('分析任务已开始，请稍候...')
-
-            if (
-                !ctx.analysis ||
-                typeof ctx.analysis.executeGroupAnalysis !== 'function'
-            ) {
-                ctx.logger.warn('AnalysisService 未加载，直接返回占位消息。')
-                return ' 分析服务不可用，请联系管理员安装并启用 AnalysisService。'
-            }
-
             try {
-                await ctx.analysis.executeGroupAnalysis(
+                await ctx.chatluna_group_analysis.executeGroupAnalysis(
                     session.selfId,
                     session.guildId,
                     analysisDays
                 )
             } catch (err) {
                 ctx.logger.error('执行分析时发生未捕获的错误:', err)
-                return '❌群分析执行失败，请检查日志。'
+                return '群分析执行失败，请检查日志。'
             }
         })
 
@@ -58,9 +55,9 @@ export function apply(ctx: Context) {
 
     settings
         .subcommand('.enable', '启用本群的分析功能')
-        .alias('启用')
+        .alias('.启用')
         .action(async ({ session }) => {
-            if (!session.isDirect) return '请在群聊中使用此命令。'
+            if (session.isDirect) return '请在群聊中使用此命令。'
 
             const config = ctx.config as Config
 
@@ -84,16 +81,23 @@ export function apply(ctx: Context) {
                 })
             }
 
-            ctx.scope.update(config, true)
+            ctx.scope.parent.scope.update(config, true)
 
-            return ' 已为当前群启用日常分析功能。'
+            const guildId = session.event.guild.id
+
+            const guildName =
+                (await session.bot
+                    .getGuild(guildId)
+                    .then((guild) => guild.name)) || session.event.guild.name
+
+            return `已为当前群 ${guildName} (${guildId}) 启用日常分析功能。`
         })
 
     settings
         .subcommand('.disable', '禁用本群的分析功能')
-        .alias('禁用')
+        .alias('.禁用')
         .action(async ({ session }) => {
-            if (!session?.guildId) return '请在群聊中使用此命令。'
+            if (session.isDirect) return '请在群聊中使用此命令。'
 
             const config = ctx.config as Config
 
@@ -109,16 +113,23 @@ export function apply(ctx: Context) {
                 config.listenerGroups.splice(originalGroupSetting, 1)
             }
 
-            ctx.scope.update(config, true)
+            ctx.scope.parent.scope.update(config, true)
 
-            return '✅ 已为当前群禁用日常分析功能。'
+            const guildId = session.event.guild.id
+
+            const guildName =
+                (await session.bot
+                    .getGuild(guildId)
+                    .then((guild) => guild.name)) || session.event.guild.name
+
+            return `已为当前群 ${guildName} (${guildId}) 禁用日常分析功能。`
         })
 
     settings
         .subcommand('.status', '查看当前分析设置')
-        .alias('状态')
+        .alias('.状态')
         .action(async ({ session }) => {
-            if (!session?.guildId) return '请在群聊中使用此命令。'
+            if (session.isDirect) return '请在群聊中使用此命令。'
 
             const config = ctx.config as Config
 
@@ -130,9 +141,16 @@ export function apply(ctx: Context) {
                         settings.guildId === session.guildId)
             )
 
-            ctx.scope.update(config, true)
+            ctx.scope.parent.scope.update(config, true)
+
+            const guildId = session.event.guild.id
+
+            const guildName =
+                (await session.bot
+                    .getGuild(guildId)
+                    .then((guild) => guild.name)) || session.event.guild.name
 
             const enabled = originalGroupSetting?.enabled ? '已启用' : '未启用'
-            return `📊 当前群分析功能状态: ${enabled}`
+            return `当前群 ${guildName} (${guildId}) 分析功能状态: ${enabled}`
         })
 }

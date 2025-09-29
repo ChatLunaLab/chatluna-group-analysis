@@ -1,4 +1,4 @@
-import { Context, h, Query, Service, Session, sleep } from 'koishi'
+import { Bot, Context, h, Query, Service, Session } from 'koishi'
 import { Config } from '../config'
 import { OneBotMessage } from '../types'
 import type { OneBotBot } from 'koishi-plugin-adapter-onebot'
@@ -30,7 +30,7 @@ export interface StoredMessage {
 }
 
 export class MessageService extends Service {
-    private messageCache: Map<string, StoredMessage[]> = new Map()
+    private messageCache = new Map<string, StoredMessage[]>()
     private readonly cacheSize = 1000
     private readonly cacheExpiration = 1000 * 60 * 24 // 1 days
 
@@ -39,7 +39,6 @@ export class MessageService extends Service {
         public config: Config
     ) {
         super(ctx, 'chatluna_group_analysis_message', true)
-
         this.setupDatabase()
         this.setupMessageListener()
         this.setupCacheCleanup()
@@ -60,9 +59,7 @@ export class MessageService extends Service {
                 timestamp: 'timestamp',
                 messageId: { type: 'string', nullable: true }
             },
-            {
-                primary: 'id'
-            }
+            { primary: 'id' }
         )
     }
 
@@ -77,22 +74,19 @@ export class MessageService extends Service {
     private shouldListenToMessage(session: Session): boolean {
         if (!session.guildId && !session.channelId) return false
 
-        return this.config.listenerGroups.some((listener) => {
-            return (
+        return this.config.listenerGroups.some(
+            (listener) =>
                 listener.enabled &&
                 listener.platform === session.platform &&
                 listener.selfId === session.selfId &&
                 listener.channelId === session.channelId &&
                 (!listener.guildId || listener.guildId === session.guildId)
-            )
-        })
+        )
     }
 
     private async handleMessage(session: Session) {
-        const messageId = `${session.platform}_${session.selfId}_${session.channelId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-
         const storedMessage: StoredMessage = {
-            id: messageId,
+            id: `${session.platform}_${session.selfId}_${session.channelId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             platform: session.platform,
             selfId: session.selfId,
             channelId: session.channelId,
@@ -100,14 +94,15 @@ export class MessageService extends Service {
             userId: session.userId,
             username: session.username,
             content: session.content,
-            timestamp: new Date(),
+            timestamp: new Date(session.timestamp * 1000),
             messageId: session.messageId
         }
 
         // Add to local cache
         this.addToCache(storedMessage)
 
-        if (session.platform !== 'onebot') {
+        // Store to database for platforms without getMessageList API
+        if (session.platform !== 'onebot' && !session.bot['getMessageList']) {
             try {
                 await this.ctx.database.create(
                     'chatluna_messages',
@@ -158,34 +153,123 @@ export class MessageService extends Service {
         )
     }
 
+    private async getBotAPIHistoricalMessages(
+        filter: MessageFilter,
+        bot: Bot
+    ): Promise<StoredMessage[]> {
+        const logger = this.ctx.logger
+        const targetId = filter.channelId || filter.guildId
+
+        if (!targetId) {
+            logger.warn(
+                'Bot API historical messages require channelId or guildId'
+            )
+            return []
+        }
+
+        const limit = filter.limit || 100
+        const startTime =
+            filter.startTime || new Date(Date.now() - 24 * 60 * 60 * 1000) // Default 1 day
+        const endTime = filter.endTime || new Date()
+
+        const allMessages: StoredMessage[] = []
+        let fetchedCount = 0
+        let queryRounds = 0
+        let nextId: string
+
+        try {
+            while (fetchedCount < limit) {
+                const messageList = await bot.getMessageList(
+                    targetId,
+                    nextId,
+                    'before'
+                )
+
+                if (!messageList?.data?.length) break
+
+                queryRounds++
+
+                const batch = messageList.data.map((msg) => ({
+                    id: `${bot.platform}_${bot.selfId}_${targetId}_${msg.id}`,
+                    platform: bot.platform,
+                    selfId: bot.selfId,
+                    channelId: filter.channelId,
+                    guildId: msg.guild?.id ?? filter.guildId,
+                    userId: msg.user.id,
+                    username:
+                        msg.member?.name ?? msg.user.name ?? msg.user.nick,
+                    content: msg.content,
+                    timestamp: new Date(msg.createdAt ?? msg.timestamp),
+                    messageId: msg.id,
+                    elements: h.parse(msg.content)
+                }))
+
+                const validMessages = batch.filter((msg) => {
+                    const withinTimeRange =
+                        msg.timestamp >= startTime && msg.timestamp <= endTime
+                    const matchesUser =
+                        !filter.userId ||
+                        String(msg.userId) === String(filter.userId)
+                    return withinTimeRange && matchesUser
+                })
+
+                allMessages.push(...validMessages)
+                fetchedCount += validMessages.length
+
+                const oldestMsg = batch[batch.length - 1]
+                logger.info(
+                    `群 ${targetId} [第 ${queryRounds} 轮] 获取了 ${validMessages.length} 条消息。最旧消息: ${oldestMsg.timestamp.toLocaleString()}`
+                )
+
+                if (oldestMsg.timestamp < startTime) break
+
+                nextId = messageList.prev
+                if (fetchedCount >= limit || !nextId?.length) break
+            }
+
+            return allMessages.slice(0, limit)
+        } catch (error) {
+            logger.error('Failed to fetch Bot API historical messages:', error)
+            return []
+        }
+    }
+
     public async getHistoricalMessages(
         filter: MessageFilter
     ): Promise<StoredMessage[]> {
-        const { platform } = inferPlatformInfo(
+        const { platform, selfId } = inferPlatformInfo(
             filter,
             this.config.listenerGroups
+        )
+        const bot = this.ctx.bots.find(
+            (b) => b.platform === platform && b.selfId === selfId
         )
 
         if (platform === 'onebot') {
             return this.getOneBotHistoricalMessages(filter)
-        } else {
-            return this.getDatabaseHistoricalMessages(filter)
         }
+
+        if (bot?.['getMessageList']) {
+            return this.getBotAPIHistoricalMessages(filter, bot)
+        }
+
+        return this.getDatabaseHistoricalMessages(filter)
     }
 
     private async getOneBotHistoricalMessages(
         filter: MessageFilter
     ): Promise<StoredMessage[]> {
-        const logger = this.ctx.logger('MessageService:OneBot')
+        const logger = this.ctx.logger
+        const targetId = filter.guildId || filter.channelId
 
-        if (!filter.guildId && !filter.channelId) {
+        if (!targetId) {
             logger.warn(
                 'OneBot historical messages require guildId or channelId'
             )
             return []
         }
 
-        const bot: OneBotBot<Context, OneBotBot.Config> = this.ctx.bots.find(
+        const bot = this.ctx.bots.find(
             (b) =>
                 b.platform === 'onebot' &&
                 b.selfId === (filter.selfId ?? b.selfId)
@@ -197,7 +281,6 @@ export class MessageService extends Service {
         }
 
         const messages: OneBotMessage[] = []
-        const targetId = filter.guildId || filter.channelId
         const limit = filter.limit || 100
         const startTime =
             filter.startTime || new Date(Date.now() - 24 * 60 * 60 * 1000) // Default 1 day
@@ -205,22 +288,24 @@ export class MessageService extends Service {
 
         let messageSeq = 0
         let fetchedCount = 0
+        let queryRounds = 0
 
         try {
             while (fetchedCount < limit) {
                 const result = await bot.internal
                     ._request('get_group_msg_history', {
                         group_id: Number(targetId),
-                        message_seq: messageSeq || 0
+                        message_seq: messageSeq,
+                        count: 50,
+                        reverseOrder: messageSeq !== 0
                     })
                     .then(
-                        (result) =>
-                            result.data as {
-                                messages: OneBotMessage[]
-                            }
+                        (result) => result.data as { messages: OneBotMessage[] }
                     )
 
                 if (!result?.messages?.length) break
+
+                queryRounds++
 
                 const batch: OneBotMessage[] = result.messages
                 const validMessages = batch.filter((msg) => {
@@ -233,16 +318,17 @@ export class MessageService extends Service {
                     return withinTimeRange && matchesUser
                 })
 
-                messages.push(...validMessages)
+                messages.unshift(...validMessages)
                 fetchedCount += validMessages.length
 
-                const oldestMsg = batch[batch.length - 1]
+                const oldestMsg = batch[0]
+                logger.info(
+                    `群 ${targetId} [第 ${queryRounds} 轮] 获取了 ${validMessages.length} 条消息。最旧消息: ${new Date(oldestMsg.time * 1000).toLocaleString()}`
+                )
+
                 if (new Date(oldestMsg.time * 1000) < startTime) break
 
-                messageSeq = oldestMsg.message_id
-
-                // Rate limiting
-                await sleep(this.config.apiCallDelay || 800)
+                messageSeq = oldestMsg.message_seq
             }
 
             // Convert to StoredMessage format
@@ -281,14 +367,14 @@ export class MessageService extends Service {
                 if (filter.endTime) query.timestamp.$lte = filter.endTime
             }
 
-            const selections = this.ctx.database
+            const messages = await this.ctx.database
                 .select('chatluna_messages')
                 .where(query)
                 .offset(filter.offset ?? 0)
                 .limit(filter.limit ?? 100)
                 .orderBy(($) => $.timestamp, 'desc')
+                .execute()
 
-            const messages = await selections.execute()
             return messages.map((message) => ({
                 ...message,
                 elements: h.parse(message.content)
@@ -307,14 +393,14 @@ export class MessageService extends Service {
         channelId?: string,
         limit = 100
     ): StoredMessage[] {
-        const cacheKey = `${
+        const platform =
             this.config.listenerGroups.find(
                 (l) =>
                     (!guildId || l.guildId === guildId) &&
                     (!channelId || l.channelId === channelId)
             )?.platform || 'unknown'
-        }_${guildId || channelId}`
 
+        const cacheKey = `${platform}_${guildId || channelId}`
         const cached = this.messageCache.get(cacheKey) || []
         return cached.slice(0, limit)
     }
@@ -328,7 +414,6 @@ export class MessageService extends Service {
             ...filter,
             limit: 10000
         })
-
         const uniqueUsers = new Set(messages.map((m) => m.userId))
         const timestamps = messages.map((m) => m.timestamp).sort()
 

@@ -31,8 +31,7 @@ export class AnalysisService extends Service {
         guildId: string,
         days: number
     ): Promise<StoredMessage[]> {
-        const logger = this.ctx.logger('AnalysisService:MessageService')
-        logger.info(
+        this.ctx.logger.info(
             `开始从消息服务获取群组 ${guildId} 近 ${days} 天的消息记录...`
         )
 
@@ -53,7 +52,7 @@ export class AnalysisService extends Service {
                 }
             )
 
-        logger.info(`从消息服务获取到 ${messages.length} 条消息。`)
+        this.ctx.logger.info(`从消息服务获取到 ${messages.length} 条消息。`)
         return messages
     }
 
@@ -67,7 +66,7 @@ export class AnalysisService extends Service {
 
         await bot?.sendMessage(
             guildId,
-            `🔍 开始分析群聊近 ${days} 天的活动，请稍候...`
+            `开始分析群聊近 ${days} 天的活动，请稍候...`
         )
 
         let message: h
@@ -94,12 +93,8 @@ export class AnalysisService extends Service {
 
             const analysisResult = await this.analyzeGroupMessages(
                 messages,
+                selfId,
                 guildId
-            )
-
-            this.ctx.logger.error(
-                'Analysis result:',
-                JSON.stringify(analysisResult, null, 2)
             )
 
             const format = outputFormat || this.config.outputFormat || 'image'
@@ -164,6 +159,7 @@ export class AnalysisService extends Service {
 
     public async analyzeGroupMessages(
         messages: StoredMessage[],
+        selfId: string,
         guildId: string
     ): Promise<GroupAnalysisResult> {
         this.ctx.logger.info(`开始分析 ${messages.length} 条消息...`)
@@ -219,15 +215,13 @@ export class AnalysisService extends Service {
         const activeHoursChartHtml =
             generateActiveHoursChart(overallActiveHours)
 
-        const bot = this.ctx.bots.find((b) => b.platform === 'onebot')
+        const bot = this._getBot(selfId)
         let groupName = guildId
         if (bot) {
             try {
                 groupName = (await bot.getGuild(guildId)).name || guildId
             } catch (err) {
-                this.ctx
-                    .logger('AnalysisService')
-                    .warn(`获取群组 ${guildId} 名称失败: ${err}`)
+                this.ctx.logger.warn(`获取群组 ${guildId} 名称失败: ${err}`)
             }
         }
 

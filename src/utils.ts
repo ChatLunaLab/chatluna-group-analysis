@@ -7,6 +7,7 @@ import {
     UserStats
 } from './types'
 import { StoredMessage } from './service/message'
+import { Config } from './config'
 
 export function calculateBasicStats(
     messages: StoredMessage[]
@@ -145,7 +146,7 @@ export function formatUserStats(userStats: UserStats[]): string {
         .map(
             (user) => `
       <div class="user-stat-card">
-        <img src="${this.getAvatarUrl(user.userId)}" alt="avatar" class="avatar">
+        <img src="${getAvatarUrl(user.userId)}" alt="avatar" class="avatar">
         <div class="user-details">
           <div class="nickname">${user.nickname}</div>
           <div class="stats-grid">
@@ -192,7 +193,7 @@ export function formatUserTitles(
         .map(
             (title) => `
       <div class="title-card">
-        <img src="${this.getAvatarUrl(title.qq)}" alt="avatar" class="avatar">
+        <img src="${getAvatarUrl(title.qq)}" alt="avatar" class="avatar">
         <div class="title-details">
           <div class="nickname">${title.name}</div>
           <div class="title-badge">${title.mbti && title.mbti !== 'N/A' ? `${title.title} | ${title.mbti}` : title.title}</div>
@@ -291,15 +292,12 @@ export function shouldListenToMessage(
 
 export function inferPlatformInfo(
     filter: { guildId?: string; channelId?: string },
-    listenerGroups: {
-        platform: string
-        guildId?: string
-        channelId: string
-    }[]
+    listenerGroups: Config['listenerGroups']
 ): {
     platform?: string
     guildId?: string
     channelId?: string
+    selfId?: string
 } {
     for (const listener of listenerGroups) {
         if (
@@ -309,7 +307,8 @@ export function inferPlatformInfo(
             return {
                 platform: listener.platform,
                 guildId: filter.guildId || listener.guildId,
-                channelId: filter.channelId || listener.channelId
+                channelId: filter.channelId || listener.channelId,
+                selfId: listener.selfId
             }
         }
     }

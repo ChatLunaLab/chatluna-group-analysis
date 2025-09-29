@@ -37,28 +37,33 @@ export class LLMService extends Service {
             return []
         }
 
-        logger.info(`正在调用 ChatLuna 模型进行 ${taskName}...`)
-        const response = await model.invoke(prompt)
+        return await model.caller.call(async () => {
+            logger.info(`正在调用 ChatLuna 模型进行 ${taskName}...`)
+            const response = await model.invoke(prompt)
 
-        const rawContent = getMessageContent(response.content)
+            const rawContent = getMessageContent(response.content)
 
-        logger.info(`LLM 原始响应: ${rawContent || '[空响应]'}`)
+            logger.info(`LLM 原始响应: ${rawContent || '[空响应]'}`)
 
-        const jsonMatch = rawContent.match(/\[.*\]/s)
-        if (!jsonMatch) {
-            logger.warn(`未找到 JSON 数组，无法解析。`)
-            return []
-        }
+            const jsonMatch = rawContent.match(/\[.*\]/s)
+            if (!jsonMatch) {
+                logger.warn(`未找到 JSON 数组，无法解析。`)
+                return []
+            }
 
-        try {
-            const data = JSON.parse(jsonMatch[0]) as T[]
-            logger.info(`成功解析 ${data.length} 条结果。`)
-            return data
-        } catch (err) {
-            logger.error('解析 JSON 失败:', err)
-            logger.debug('待解析的 JSON 字符串:', jsonMatch[0] || '[空字符串]')
-            return []
-        }
+            try {
+                const data = JSON.parse(jsonMatch[0]) as T[]
+                logger.info(`成功解析 ${data.length} 条结果。`)
+                return data
+            } catch (err) {
+                logger.error('解析 JSON 失败:', err)
+                logger.debug(
+                    '待解析的 JSON 字符串:',
+                    jsonMatch[0] || '[空字符串]'
+                )
+                return []
+            }
+        })
     }
 
     public async summarizeTopics(
