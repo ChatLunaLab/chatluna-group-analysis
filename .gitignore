@@ -16,4 +16,4 @@ tsconfig.tsbuildinfo
 *.njsproj
 *.sln
 
-.cluade/*.local.json
+.claude/*.local.json

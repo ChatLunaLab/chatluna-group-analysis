@@ -217,54 +217,54 @@
     <div class="container">
         <div class="header">
             <h1>群聊分析报告</h1>
-            <div class="sub-title">{{groupName}} | {{analysisDate}}</div>
+            <div class="sub-title">${groupName} | ${analysisDate}</div>
         </div>
         
         <div class="summary">
             <div class="summary-item">
                 <div class="label">总消息数</div>
-                <div class="value">{{totalMessages}}</div>
+                <div class="value">${totalMessages}</div>
             </div>
             <div class="summary-item">
                 <div class="label">参与人数</div>
-                <div class="value">{{totalParticipants}}</div>
+                <div class="value">${totalParticipants}</div>
             </div>
             <div class="summary-item">
                 <div class="label">总字数</div>
-                <div class="value">{{totalChars}}</div>
+                <div class="value">${totalChars}</div>
             </div>
             <div class="summary-item">
                 <div class="label">最活跃时段</div>
-                <div class="value">{{mostActivePeriod}}</div>
+                <div class="value">${mostActivePeriod}</div>
             </div>
         </div>
 
         <div class="section-title">🏆 群友称号</div>
         <div class="card-grid">
-            {{userTitles}}
+            ${userTitles}
         </div>
 
         <div class="section-title">👑 龙王榜</div>
         <div class="card-grid">
-            {{userStats}}
+            ${userStats}
         </div>
 
         <div class="section-title">💬 热门话题</div>
         <div class="card-grid">
-            {{topics}}
+            ${topics}
         </div>
 
         <div class="section-title">📖 本群圣经</div>
         <div class="card-grid">
-            {{goldenQuotes}}
+            ${goldenQuotes}
         </div>
 
         <div class="section-title">🔥 24小时活跃分布</div>
         <div class="activity-chart">
-            {{activeHoursChart}}
+            ${activeHoursChart}
         </div>
 
-        <footer>由 Koishi & ChatLuna 强力驱动 | Total Tokens: {{tokenUsage}}</footer>
+        <footer>由 Koishi & ChatLuna 强力驱动</footer>
     </div>
 </body>
 </html>

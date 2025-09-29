@@ -1,13 +1,8 @@
-/**
- * 本文件定义了插件所需的所有数据结构
- */
-
-// OneBot v11 消息对象（简化版）
 export interface OneBotMessage {
     message_id: number
     message_seq: number
     time: number
-    message: string | any[]
+    message: string | OneBotMessageType[]
     raw_message: string
     sender: {
         user_id: number
@@ -16,9 +11,14 @@ export interface OneBotMessage {
     }
 }
 
+export interface OneBotMessageType {
+    type: string
+    data: Record<string, string>
+}
+
 // 用户统计信息
 export interface UserStats {
-    userId: number
+    userId: string
     nickname: string
     messageCount: number
     charCount: number
@@ -58,12 +58,6 @@ export interface GoldenQuote {
     reason: string
 }
 
-export interface TokenUsage {
-    promptTokens: number
-    completionTokens: number
-    totalTokens: number
-}
-
 // 最终的群聊分析报告数据结构
 export interface GroupAnalysisResult {
     totalMessages: number
@@ -77,7 +71,14 @@ export interface GroupAnalysisResult {
     userTitles: UserTitle[]
     goldenQuotes: GoldenQuote[]
     activeHoursChart: string
+    activeHoursData: Record<number, number>
     analysisDate: string
     groupName: string
-    tokenUsage: TokenUsage
+}
+
+export interface BasicStatsResult {
+    userStats: Record<string, UserStats>
+    totalChars: number
+    totalEmojiCount: number
+    allMessagesText: string[]
 }
