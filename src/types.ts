@@ -25,6 +25,7 @@ export interface UserStats {
     lastActive: Date
     avatar?: string
     replyCount: number
+    emojiRatio: number
     atCount: number
     emojiStats: Record<string, number>
     nightRatio: number

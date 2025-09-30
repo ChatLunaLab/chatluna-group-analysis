@@ -75,6 +75,9 @@ export function calculateBasicStats(
         stat.replyRatio = stat.messageCount
             ? parseFloat((stat.replyCount / stat.messageCount).toFixed(2))
             : 0
+        stat.emojiRatio = stat.messageCount
+            ? parseFloat((totalEmojiCount / stat.messageCount).toFixed(2))
+            : 0
     }
 
     return { userStats, totalChars, totalEmojiCount, allMessagesText }
@@ -89,6 +92,7 @@ function getInitialUserStats(msg: StoredMessage): UserStats {
         lastActive: new Date(0),
         replyCount: 0,
         atCount: 0,
+        emojiRatio: 0,
         emojiStats: {},
         nightRatio: 0,
         avgChars: 0,
@@ -233,13 +237,24 @@ export function generateActiveHoursChart(
 
     for (let i = 0; i < 24; i++) {
         const count = activeHours[i] || 0
-        const height = maxCount > 0 ? (count / maxCount) * 100 : 0
+        let height = maxCount > 0 ? (count / maxCount) * 100 : 0
+        if (height > 0 && height < 5) {
+            height = 5 // 最小可见高度
+        }
+        height = Math.round(height * 100) / 100
+
         const percentage =
             maxCount > 0 ? Math.round((count / maxCount) * 100) : 0
 
+        // 使用内联样式，但加上 !important 确保优先级
+        const barStyle =
+            height > 0
+                ? `style="height: ${height}% !important;"`
+                : `style="height: 0px !important;"`
+
         chartBars.push(`
-                <div class="activity-bar" title="${i}:00 - ${count} ����Ϣ (${percentage}%)">
-                    <div class="activity-bar-bar" style="height: ${height}%;"></div>
+                <div class="activity-bar" title="${i}:00 - ${count} 条消息 (${percentage}%)">
+                    <div class="activity-bar-bar" ${barStyle}></div>
                     <span class="activity-bar-label">${String(i).padStart(2, '0')}</span>
                 </div>
             `)
@@ -251,7 +266,7 @@ export function generateActiveHoursChart(
                     ${chartBars.join('')}
                 </div>
                 <div class="chart-legend">
-                    <span class="legend-text">24Сʱ��Ծ�ȷֲ� (���: ${maxCount} ����Ϣ)</span>
+                    <span class="legend-text">24小时活跃度分布 (峰值: ${maxCount} 条消息)</span>
                 </div>
             </div>
         `

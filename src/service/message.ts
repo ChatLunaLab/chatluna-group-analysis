@@ -5,6 +5,7 @@ import { type OneBotBot } from 'koishi-plugin-adapter-onebot'
 import { inferPlatformInfo } from '../utils'
 import { writeFile } from 'fs/promises'
 import path from 'path'
+import { CQCode } from '../onebot/cqcode'
 
 export interface MessageFilter {
     guildId?: string
@@ -212,7 +213,11 @@ export class MessageService extends Service {
                     const matchesUser =
                         !filter.userId ||
                         String(msg.userId) === String(filter.userId)
-                    return withinTimeRange && matchesUser
+                    const hitFilterContent = !this.config.filterWords.some(
+                        (word) => msg.content.includes(word) /* ||
+                            msg.username.includes(word) */
+                    )
+                    return withinTimeRange && matchesUser && hitFilterContent
                 })
 
                 allMessages.unshift(...validMessages)
@@ -271,8 +276,6 @@ export class MessageService extends Service {
             return []
         }
 
-        await parseCQCode('')
-
         const bot = this.ctx.bots.find(
             (b) =>
                 b.platform === 'onebot' &&
@@ -319,7 +322,11 @@ export class MessageService extends Service {
                     const matchesUser =
                         !filter.userId ||
                         String(msg.sender?.user_id) === String(filter.userId)
-                    return withinTimeRange && matchesUser
+                    const hitFilterContent = !this.config.filterWords.some(
+                        (word) => msg.raw_message.includes(word) /* ||
+                            msg.sender.nickname.includes(word) */
+                    )
+                    return withinTimeRange && matchesUser && hitFilterContent
                 })
 
                 messages.unshift(...validMessages)
@@ -347,7 +354,7 @@ export class MessageService extends Service {
                 content: msg.raw_message || '',
                 timestamp: new Date(msg.time * 1000),
                 messageId: String(msg.message_id),
-                elements: CQCodeParse(msg.raw_message)
+                elements: CQCode.parse(msg.raw_message)
             }))
 
             writeFile(
@@ -455,15 +462,4 @@ declare module 'koishi' {
     interface Tables {
         chatluna_messages: StoredMessage
     }
-}
-
-let CQCodeParse: typeof import('koishi-plugin-adapter-onebot').CQCode.parse
-
-async function parseCQCode(content: string): Promise<h[]> {
-    if (!CQCodeParse) {
-        CQCodeParse = (await import('koishi-plugin-adapter-onebot')).CQCode
-            .parse
-    }
-
-    return CQCodeParse(content)
 }

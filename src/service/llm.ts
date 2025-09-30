@@ -85,7 +85,7 @@ export class LLMService extends Service {
                 (user) =>
                     `- ${user.nickname} (QQ:${user.userId}): ` +
                     `发言${user.messageCount}条, 平均${user.avgChars}字, ` +
-                    `表情比例${user.replyRatio}, 夜间发言比例${user.nightRatio}, ` +
+                    `表情比例${user.emojiRatio}, 夜间发言比例${user.nightRatio}, ` +
                     `回复比例${user.replyRatio}`
             )
             .join('\n')

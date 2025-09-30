@@ -18,6 +18,7 @@ const GroupListener: Schema<GroupListener> = Schema.object({
 
 export interface Config {
     listenerGroups: GroupListener[]
+    filterWords: string[]
     model: string
     promptTopic: string
     promptUserTitles: string
@@ -66,7 +67,11 @@ export const Config: Schema<Config> = Schema.intersect([
             .default(true),
         outputFormat: Schema.union(['image', 'pdf', 'text'])
             .description('默认输出格式。')
-            .default('image')
+            .default('image'),
+        filterWords: Schema.array(String)
+            .role('table')
+            .description('过滤词列表。消息内含有此词语时将不会记入统计消息。')
+            .default([])
     }).description('分析渲染设置'),
     Schema.object({
         model: Schema.dynamic('model')
