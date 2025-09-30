@@ -37,12 +37,12 @@ export class RendererService extends Service {
 
         const templateDir = this.templateDir
 
-        try {
+        /* try {
             await fs.access(templateDir)
-        } catch (error) {
-            await fs.mkdir(templateDir, { recursive: true })
-            await fs.cp(templateHtmlDir, templateDir, { recursive: true })
-        }
+        } catch (error) { */
+        await fs.mkdir(templateDir, { recursive: true })
+        await fs.cp(templateHtmlDir, templateDir, { recursive: true })
+        /*   } */
 
         const tempHtmlFiles = await fs
             .readdir(templateDir)

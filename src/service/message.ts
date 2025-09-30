@@ -1,8 +1,10 @@
 import { Bot, Context, h, Query, Service, Session } from 'koishi'
 import { Config } from '../config'
 import { OneBotMessage } from '../types'
-import type { OneBotBot } from 'koishi-plugin-adapter-onebot'
+import { type OneBotBot } from 'koishi-plugin-adapter-onebot'
 import { inferPlatformInfo } from '../utils'
+import { writeFile } from 'fs/promises'
+import path from 'path'
 
 export interface MessageFilter {
     guildId?: string
@@ -213,10 +215,10 @@ export class MessageService extends Service {
                     return withinTimeRange && matchesUser
                 })
 
-                allMessages.push(...validMessages)
+                allMessages.unshift(...validMessages)
                 fetchedCount += validMessages.length
 
-                const oldestMsg = batch[batch.length - 1]
+                const oldestMsg = batch[0]
                 logger.info(
                     `群 ${targetId} [第 ${queryRounds} 轮] 获取了 ${validMessages.length} 条消息。最旧消息: ${oldestMsg.timestamp.toLocaleString()}`
                 )
@@ -268,6 +270,8 @@ export class MessageService extends Service {
             )
             return []
         }
+
+        await parseCQCode('')
 
         const bot = this.ctx.bots.find(
             (b) =>
@@ -326,13 +330,13 @@ export class MessageService extends Service {
                     `群 ${targetId} [第 ${queryRounds} 轮] 获取了 ${validMessages.length} 条消息。最旧消息: ${new Date(oldestMsg.time * 1000).toLocaleString()}`
                 )
 
-                if (new Date(oldestMsg.time * 1000) < startTime) break
+                if (oldestMsg.time * 1000 < startTime.getTime()) break
 
                 messageSeq = oldestMsg.message_seq
             }
 
             // Convert to StoredMessage format
-            return messages.slice(0, limit).map((msg) => ({
+            const results = messages.map((msg) => ({
                 id: `onebot_${msg.message_id}`,
                 platform: 'onebot',
                 selfId: bot.selfId,
@@ -343,8 +347,20 @@ export class MessageService extends Service {
                 content: msg.raw_message || '',
                 timestamp: new Date(msg.time * 1000),
                 messageId: String(msg.message_id),
-                elements: h.parse(msg.raw_message)
+                elements: CQCodeParse(msg.raw_message)
             }))
+
+            writeFile(
+                path.join(this.ctx.baseDir, 'onebot_messages2.json'),
+                JSON.stringify(results, null, 2)
+            )
+
+            writeFile(
+                path.join(this.ctx.baseDir, 'onebot_messages.json'),
+                JSON.stringify(messages, null, 2)
+            )
+
+            return results
         } catch (error) {
             logger.error('Failed to fetch OneBot historical messages:', error)
             return []
@@ -439,4 +455,15 @@ declare module 'koishi' {
     interface Tables {
         chatluna_messages: StoredMessage
     }
+}
+
+let CQCodeParse: typeof import('koishi-plugin-adapter-onebot').CQCode.parse
+
+async function parseCQCode(content: string): Promise<h[]> {
+    if (!CQCodeParse) {
+        CQCodeParse = (await import('koishi-plugin-adapter-onebot')).CQCode
+            .parse
+    }
+
+    return CQCodeParse(content)
 }

@@ -9,7 +9,8 @@ import { Config, StoredMessage } from '..'
 import {
     calculateBasicStats,
     generateActiveHoursChart,
-    generateTextReport
+    generateTextReport,
+    getStartTimeByDays
 } from '../utils'
 
 export class AnalysisService extends Service {
@@ -35,9 +36,7 @@ export class AnalysisService extends Service {
             `开始从消息服务获取群组 ${guildId} 近 ${days} 天的消息记录...`
         )
 
-        const startTime = new Date()
-        startTime.setDate(startTime.getDate() - days)
-        startTime.setHours(0, 0, 0, 0)
+        const startTime = getStartTimeByDays(days)
 
         const endTime = new Date()
 

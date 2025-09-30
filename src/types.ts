@@ -44,7 +44,7 @@ export interface SummaryTopic {
 // 用户称号
 export interface UserTitle {
     name: string
-    qq: number
+    id: number
     title: string
     mbti: string
     reason: string

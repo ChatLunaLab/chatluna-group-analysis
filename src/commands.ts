@@ -20,7 +20,8 @@ export const inject = {
 }
 
 export function apply(ctx: Context, config: Config) {
-    ctx.command('群分析 [days:number]', '分析本群的近期聊天记录')
+    const settings = ctx
+        .command('群分析 [days:number]', '分析本群的近期聊天记录')
         .usage(
             '本功能会分析本群的近期聊天记录，并生成一份报告。\n' +
                 '默认情况下，本功能会分析最近 1 天的聊天记录。\n' +
@@ -46,12 +47,6 @@ export function apply(ctx: Context, config: Config) {
                 return '群分析执行失败，请检查日志。'
             }
         })
-
-    const settings = ctx
-        .command('群分析设置', '管理群聊分析功能', {
-            authority: 3
-        })
-        .alias('group-analysis.settings')
 
     settings
         .subcommand('.enable', '启用本群的分析功能')

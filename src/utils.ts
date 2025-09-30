@@ -58,7 +58,9 @@ export function calculateBasicStats(
             }
         }
         if (pureText) {
-            allMessagesText.push(`${msg.userId}: ${pureText.trim()}`)
+            allMessagesText.push(
+                `${msg.username}(${msg.userId}): ${pureText.trim()}`
+            )
         }
     }
 
@@ -193,7 +195,7 @@ export function formatUserTitles(
         .map(
             (title) => `
       <div class="title-card">
-        <img src="${getAvatarUrl(title.qq)}" alt="avatar" class="avatar">
+        <img src="${getAvatarUrl(title.id)}" alt="avatar" class="avatar">
         <div class="title-details">
           <div class="nickname">${title.name}</div>
           <div class="title-badge">${title.mbti && title.mbti !== 'N/A' ? `${title.title} | ${title.mbti}` : title.title}</div>
@@ -313,4 +315,13 @@ export function inferPlatformInfo(
         }
     }
     return {}
+}
+
+export function getStartTimeByDays(days: number): Date {
+    const now = new Date()
+    const millisecondsPerDay = 24 * 60 * 60 * 1000
+    const targetTime = now.getTime() - (days - 1) * millisecondsPerDay
+    const startTime = new Date(targetTime)
+    startTime.setHours(0, 0, 0, 0)
+    return startTime
 }

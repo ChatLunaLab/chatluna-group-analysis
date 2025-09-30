@@ -66,13 +66,7 @@ export const Config: Schema<Config> = Schema.intersect([
             .default(true),
         outputFormat: Schema.union(['image', 'pdf', 'text'])
             .description('默认输出格式。')
-            .default('image'),
-        cronSchedule: Schema.string().description(
-            '定时发送分析报告的 CRON 表达式。留空则禁用。例如 "0 22 * * *" 表示每天22点。'
-        ),
-        cronAnalysisDays: Schema.number()
-            .description('定时任务分析的默认天数。')
-            .default(1)
+            .default('image')
     }).description('分析渲染设置'),
     Schema.object({
         model: Schema.dynamic('model')
@@ -105,6 +99,7 @@ export const Config: Schema<Config> = Schema.intersect([
 - 对于比较有价值的点，稍微用一两句话详细讲讲，比如不要生成 "Nolan 和 SOV 讨论了 galgame 中关于性符号的衍生情况" 这种宽泛的内容，而是生成更加具体的讨论内容，让其他人只看这个消息就能知道讨论中有价值的，有营养的信息。
 - 对于其中的部分信息，你需要特意提到主题施加的主体是谁，是哪个群友做了什么事情，而不要直接生成和群友没有关系的语句。
 - 对于每一条总结，尽量讲清楚前因后果，以及话题的结论，是什么，为什么，怎么做，如果用户没有讲到细节，则可以不用这么做。
+- 对于话题的描述内容，请在里面使用用户的昵称而不是用户的ID，避免输出用户ID和字符到话题描述内容中。
 
 群聊记录：
 {messages}
@@ -113,8 +108,8 @@ export const Config: Schema<Config> = Schema.intersect([
 \`\`\`yaml
 - topic: 话题名称
   contributors:
-    - 用户1
-    - 用户2
+    - 用户1 (用户ID)
+    - 用户2 (用户ID)
   detail: 话题描述内容
 \`\`\``
             ),
@@ -141,7 +136,7 @@ export const Config: Schema<Config> = Schema.intersect([
 请严格按照以下 YAML 格式返回，放在 markdown 代码块中：
 \`\`\`yaml
 - name: 用户名
-  qq: 123456789
+  id: 123456789
   title: 称号
   mbti: MBTI类型
   reason: 获得此称号的原因
@@ -170,7 +165,7 @@ export const Config: Schema<Config> = Schema.intersect([
 请严格按照以下 YAML 格式返回，放在 markdown 代码块中：
 \`\`\`yaml
 - content: 金句原文
-  sender: 发言人昵称
+  sender: 发言人昵称（注意不是 ID）
   reason: 选择这句话的理由（需明确说明逆天特质）
 \`\`\``
             )
