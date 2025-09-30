@@ -63,7 +63,7 @@ export class LLMService extends Service {
                     '待解析的 YAML 字符串:',
                     yamlMatch[1] || '[空字符串]'
                 )
-                return []
+                throw err
             }
         })
     }

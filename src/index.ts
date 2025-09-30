@@ -21,7 +21,7 @@ export function apply(ctx: Context, config: Config) {
 
     ctx.plugin(commands, config)
 
-    ctx.inject(['scheduler'], (ctx) => {
+    ctx.inject(['cron'], (ctx) => {
         if (!config.cronSchedule && !ctx.cron) {
             return
         }

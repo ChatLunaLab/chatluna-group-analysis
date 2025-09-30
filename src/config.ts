@@ -115,7 +115,9 @@ export const Config: Schema<Config> = Schema.intersect([
   contributors:
     - 用户1 (用户ID)
     - 用户2 (用户ID)
-  detail: 话题描述内容
+  detail: |-
+    话题描述内容（支持多行文本，
+    保留换行符，适合多段落描述）
 \`\`\``
             ),
         promptUserTitles: Schema.string()
@@ -144,7 +146,9 @@ export const Config: Schema<Config> = Schema.intersect([
   id: 123456789
   title: 称号
   mbti: MBTI类型
-  reason: 获得此称号的原因
+  reason: |-
+    获得此称号的原因（支持多行文本，
+    保留换行符）
 \`\`\``
             ),
         promptGoldenQuotes: Schema.string()
@@ -171,7 +175,9 @@ export const Config: Schema<Config> = Schema.intersect([
 \`\`\`yaml
 - content: 金句原文
   sender: 发言人昵称（注意不是 ID）
-  reason: 选择这句话的理由（需明确说明逆天特质）
+  reason: |-
+    选择这句话的理由（需明确说明逆天特质，
+    支持多行文本，保留换行符）
 \`\`\``
             )
     }).description('高级设置')
@@ -181,5 +187,5 @@ export const name = 'chatluna-group-analysis'
 
 export const inject = {
     required: ['puppeteer', 'chatluna', 'database'],
-    optional: ['scheduler']
+    optional: ['cron']
 }
