@@ -27,7 +27,7 @@ export function apply(ctx: Context, config: Config) {
         }
         ctx.effect(() =>
             ctx.cron(config.cronSchedule, async () => {
-                await ctx.analysis.executeAutoAnalysisForEnabledGroups()
+                await ctx.chatluna_group_analysis.executeAutoAnalysisForEnabledGroups()
             })
         )
     })
