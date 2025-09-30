@@ -142,11 +142,15 @@ export class RendererService extends Service {
         const page = await this.ctx.puppeteer.page()
 
         // 重新加载页面并使用 goto 访问本地文件
-        await page.reload()
         await page.goto('file://' + outTemplateHtmlPath, {
             waitUntil: 'networkidle0',
             timeout: 40 * 1000
         })
+
+        // 等待字体加载完成
+        await page.evaluate(() => document.fonts.ready)
+
+        this.ctx.logger.debug('字体加载完成')
 
         // 设置 3 分钟后自动删除临时文件
         this.ctx.setTimeout(
