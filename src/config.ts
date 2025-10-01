@@ -113,8 +113,8 @@ export const Config: Schema<Config> = Schema.intersect([
         personaMaxMessages: Schema.number()
             .description('单次用户画像分析最多提取的历史消息数量。')
             .min(100)
-            .max(500)
-            .default(150),
+            .max(1500)
+            .default(300),
         personaMinMessages: Schema.number()
             .description('触发用户画像分析所需的最少历史消息数量。')
             .min(10)

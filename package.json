@@ -106,7 +106,7 @@
   },
   "koishi": {
     "description": {
-      "zh": "ChatLuna AI 群分析插件，用户画像等。支持 AI 分析群话题等。"
+      "zh": "ChatLuna AI 群分析插件。支持 AI 分析群话题，分析群友的用户画像。并为 ChatLuna 提供消息拉取等模型工具。"
     },
     "service": {
       "required": [

@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import { Context } from 'koishi'
+import { Context, Session } from 'koishi'
 import { AnalysisService } from './service/analysis'
 import { RendererService } from './service/renderer'
 import { Config } from './config'
@@ -20,6 +20,24 @@ export const inject = {
 }
 
 export function apply(ctx: Context, config: Config) {
+
+    const checkGroup = (session: Session) => {
+        return (
+            config.listenerGroups.some(
+                (settings) =>
+                    (settings.channelId === session.channelId &&
+                        session.channelId != null) ||
+                    (settings.guildId !== null &&
+                        settings.guildId === session.guildId)
+            ) &&
+            config.listenerGroups.some(
+                (settings) =>
+                    settings.enabled &&
+                    (settings.channelId === session.channelId && session.channelId != null)
+            )
+        )
+    }
+
     const settings = ctx
         .command('群分析 [days:number]', '分析本群的近期聊天记录')
         .usage(
@@ -31,6 +49,9 @@ export function apply(ctx: Context, config: Config) {
         .alias('group-analysis')
         .action(async ({ session }, days) => {
             if (session.isDirect) return '请在群聊中使用此命令。'
+
+            if (!checkGroup(session))
+                return '本群未启用分析功能，请使用 群分析.启用 来启用本群的分析功能。'
 
             const analysisDays = days || ctx.config?.cronAnalysisDays || 1
             if (analysisDays > 7)
@@ -153,10 +174,14 @@ export function apply(ctx: Context, config: Config) {
         .subcommand('.用户画像 [user:user]', '查看指定用户的画像')
         .alias('.persona')
         .usage(
-            '使用方法：/群分析.用户画像 @用户 或 /群分析.用户画像 <用户ID> 或 /群分析.用户画像'
+            '使用方法：/群分析.用户画像 @用户 或 /群分析.用户画像 <用户ID> 或 /群分析.用户画像。不带 参数时查看当前用户。'
         )
-        .action(async ({ session }, user) => {
+        .option('force', '-f 是否强制更新用户画像')
+        .action(async ({ session, options }, user) => {
             if (session.isDirect) return '请在群聊中使用此命令。'
+
+             if (!checkGroup(session))
+                return '本群未启用群分析功能，请使用 群分析.启用 来启用本群的群分析功能。'
 
             const userId = user?.split(':')[1] ?? session.userId
            
@@ -167,7 +192,8 @@ export function apply(ctx: Context, config: Config) {
             try {
                 await ctx.chatluna_group_analysis.executeUserPersonaAnalysis(
                     session,
-                    userId
+                    userId,
+                    options.force ?? false
                 )
             } catch (err) {
                 ctx.logger.error(

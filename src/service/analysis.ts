@@ -564,7 +564,7 @@ export class AnalysisService extends Service {
         }
     }
 
-    public async executeUserPersonaAnalysis(session: Session, userId: string) {
+    public async executeUserPersonaAnalysis(session: Session, userId: string, force?: boolean) {
         const bot = session.bot
 
         await session.send('正在查询用户画像数据，请稍候...')
@@ -584,7 +584,7 @@ export class AnalysisService extends Service {
                 userId
             )
 
-            if (!personaData) {
+            if (!personaData || force) {
                 const cache = await this.ensurePersonaCache(recordId, {
                     platform: session.platform,
                     selfId: session.selfId,
