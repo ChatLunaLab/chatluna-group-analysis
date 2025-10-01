@@ -150,7 +150,7 @@ export const Config: Schema<Config> = Schema.intersect([
     - 用户2 (用户ID)
   detail: |-
     话题描述内容（支持多行文本，
-    保留换行符，适合多段落描述）
+    保留换行符，适合多段落描述，不要在里面添加任何markdown语法，请使用纯文本）
 \`\`\``
             ),
         promptUserTitles: Schema.string()
@@ -180,8 +180,7 @@ export const Config: Schema<Config> = Schema.intersect([
   title: 称号
   mbti: MBTI类型
   reason: |-
-    获得此称号的原因（支持多行文本，
-    保留换行符）
+    获得此称号的原因（支持多行文本，不要在里面添加任何markdown语法，请使用纯文本）
 \`\`\``
             ),
         promptGoldenQuotes: Schema.string()
@@ -209,8 +208,7 @@ export const Config: Schema<Config> = Schema.intersect([
 - content: 金句原文
   sender: 发言人昵称（注意不是 ID）
   reason: |-
-    选择这句话的理由（需明确说明逆天特质，
-    支持多行文本，保留换行符）
+    选择这句话的理由（需明确说明逆天特质，不要在里面添加任何markdown语法，请使用纯文本）
 \`\`\``
             ),
         promptUserPersona: Schema.string()

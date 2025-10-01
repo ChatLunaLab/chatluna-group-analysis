@@ -143,14 +143,15 @@ export class RendererService extends Service {
 
         // 重新加载页面并使用 goto 访问本地文件
         await page.goto('file://' + outTemplateHtmlPath, {
-            waitUntil: 'networkidle0',
-            timeout: 40 * 1000
+            waitUntil: 'domcontentloaded',
         })
+
+        this.ctx.logger.info('网页加载完成，开始等待字体加载。')
 
         // 等待字体加载完成
         await page.evaluate(() => document.fonts.ready)
 
-        this.ctx.logger.debug('字体加载完成')
+        this.ctx.logger.info('字体加载完成。')
 
         // 设置 3 分钟后自动删除临时文件
         this.ctx.setTimeout(
@@ -274,15 +275,20 @@ export class RendererService extends Service {
             '用户画像 HTML 模板填充完成，正在调用 Puppeteer 进行渲染...'
         )
 
-        const page = await this.ctx.puppeteer.page()
+       const page = await this.ctx.puppeteer.page()
 
+        // 重新加载页面并使用 goto 访问本地文件
         await page.goto('file://' + outTemplateHtmlPath, {
-            waitUntil: 'networkidle0',
-            timeout: 40 * 1000
+            waitUntil: 'domcontentloaded',
         })
 
+        this.ctx.logger.info('网页加载完成，开始等待字体加载。')
+
+        // 等待字体加载完成
         await page.evaluate(() => document.fonts.ready)
-        this.ctx.logger.debug('字体加载完成')
+
+        this.ctx.logger.info('字体加载完成。')
+
 
         this.ctx.setTimeout(
             async () => {
