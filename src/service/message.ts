@@ -337,7 +337,7 @@ export class MessageService extends Service {
                     `群 ${targetId} [第 ${queryRounds} 轮] 获取了 ${validMessages.length} 条消息。最旧消息: ${new Date(oldestMsg.time * 1000).toLocaleString()}`
                 )
 
-                if (oldestMsg.time * 1000 < startTime.getTime()) break
+                if (oldestMsg.time * 1000 < startTime.getTime() || validMessages.length === 0) break
 
                 messageSeq = oldestMsg.message_seq
             }
@@ -356,16 +356,6 @@ export class MessageService extends Service {
                 messageId: String(msg.message_id),
                 elements: CQCode.parse(msg.raw_message)
             }))
-
-            writeFile(
-                path.join(this.ctx.baseDir, 'onebot_messages2.json'),
-                JSON.stringify(results, null, 2)
-            )
-
-            writeFile(
-                path.join(this.ctx.baseDir, 'onebot_messages.json'),
-                JSON.stringify(messages, null, 2)
-            )
 
             return results
         } catch (error) {
