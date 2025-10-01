@@ -1,6 +1,6 @@
  @import url('https://unpkg.com/@fontsource/maple-mono@5.2.5/index.css');
- @import url('https://fonts.font.im/css?family=Noto+Color+Emoji');
- @import url('https://fonts.font.im/css?family=Noto+Sans+SC-Color:100,300,400,500,700,900');
+ @import url('https://fonts.googleapis.com/css?family=Noto+Color+Emoji');
+ @import url('https://fonts.googleapis.com/css?family=Noto+Sans+SC-Color:100,300,400,500,700,900');
 
  body {
      font-family: 'Maple Mono', 'Noto Color Emoji', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei',
@@ -266,3 +266,97 @@
      color: #b0b0b0;
      font-size: 12px;
  }
+
+ /* User Persona Specific Styles */
+.user-header {
+    margin-bottom: 30px;
+}
+
+.avatar-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 15px;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.persona-summary {
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 20px 25px;
+    font-size: 15px;
+    line-height: 1.8;
+    color: #333;
+    margin-bottom: 25px;
+    border: 1px solid #f0f0f0;
+}
+
+.tag-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.tag {
+    background-color: #eef5ff;
+    color: #1890ff;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid #d6eaff;
+}
+
+.persona-block {
+    background: #fdfdfd;
+    border: 1px solid #f0f0f0;
+    padding: 20px 25px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #595959;
+}
+
+.persona-block p {
+    margin: 0;
+}
+
+.persona-block ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.persona-block.evidence ul {
+    color: #777;
+    font-size: 13px;
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.persona-block.evidence li {
+    border-left: 3px solid #e8e8e8;
+    padding-left: 15px;
+    margin-bottom: 15px !important;
+}
+
+.persona-block.evidence .evidence-quote {
+    color: #555;
+    font-weight: 500;
+    line-height: 1.6;
+}
+
+.persona-block.evidence .evidence-meta {
+    color: #999;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.persona-block li {
+    margin-bottom: 8px;
+}
+
+.persona-block li:last-child {
+    margin-bottom: 0;
+}

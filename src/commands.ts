@@ -148,4 +148,33 @@ export function apply(ctx: Context, config: Config) {
             const enabled = originalGroupSetting?.enabled ? '已启用' : '未启用'
             return `当前群 ${guildName} (${guildId}) 分析功能状态: ${enabled}`
         })
+
+    settings
+        .subcommand('.用户画像 [user:user]', '查看指定用户的画像')
+        .alias('.persona')
+        .usage(
+            '使用方法：/群分析.用户画像 @用户 或 /群分析.用户画像 <用户ID> 或 /群分析.用户画像'
+        )
+        .action(async ({ session }, user) => {
+            if (session.isDirect) return '请在群聊中使用此命令。'
+
+            const userId = user?.split(':')[1] ?? session.userId
+           
+            if (!userId) {
+                return '无法获取目标用户信息。'
+            }
+
+            try {
+                await ctx.chatluna_group_analysis.executeUserPersonaAnalysis(
+                    session,
+                    userId
+                )
+            } catch (err) {
+                ctx.logger.error(
+                    `执行用户画像分析时发生未捕获的错误 (用户: ${userId}):`,
+                    err
+                )
+                return '用户画像分析执行失败，请检查日志。'
+            }
+        })
 }

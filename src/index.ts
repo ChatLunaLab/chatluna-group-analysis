@@ -15,8 +15,8 @@ export * from './service/message'
 
 export function apply(ctx: Context, config: Config) {
     ctx.plugin(MessageService, config)
-    ctx.plugin(AnalysisService, config)
     ctx.plugin(LLMService, config)
+    ctx.plugin(AnalysisService, config)
     ctx.plugin(RendererService, config)
 
     ctx.plugin(commands, config)

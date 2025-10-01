@@ -36,6 +36,7 @@ export class MessageService extends Service {
     private messageCache = new Map<string, StoredMessage[]>()
     private readonly cacheSize = 1000
     private readonly cacheExpiration = 1000 * 60 * 24 // 1 days
+    private messageHandlers: Array<(session: Session) => void | Promise<void>> = []
 
     constructor(
         ctx: Context,
@@ -45,6 +46,10 @@ export class MessageService extends Service {
         this.setupDatabase()
         this.setupMessageListener()
         this.setupCacheCleanup()
+    }
+
+    public onUserMessage(handler: (session: Session) => void | Promise<void>) {
+        this.messageHandlers.push(handler)
     }
 
     private setupDatabase() {
@@ -116,6 +121,15 @@ export class MessageService extends Service {
                     'Failed to store message in database:',
                     error
                 )
+            }
+        }
+
+        // Notify all registered handlers
+        for (const handler of this.messageHandlers) {
+            try {
+                await handler(session)
+            } catch (error) {
+                this.ctx.logger.warn('Message handler error:', error)
             }
         }
     }
@@ -296,6 +310,7 @@ export class MessageService extends Service {
         let messageSeq = 0
         let fetchedCount = 0
         let queryRounds = 0
+        let oldestMsg: OneBotMessage | null = null
 
         try {
             while (fetchedCount < limit) {
@@ -332,12 +347,14 @@ export class MessageService extends Service {
                 messages.unshift(...validMessages)
                 fetchedCount += validMessages.length
 
-                const oldestMsg = batch[0]
+
                 logger.info(
-                    `群 ${targetId} [第 ${queryRounds} 轮] 获取了 ${validMessages.length} 条消息。最旧消息: ${new Date(oldestMsg.time * 1000).toLocaleString()}`
+                    `群 ${targetId} [第 ${queryRounds} 轮] 获取了 ${validMessages.length} 条消息。最旧消息: ${new Date(batch[0].time * 1000).toLocaleString()}`
                 )
 
-                if (oldestMsg.time * 1000 < startTime.getTime() || validMessages.length === 0) break
+                if ((batch?.[0]?.time || 0) * 1000 < startTime.getTime() || batch[0].time === oldestMsg?.time || batch.length === 0) break
+
+                oldestMsg = batch[0]
 
                 messageSeq = oldestMsg.message_seq
             }

@@ -23,8 +23,10 @@ export interface Config {
     promptTopic: string
     promptUserTitles: string
     promptGoldenQuotes: string
+    promptUserPersona: string
     outputFormat: 'image' | 'pdf' | 'text'
     maxMessages: number
+    temperature: number
     minMessages: number
     maxTopics: number
     maxUserTitles: number
@@ -33,6 +35,10 @@ export interface Config {
     userTitleAnalysis: boolean
     cronSchedule: string
     cronAnalysisDays: number
+    personaAnalysisMessageInterval: number
+    personaLookbackDays: number
+    personaMaxMessages: number
+    personaMinMessages: number
 
     debug?: boolean
 }
@@ -71,12 +77,7 @@ export const Config: Schema<Config> = Schema.intersect([
         filterWords: Schema.array(String)
             .role('table')
             .description('过滤词列表。消息内含有此词语时将不会记入统计消息。')
-            .default([])
-    }).description('分析渲染设置'),
-    Schema.object({
-        model: Schema.dynamic('model')
-            .description('ChatLuna 模型名称')
-            .required(),
+            .default([]),
         maxTopics: Schema.number()
             .description('最多生成的话题数量。')
             .default(5),
@@ -86,7 +87,39 @@ export const Config: Schema<Config> = Schema.intersect([
         maxGoldenQuotes: Schema.number()
             .description('最多生成的金句数量。')
             .default(3)
+    }).description('分析渲染设置'),
+    Schema.object({
+        model: Schema.dynamic('model')
+            .description('使用的 LLM 模型。')
+            .required(),
+        temperature: Schema.number()
+            .description('生成的温度。')
+            .min(0)
+            .max(2)
+            .default(1.5)
     }).description('LLM 设置'),
+    Schema.object({
+        personaAnalysisMessageInterval: Schema.number()
+            .description(
+                '跨群用户画像分析的触发阈值，新消息累计达到该条数时尝试更新画像。'
+            )
+            .min(10)
+            .default(50),
+        personaLookbackDays: Schema.number()
+            .description('画像分析回溯的天数窗口（建议保持在 1-4 天）。')
+            .min(1)
+            .max(7)
+            .default(4),
+        personaMaxMessages: Schema.number()
+            .description('单次用户画像分析最多提取的历史消息数量。')
+            .min(100)
+            .max(500)
+            .default(150),
+        personaMinMessages: Schema.number()
+            .description('触发用户画像分析所需的最少历史消息数量。')
+            .min(10)
+            .default(50)
+    }).description('用户画像设置'),
     Schema.object({
         promptTopic: Schema.string()
             .description('话题分析的提示词模板。')
@@ -178,6 +211,39 @@ export const Config: Schema<Config> = Schema.intersect([
   reason: |-
     选择这句话的理由（需明确说明逆天特质，
     支持多行文本，保留换行符）
+\`\`\``
+            ),
+        promptUserPersona: Schema.string()
+            .description('跨群用户画像分析的提示词模板。')
+            .role('textarea')
+            .default(
+                `你是一名专业的社群观察员，请基于提供的用户聊天记录，给出该用户的最新画像总结，并在更新时严谨比对历史画像。
+
+要求：
+1. 先阅读「历史画像」，理解已有结论。
+2. 再阅读「最新聊天记录」，分析过去 {personaLookbackDays} 天内该用户在多个群的活跃情况。
+3. 如果历史画像为空，则从零开始构建；否则基于历史画像。融合生成新的用户画像。
+4. 输出时请确保条理清晰、总结恰当，中性。输出的 yaml 内容里，为纯文本格式，不要包含 markdown 标记，如 ** 加粗。
+5. 注意 evidence，需要选出 7 - 12 句最具冲击力、最令人惊叹的"金句"。这些金句需满足，**逆天的神人发言**，即具备颠覆常识的脑洞、逻辑跳脱的表达或强烈反差感的原创内容。
+
+历史画像：{previousAnalysis}
+最新聊天记录：{messages}
+
+请严格按照以下 YAML 格式返回，放在代码块中：
+\`\`\`yaml
+- userId: "{userId}"
+  username: "{username}"
+  summary: |-
+    对整体聊天记录的提炼（性格特点，发言语气等，几段话）
+  keyTraits:
+    - "核心性格特质（列出几点）"
+  interests:
+    - "关注的主题或爱好"
+  communicationStyle: |-
+    描述其发言风格和情绪倾向，几段话。
+  evidence:
+    - "对应上面聊天记录中提供的 id，输出纯 id 的引用"（加入多条组成数组，引用到的聊天消息或者你自己挑选的逆天语句）
+  lastMergedFromHistory: true/false（是否成功融合历史画像）
 \`\`\``
             )
     }).description('高级设置')

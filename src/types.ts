@@ -59,6 +59,19 @@ export interface GoldenQuote {
     reason: string
 }
 
+
+
+export interface UserPersonaProfile {
+    userId: string
+    username: string
+    summary: string
+    keyTraits: string[]
+    interests: string[]
+    communicationStyle: string
+    evidence: string[] 
+    lastMergedFromHistory?: boolean
+}
+
 // 最终的群聊分析报告数据结构
 export interface GroupAnalysisResult {
     totalMessages: number

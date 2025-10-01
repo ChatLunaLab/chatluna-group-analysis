@@ -1,6 +1,12 @@
 import { Context, Service } from 'koishi'
 import { Config } from '../index'
-import { GoldenQuote, SummaryTopic, UserStats, UserTitle } from '../types'
+import {
+    GoldenQuote,
+    SummaryTopic,
+    UserStats,
+    UserTitle,
+    UserPersonaProfile
+} from '../types'
 import { ComputedRef } from 'koishi-plugin-chatluna'
 import { ChatLunaChatModel } from 'koishi-plugin-chatluna/llm-core/platform/model'
 import { getMessageContent } from 'koishi-plugin-chatluna/utils/string'
@@ -24,7 +30,7 @@ export class LLMService extends Service {
         this.model = await this.ctx.chatluna.createChatModel(this.config.model)
     }
 
-    private async _callLLM<T>(prompt: string, taskName: string): Promise<T[]> {
+    private async _callLLM<T>(prompt: string, taskName: string): Promise<T> {
         await this.loadModel()
 
         const model = this.model.value
@@ -35,12 +41,14 @@ export class LLMService extends Service {
                 `未找到 ChatLuna 模型 ${this.config.model}，请检查配置。`
             )
 
-            return []
+            return null
         }
 
         return await model.caller.call(async () => {
             logger.info(`正在调用 ChatLuna 模型进行 ${taskName}...`)
-            const response = await model.invoke(prompt)
+            const response = await model.invoke(prompt, {
+                temperature: this.config.temperature ?? 1
+            })
 
             const rawContent = getMessageContent(response.content)
 
@@ -50,12 +58,14 @@ export class LLMService extends Service {
             const yamlMatch = rawContent.match(/```ya?ml\s*([\s\S]*?)\s*```/)
             if (!yamlMatch) {
                 logger.warn(`未找到 YAML 代码块，无法解析。`)
-                return []
+                throw new Error('未找到 YAML 响应。')
             }
 
             try {
-                const data = load(yamlMatch[1]) as T[]
-                logger.info(`成功解析 ${data.length} 条结果。`)
+                const data = load(yamlMatch[1]) as T
+                if (Array.isArray(data)) {
+                    logger.warn(`成功解析 ${data.length} 条数据。`)
+                }
                 return data
             } catch (err) {
                 logger.error('解析 YAML 失败:', err)
@@ -74,7 +84,7 @@ export class LLMService extends Service {
         const prompt = this.config.promptTopic
             .replace('{messages}', messagesText)
             .replace('{maxTopics}', this.config.maxTopics.toString())
-        return this._callLLM(prompt, '话题分析')
+        return this._callLLM<SummaryTopic[]>(prompt, '话题分析').then((data) => data ?? [])
     }
 
     public async analyzeUserTitles(users: UserStats[]): Promise<UserTitle[]> {
@@ -94,7 +104,7 @@ export class LLMService extends Service {
             '{users}',
             userSummaries
         )
-        return this._callLLM(prompt, '用户称号分析')
+        return this._callLLM<UserTitle[]>(prompt, '用户称号分析').then((data) => data ?? [])
     }
 
     public async analyzeGoldenQuotes(
@@ -104,7 +114,34 @@ export class LLMService extends Service {
         const prompt = this.config.promptGoldenQuotes
             .replace('{messages}', messagesText)
             .replace('{maxGoldenQuotes}', String(maxQuotes))
-        return this._callLLM(prompt, '金句分析')
+        return this._callLLM<GoldenQuote[]>(prompt, '金句分析').then((data) => data ?? [])
+    }
+
+    public async analyzeUserPersona(
+        userId: string,
+        username: string,
+        recentMessages: string,
+        previousAnalysis?: string
+    ): Promise<UserPersonaProfile | null> {
+        const filledPrompt = this.config.promptUserPersona
+            .replace('{messages}', recentMessages || '（最近暂无发言记录）')
+            .replace(
+                '{previousAnalysis}',
+                previousAnalysis || '（无历史画像，请从零开始）'
+            )
+            .replace('{userId}', userId)
+            .replace('{username}', username || userId)
+            .replace(
+                '{personaLookbackDays}',
+                String(this.config.personaLookbackDays)
+            )
+
+        const result = await this._callLLM<UserPersonaProfile>(
+            filledPrompt,
+            '用户画像分析'
+        )
+
+        return result?.[0]
     }
 }
 

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户画像报告</title>
+    <link rel="stylesheet" href="./css/template_group.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header user-header">
+            <img src="${avatar}" alt="User Avatar" class="avatar-large">
+            <h1>${username} 的用户画像</h1>
+            <div class="sub-title">数据生成于: ${analysisDate}</div>
+        </div>
+
+        <div class="section-title">📝 个性摘要</div>
+        <div class="persona-summary">
+            <p>${summary}</p>
+        </div>
+
+        <div class="section-title">💡 核心特质</div>
+        <div class="tag-container">
+            ${keyTraits}
+        </div>
+
+        <div class="section-title">🎨 兴趣领域</div>
+        <div class="tag-container">
+            ${interests}
+        </div>
+
+        <div class="section-title">🗣️ 沟通风格</div>
+        <div class="persona-block">
+            <p>${communicationStyle}</p>
+        </div>
+
+        <div class="section-title">📜 事实依据</div>
+        <div class="persona-block evidence">
+            <ul>
+                ${evidence}
+            </ul>
+        </div>
+
+        <footer>由 Koishi & ChatLuna 强力驱动</footer>
+    </div>
+</body>
+</html>

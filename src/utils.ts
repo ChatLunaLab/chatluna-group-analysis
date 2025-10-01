@@ -4,6 +4,7 @@ import {
     BasicStatsResult,
     GroupAnalysisResult,
     SummaryTopic,
+    UserPersonaProfile,
     UserStats
 } from './types'
 import { StoredMessage } from './service/message'
@@ -339,4 +340,50 @@ export function getStartTimeByDays(days: number): Date {
     const startTime = new Date(targetTime)
     startTime.setHours(0, 0, 0, 0)
     return startTime
+}
+
+export function normalizeArray(
+    value: string[] | string | '无' | undefined
+): string[] {
+    if (!value) return []
+    if (Array.isArray(value)) return value
+    if (value === '无') return []
+    return value
+        .split(/[,;\n]/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+}
+
+export function preferArray(
+    primary?: string[] | null,
+    fallback?: string[] | null
+): string[] {
+    const primaryList = primary?.filter(Boolean) || []
+    if (primaryList.length) return primaryList
+    return fallback?.filter(Boolean) || []
+}
+
+export function finalizePersonaList(list: string[]): string[] | '无' {
+    return list.length ? list : '无'
+}
+
+
+export function normalizePersonaText(text: string | undefined): string {
+    return text ? text.replace(/\s+/g, ' ').trim() : ''
+}
+
+export function mergePersona(
+    previous: UserPersonaProfile | null | undefined,
+    current: UserPersonaProfile
+): UserPersonaProfile {
+    if (!previous) return current
+
+    return {
+        ...previous,
+        ...current,
+        keyTraits: preferArray(current.keyTraits, previous.keyTraits),
+        interests: preferArray(current.interests, previous.interests),
+        evidence: preferArray(current.evidence, previous.evidence),
+        lastMergedFromHistory: true
+    }
 }
