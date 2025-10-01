@@ -20,7 +20,6 @@ export const inject = {
 }
 
 export function apply(ctx: Context, config: Config) {
-
     const checkGroup = (session: Session) => {
         return (
             config.listenerGroups.some(
@@ -33,7 +32,8 @@ export function apply(ctx: Context, config: Config) {
             config.listenerGroups.some(
                 (settings) =>
                     settings.enabled &&
-                    (settings.channelId === session.channelId && session.channelId != null)
+                    settings.channelId === session.channelId &&
+                    session.channelId != null
             )
         )
     }
@@ -70,7 +70,9 @@ export function apply(ctx: Context, config: Config) {
         })
 
     settings
-        .subcommand('.enable', '启用本群的分析功能')
+        .subcommand('.enable', '启用本群的分析功能', {
+            authority: 3
+        })
         .alias('.启用')
         .action(async ({ session }) => {
             if (session.isDirect) return '请在群聊中使用此命令。'
@@ -110,7 +112,9 @@ export function apply(ctx: Context, config: Config) {
         })
 
     settings
-        .subcommand('.disable', '禁用本群的分析功能')
+        .subcommand('.disable', '禁用本群的分析功能', {
+            authority: 3
+        })
         .alias('.禁用')
         .action(async ({ session }) => {
             if (session.isDirect) return '请在群聊中使用此命令。'
@@ -174,17 +178,21 @@ export function apply(ctx: Context, config: Config) {
         .subcommand('.用户画像 [user:user]', '查看指定用户的画像')
         .alias('.persona')
         .usage(
-            '使用方法：/群分析.用户画像 @用户 或 /群分析.用户画像 <用户ID> 或 /群分析.用户画像。不带 参数时查看当前用户。'
+            '使用方法：/群分析.用户画像 @用户 或 /群分析.用户画像 <用户ID> 或 /群分析.用户画像。不带参数时查看当前用户。查看其他用户需要为 bot 管理员。'
         )
         .option('force', '-f 是否强制更新用户画像')
         .action(async ({ session, options }, user) => {
             if (session.isDirect) return '请在群聊中使用此命令。'
 
-             if (!checkGroup(session))
+            if (!checkGroup(session))
                 return '本群未启用群分析功能，请使用 群分析.启用 来启用本群的群分析功能。'
 
             const userId = user?.split(':')[1] ?? session.userId
-           
+
+            if (userId !== session.userId && !(await ctx.permissions.check('authority:3', session))) {
+                return '你没有权限查看其他用户的画像。当前需要的权限为 3 级。'
+            }
+
             if (!userId) {
                 return '无法获取目标用户信息。'
             }

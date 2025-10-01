@@ -109,16 +109,16 @@ export const Config: Schema<Config> = Schema.intersect([
             .description('画像分析回溯的天数窗口（建议保持在 1-4 天）。')
             .min(1)
             .max(7)
-            .default(4),
+            .default(2),
         personaMaxMessages: Schema.number()
             .description('单次用户画像分析最多提取的历史消息数量。')
             .min(100)
             .max(1500)
-            .default(300),
+            .default(400),
         personaMinMessages: Schema.number()
             .description('触发用户画像分析所需的最少历史消息数量。')
             .min(10)
-            .default(50)
+            .default(20)
     }).description('用户画像设置'),
     Schema.object({
         promptTopic: Schema.string()

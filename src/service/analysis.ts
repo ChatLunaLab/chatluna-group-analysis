@@ -19,6 +19,7 @@ import {
     shouldListenToMessage
 } from '../utils'
 import { writeFile } from 'fs/promises'
+import type { GuildMember } from "@satorijs/protocol"
 
 interface PersonaRecord {
     id: string
@@ -261,6 +262,23 @@ export class AnalysisService extends Service {
         const totalLimit = this.config.personaMaxMessages
 
         for (const group of relevantGroups) {
+
+            const bot = this._getBot(group.selfId)
+
+            let userGroupInfo: GuildMember | null = null
+
+            try {
+                userGroupInfo = await bot.getGuildMember(group.channelId || group.guildId, record.userId)
+                if (userGroupInfo == null) {
+                    continue
+                }
+            } catch (error) {
+                this.ctx.logger.warn(
+                    `获取用户 ${record.userId} 的群组信息失败 (${group.selfId})，可能是未加入该群聊。将跳过此群组的信息获取。`
+                )
+                continue
+            }
+
             const history =
                 await this.ctx.chatluna_group_analysis_message.getHistoricalMessages(
                     {
