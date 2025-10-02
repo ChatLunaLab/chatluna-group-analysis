@@ -1,17 +1,9 @@
 /* eslint-disable max-len */
 import { Context, Session } from 'koishi'
-import { AnalysisService } from './service/analysis'
-import { RendererService } from './service/renderer'
-import { Config } from './config'
+import { AnalysisService } from '../service/analysis'
+import { RendererService } from '../service/renderer'
+import { Config } from '../config'
 
-export const name = 'group-analysis-commands'
-
-declare module 'koishi' {
-    interface Context {
-        analysis: AnalysisService
-        renderer: RendererService
-    }
-}
 
 export const inject = {
     chatluna_group_analysis: {

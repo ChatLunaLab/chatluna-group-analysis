@@ -20,6 +20,8 @@ export interface Config {
     listenerGroups: GroupListener[]
     filterWords: string[]
     model: string
+    alwaysPersistMessages: boolean
+    retentionDays: number
     promptTopic: string
     promptUserTitles: string
     promptGoldenQuotes: string
@@ -36,6 +38,7 @@ export interface Config {
     cronSchedule: string
     cronAnalysisDays: number
     personaAnalysisMessageInterval: number
+    personaCacheLifetimeDays: number
     personaLookbackDays: number
     personaMaxMessages: number
     personaMinMessages: number
@@ -56,6 +59,17 @@ export const Config: Schema<Config> = Schema.intersect([
             .description('定时任务分析的默认天数。')
             .default(1)
     }).description('基础设置'),
+    Schema.object({
+        alwaysPersistMessages: Schema.boolean()
+            .description(
+                '启用后，无论平台能力如何都会将监听到的消息写入数据库。'
+            )
+            .default(false),
+        retentionDays: Schema.number()
+            .description('数据库中缓存消息的最长保留时间（天）。')
+            .min(1)
+            .default(14)
+    }).description('消息存储设置'),
     Schema.object({
         maxMessages: Schema.number()
             .description('单次分析的最大消息数量。')
@@ -101,10 +115,16 @@ export const Config: Schema<Config> = Schema.intersect([
     Schema.object({
         personaAnalysisMessageInterval: Schema.number()
             .description(
-                '跨群用户画像分析的触发阈值，新消息累计达到该条数时尝试更新画像。'
+                '跨群用户画像分析的触发阈值，新消息累计达到该条数时尝试更新画像。设置为 0 则关闭自动画像分析。'
             )
-            .min(10)
+            .min(0)
             .default(50),
+        personaCacheLifetimeDays: Schema.number()
+            .description(
+                '用户画像缓存结果的保留天数。超过此时长后再次请求会重新生成画像。'
+            )
+            .min(0)
+            .default(3),
         personaLookbackDays: Schema.number()
             .description('画像分析回溯的天数窗口（建议保持在 1-4 天）。')
             .min(1)

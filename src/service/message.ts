@@ -3,8 +3,6 @@ import { Config } from '../config'
 import { OneBotMessage } from '../types'
 import { type OneBotBot } from 'koishi-plugin-adapter-onebot'
 import { inferPlatformInfo } from '../utils'
-import { writeFile } from 'fs/promises'
-import path from 'path'
 import { CQCode } from '../onebot/cqcode'
 
 export interface MessageFilter {
@@ -32,11 +30,29 @@ export interface StoredMessage {
     elements?: h[]
 }
 
+interface ActivityStats {
+    windowStart: number
+    count: number
+}
+
+interface PersistenceBuffer {
+    messages: StoredMessage[]
+    lastMessageAt: number
+}
+
 export class MessageService extends Service {
     private messageCache = new Map<string, StoredMessage[]>()
     private readonly cacheSize = 1000
     private readonly cacheExpiration = 1000 * 60 * 24 // 1 days
     private messageHandlers: Array<(session: Session) => void | Promise<void>> = []
+    private activityStats = new Map<string, ActivityStats>()
+    private persistenceBuffers = new Map<string, PersistenceBuffer>()
+    private readonly activityWindowMs = 60 * 1000
+    private readonly highActivityThreshold = 30
+    private readonly bufferFlushSize = 50
+    private readonly bufferIdleFlushMs = 30 * 1000
+    private readonly bufferSweepIntervalMs = 30 * 1000
+    private warnedOneBotPersistence = true
 
     constructor(
         ctx: Context,
@@ -46,6 +62,8 @@ export class MessageService extends Service {
         this.setupDatabase()
         this.setupMessageListener()
         this.setupCacheCleanup()
+        this.setupPersistenceTasks()
+        this.warnForOneBotVariants()
     }
 
     public onUserMessage(handler: (session: Session) => void | Promise<void>) {
@@ -80,6 +98,7 @@ export class MessageService extends Service {
     }
 
     private shouldListenToMessage(session: Session): boolean {
+        // TODO: private message
         if (!session.guildId && !session.channelId) return false
 
         return this.config.listenerGroups.some(
@@ -93,12 +112,17 @@ export class MessageService extends Service {
     }
 
     private async handleMessage(session: Session) {
+        const uniqueId = session.messageId
+            ? `${session.platform}_${session.messageId}`
+            : `${session.platform}_${session.selfId}_${session.channelId}_${Date.now()}_${Math.random()
+                  .toString(36)
+                  .substring(2, 9)}`
         const storedMessage: StoredMessage = {
-            id: `${session.platform}_${session.selfId}_${session.channelId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            id: uniqueId,
             platform: session.platform,
             selfId: session.selfId,
-            channelId: session.channelId,
-            guildId: session.guildId,
+            channelId: session.channelId || '0',
+            guildId: session.guildId || '0',
             userId: session.userId,
             username: session.username,
             content: session.content,
@@ -109,20 +133,7 @@ export class MessageService extends Service {
         // Add to local cache
         this.addToCache(storedMessage)
 
-        // Store to database for platforms without getMessageList API
-        if (session.platform !== 'onebot' && !session.bot['getMessageList']) {
-            try {
-                await this.ctx.database.create(
-                    'chatluna_messages',
-                    storedMessage
-                )
-            } catch (error) {
-                this.ctx.logger.warn(
-                    'Failed to store message in database:',
-                    error
-                )
-            }
-        }
+        await this.persistIncomingMessage(session, storedMessage)
 
         // Notify all registered handlers
         for (const handler of this.messageHandlers) {
@@ -168,6 +179,70 @@ export class MessageService extends Service {
             },
             5 * 60 * 1000
         )
+    }
+
+    private setupPersistenceTasks() {
+
+        this.ctx.setInterval(
+            () => {
+                void this.flushIdleBuffers()
+            },
+            this.bufferSweepIntervalMs
+        )
+
+        this.ctx.on('dispose', () => {
+            void this.flushAllBuffers()
+        })
+
+        const retentionDays = this.config.retentionDays
+        if (retentionDays > 0) {
+            const retentionMs = retentionDays * 24 * 60 * 60 * 1000
+            this.ctx.setInterval(
+                () => {
+                    const cutoff = new Date(Date.now() - retentionMs)
+                    const removalQuery: Query<StoredMessage> = {
+                        timestamp: { $lt: cutoff }
+                    }
+                    void this.ctx.database
+                        .remove('chatluna_messages', removalQuery)
+                        .catch((error) =>
+                            this.ctx.logger.warn(
+                                'Failed to cleanup expired cached messages:',
+                                error
+                            )
+                        )
+                },
+                6 * 60 * 60 * 1000
+            )
+        }
+    }
+
+    private warnForOneBotVariants() {
+        if (this.config.alwaysPersistMessages) return
+
+        const checkAndWarn = async () => {
+            if (this.warnedOneBotPersistence) return
+            const targeted = await Promise.all(this.ctx.bots.map(async (bot) => {
+                if (bot.platform !== 'onebot') return false
+                const onebot = bot as OneBotBot<Context>
+
+                const versionInfo = await onebot.internal._request("get_version_info", {})
+
+                const name = (versionInfo.data['app_name'] as string).toLowerCase()
+
+                return name.includes('llonebot') || name.includes('lagrange')
+            })).then(targeted => targeted.filter(targeted => targeted))
+
+            if (targeted.length) {
+                this.ctx.logger.info(
+                    '检测到 OneBot (LLOneBot/Lagrange) 适配器，建议启用消息持久化功能。否则将无法正常获取消息'
+                )
+                this.warnedOneBotPersistence = true
+            }
+        }
+
+        checkAndWarn()
+        this.ctx.on('bot-added', checkAndWarn)
     }
 
     private async getBotAPIHistoricalMessages(
@@ -237,6 +312,7 @@ export class MessageService extends Service {
                 allMessages.unshift(...validMessages)
                 fetchedCount += validMessages.length
 
+
                 const oldestMsg = batch[0]
                 logger.info(
                     `群 ${targetId} [第 ${queryRounds} 轮] 获取了 ${validMessages.length} 条消息。最旧消息: ${oldestMsg.timestamp.toLocaleString()}`
@@ -251,6 +327,11 @@ export class MessageService extends Service {
             return allMessages.slice(0, limit)
         } catch (error) {
             logger.error('Failed to fetch Bot API historical messages:', error)
+            if (!this.config.alwaysPersistMessages) {
+                logger.info(
+                    '获取历史消息失败，建议启用消息持久化功能以降低对平台历史接口的依赖。'
+                )
+            }
             return []
         }
     }
@@ -377,6 +458,11 @@ export class MessageService extends Service {
             return results
         } catch (error) {
             logger.error('Failed to fetch OneBot historical messages:', error)
+            if (!this.config.alwaysPersistMessages) {
+                logger.info(
+                    'OneBot 历史消息获取失败，建议启用消息持久化功能以降低接口调用失败的影响。'
+                )
+            }
             return []
         }
     }
@@ -415,6 +501,111 @@ export class MessageService extends Service {
                 error
             )
             return []
+        }
+    }
+
+    private getPersistenceKey(message: StoredMessage) {
+        const scope = message.guildId || message.channelId || 'global'
+        return `${message.platform}_${message.selfId}_${scope}`
+    }
+
+    private getActivityStats(key: string, timestamp: Date): ActivityStats {
+        const now = timestamp.getTime()
+        const stats = this.activityStats.get(key)
+        if (!stats || now - stats.windowStart > this.activityWindowMs) {
+            const fresh = { windowStart: now, count: 0 }
+            this.activityStats.set(key, fresh)
+            return fresh
+        }
+        return stats
+    }
+
+    private async persistIncomingMessage(
+        session: Session,
+        storedMessage: StoredMessage
+    ) {
+        if (this.config.alwaysPersistMessages) {
+            await this.enqueueMessageForPersistence(storedMessage)
+            return
+        }
+
+        if (session.platform !== 'onebot' && !session.bot['getMessageList']) {
+            await this.persistMessages([storedMessage])
+        }
+    }
+
+    private async enqueueMessageForPersistence(message: StoredMessage) {
+        const key = this.getPersistenceKey(message)
+        const stats = this.getActivityStats(key, message.timestamp)
+        stats.count += 1
+
+        if (stats.count < this.highActivityThreshold) {
+            await this.flushPendingBuffer(key)
+            await this.persistMessages([message])
+            return
+        }
+
+        const buffer = this.persistenceBuffers.get(key) || {
+            messages: [],
+            lastMessageAt: 0
+        }
+        buffer.messages.push(message)
+        buffer.lastMessageAt = Date.now()
+        this.persistenceBuffers.set(key, buffer)
+
+        if (buffer.messages.length >= this.bufferFlushSize) {
+            await this.flushPendingBuffer(key)
+        }
+    }
+
+
+    private async flushPendingBuffer(key: string) {
+        const buffer = this.persistenceBuffers.get(key)
+        if (!buffer || buffer.messages.length === 0) return
+
+        const payload = buffer.messages.splice(0, buffer.messages.length)
+        this.persistenceBuffers.delete(key)
+        await this.persistMessages(payload)
+    }
+
+    private async flushIdleBuffers() {
+        const now = Date.now()
+        const tasks: Array<Promise<void>> = []
+
+        for (const [key, buffer] of this.persistenceBuffers.entries()) {
+            if (buffer.messages.length === 0) {
+                this.persistenceBuffers.delete(key)
+                continue
+            }
+
+            if (now - buffer.lastMessageAt >= this.bufferIdleFlushMs) {
+                tasks.push(this.flushPendingBuffer(key))
+            }
+        }
+
+        await Promise.allSettled(tasks)
+
+        for (const [key, stats] of this.activityStats.entries()) {
+            if (now - stats.windowStart > this.activityWindowMs) {
+                this.activityStats.delete(key)
+            }
+        }
+    }
+
+    private async flushAllBuffers() {
+        const tasks = Array.from(this.persistenceBuffers.keys()).map((key) =>
+            this.flushPendingBuffer(key)
+        )
+        await Promise.allSettled(tasks)
+    }
+
+    private async persistMessages(messages: StoredMessage[]) {
+        if (!messages.length) return
+
+        try {
+            await this.ctx.database.upsert('chatluna_messages', messages)
+        } catch (error) {
+            this.ctx.logger.warn('Failed to store message in database:', error)
         }
     }
 

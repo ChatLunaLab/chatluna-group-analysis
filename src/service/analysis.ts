@@ -83,6 +83,13 @@ export class AnalysisService extends Service {
     }
 
     private setupPersonaMessageListener() {
+        if (this.config.personaAnalysisMessageInterval === 0) {
+            this.ctx.logger.info(
+                '已关闭自动用户画像分析（personaAnalysisMessageInterval = 0）。'
+            )
+            return
+        }
+
         this.ctx.chatluna_group_analysis_message.onUserMessage(
             async (session) => {
                 if (!shouldListenToMessage(session, this.config.listenerGroups))
@@ -94,6 +101,7 @@ export class AnalysisService extends Service {
     }
 
     private async handleIncomingMessageForPersona(session: Session) {
+        if (this.config.personaAnalysisMessageInterval === 0) return
         if (!session.userId) return
         const recordId = this.getPersonaRecordId(
             session.platform,
@@ -141,11 +149,20 @@ export class AnalysisService extends Service {
         const cached = this.personaCache.get(id)
         if (cached) return cached
 
-        const existing = await this.ctx.database
+        let existing = await this.ctx.database
             .select('chatluna_user_personas')
             .where({ id })
             .execute()
             .then((records) => records[0])
+
+        if (existing) {
+            if (existing.lastAnalysisAt && !(existing.lastAnalysisAt instanceof Date)) {
+                existing.lastAnalysisAt = new Date(existing.lastAnalysisAt)
+            }
+            if (existing.updatedAt && !(existing.updatedAt instanceof Date)) {
+                existing.updatedAt = new Date(existing.updatedAt)
+            }
+        }
 
         let parsedPersona: UserPersonaProfile | null
         if (existing?.persona) {
@@ -188,6 +205,15 @@ export class AnalysisService extends Service {
         userId: string | number
     ) {
         return `${platform}:${selfId}:${userId}`
+    }
+
+    private isPersonaCacheExpired(lastAnalysisAt?: Date) {
+        const ttlDays = this.config.personaCacheLifetimeDays
+        if (ttlDays <= 0) return true
+        if (!lastAnalysisAt) return true
+
+        const ttlMs = ttlDays * 24 * 60 * 60 * 1000
+        return Date.now() - lastAnalysisAt.getTime() > ttlMs
     }
 
     private async runPersonaAnalysis(cache: PersonaCache) {
@@ -596,22 +622,30 @@ export class AnalysisService extends Service {
                 userId
             )
 
-            let personaData = await this.getUserPersona(
-                session.platform,
-                session.selfId,
-                userId
+            const cache = await this.ensurePersonaCache(recordId, {
+                platform: session.platform,
+                selfId: session.selfId,
+                userId,
+                username: session.username || userId
+            })
+
+            if (session.username) {
+                cache.record.username = session.username
+            }
+
+            const cacheExpired = this.isPersonaCacheExpired(
+                cache.record.lastAnalysisAt
             )
+            const shouldRefresh = force || cacheExpired || !cache.parsedPersona
 
-            if (!personaData || force) {
-                const cache = await this.ensurePersonaCache(recordId, {
-                    platform: session.platform,
-                    selfId: session.selfId,
-                    userId,
-                    username: session.username || userId
-                })
-
-                if (session.username) {
-                    cache.record.username = session.username
+            if (shouldRefresh) {
+                if (!force && cache.parsedPersona && cacheExpired) {
+                    const ttlDays = this.config.personaCacheLifetimeDays
+                    if (ttlDays > 0) {
+                        await session.send(
+                            `上次用户画像更新已超过 ${ttlDays} 天，正在重新生成画像。`
+                        )
+                    }
                 }
 
                 await this.runPersonaAnalysis(cache)
@@ -624,15 +658,12 @@ export class AnalysisService extends Service {
                     return
                 }
 
-                personaData = {
-                    profile: cache.parsedPersona,
-                    username: cache.record.username
-                }
+                cache.pendingMessages = 0
             }
 
-            const { profile, username } = personaData
+            const profile = cache.parsedPersona!
 
-            let displayName = username
+            let displayName = cache.record.username
             let avatar: string | undefined
             try {
                 const user = await bot.getUser(userId, session.guildId)
@@ -642,10 +673,7 @@ export class AnalysisService extends Service {
                     (user as { name?: string }).name
                 if (resolvedName) {
                     displayName = resolvedName
-                    const cache = this.personaCache.get(recordId)
-                    if (cache) {
-                        cache.record.username = resolvedName
-                    }
+                    cache.record.username = resolvedName
                 }
             } catch (e) {
                 this.ctx.logger.warn(`获取用户 ${userId} 信息失败: ${e}`)

@@ -4,7 +4,7 @@ import { AnalysisService } from './service/analysis'
 import { LLMService } from './service/llm'
 import { RendererService } from './service/renderer'
 import { MessageService } from './service/message'
-import * as commands from './commands'
+import { plugin } from './plugin'
 import type {} from 'koishi-plugin-puppeteer'
 import type {} from 'koishi-plugin-cron'
 import { Config } from './config'
@@ -19,7 +19,7 @@ export function apply(ctx: Context, config: Config) {
     ctx.plugin(AnalysisService, config)
     ctx.plugin(RendererService, config)
 
-    ctx.plugin(commands, config)
+    plugin(ctx, config)
 
     ctx.inject(['cron'], (ctx) => {
         if (!config.cronSchedule && !ctx.cron) {

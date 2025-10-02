@@ -56,6 +56,7 @@ export class RendererService extends Service {
         for (const file of tempHtmlFiles) {
             await fs.unlink(path.resolve(templateDir, file))
         }
+
     }
 
     public async renderGroupAnalysisToPdf(
