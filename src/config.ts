@@ -59,7 +59,7 @@ export const Config: Schema<Config> = Schema.intersect([
         cronAnalysisDays: Schema.number()
             .description('定时任务分析的默认天数。')
             .default(1),
-        registerTools: Schema.boolean().default(false).description('是否注册用户画像和群聊分析工具到 ChatLuna。')
+        registerTools: Schema.boolean().default(true).description('是否注册用户画像和群聊分析工具到 ChatLuna。')
     }).description('基础设置'),
     Schema.object({
         alwaysPersistMessages: Schema.boolean()
