@@ -42,6 +42,7 @@ export interface Config {
     personaLookbackDays: number
     personaMaxMessages: number
     personaMinMessages: number
+    registerTools: boolean
 
     debug?: boolean
 }
@@ -57,7 +58,8 @@ export const Config: Schema<Config> = Schema.intersect([
         ),
         cronAnalysisDays: Schema.number()
             .description('定时任务分析的默认天数。')
-            .default(1)
+            .default(1),
+        registerTools: Schema.boolean().default(false).description('是否注册用户画像和群聊分析工具到 ChatLuna。')
     }).description('基础设置'),
     Schema.object({
         alwaysPersistMessages: Schema.boolean()
@@ -242,7 +244,7 @@ export const Config: Schema<Config> = Schema.intersect([
 2. 再阅读「最新聊天记录」，分析过去 {personaLookbackDays} 天内该用户在多个群的活跃情况。
 3. 如果历史画像为空，则从零开始构建；否则基于历史画像。融合生成新的用户画像。
 4. 输出时请确保条理清晰、总结恰当，中性。输出的 yaml 内容里，为纯文本格式，不要包含 markdown 标记，如 ** 加粗。
-5. 注意 evidence，需要选出 7 - 12 句最具冲击力、最令人惊叹的"金句"。这些金句需满足，**逆天的神人发言**，即具备颠覆常识的脑洞、逻辑跳脱的表达或强烈反差感的原创内容。
+5. 注意 evidence，需要选出 15-25 句最具冲击力、最令人惊叹的"金句"。这些金句需满足，**逆天的神人发言**，即具备颠覆常识的脑洞、逻辑跳脱的表达或强烈反差感的原创内容。
 
 历史画像：{previousAnalysis}
 最新聊天记录：{messages}
@@ -252,7 +254,7 @@ export const Config: Schema<Config> = Schema.intersect([
 - userId: "{userId}"
   username: "{username}"
   summary: |-
-    对整体聊天记录的提炼（性格特点，发言语气等，几段话）
+    对整体聊天记录的提炼（性格特点，发言语气等，几段话）（如果和之前的用户画像合一起，太多了的话，超过了500字，需要精简）
   keyTraits:
     - "核心性格特质（列出几点）"
   interests:

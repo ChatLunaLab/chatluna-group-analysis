@@ -262,7 +262,7 @@ export class RendererService extends Service {
                 avatar ||
                 'https://cravatar.cn/avatar/00000000000000000000000000000000?d=mp',
             username,
-            analysisDate: new Date().toLocaleDateString(),
+            analysisDate: new Date().toLocaleString(),
             summary: data.summary || '暂无摘要',
             keyTraits: formatTags(data.keyTraits),
             interests: formatTags(data.interests),

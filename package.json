@@ -45,6 +45,7 @@
   "homepage": "https://github.com/ChatLunaLab/chatluna-group-analysis#readme",
   "dependencies": {
     "@langchain/core": "0.3.62",
+    "chrono-node": "^2.9.0",
     "js-yaml": "^4.1.0"
   },
   "resolutions": {

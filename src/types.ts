@@ -96,3 +96,14 @@ export interface BasicStatsResult {
     totalEmojiCount: number
     allMessagesText: string[]
 }
+
+export interface GroupMessageFetchFilter {
+    guildId?: string
+    channelId?: string
+    userId?: string
+    selfId?: string
+    startTime?: string
+    endTime?: string
+    limit?: number
+    offset?: number
+}
