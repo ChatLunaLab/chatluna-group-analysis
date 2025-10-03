@@ -167,27 +167,19 @@
 
                 const img = document.getElementById('dynamic-color-source')
                 img.setAttribute('crossOrigin', '')
-                if (img.complete && img.naturalWidth > 0) {
-                    try {
-                        const color = colorThief.getColor(img)
-                        applyDynamicColors(color)
-                    } catch (e) {
-                        console.error('Error extracting color:', e)
-                        applyDynamicColors(defaultSourceColor)
-                    }
-                } else {
-                    img.addEventListener('load', () => {
-                        try {
-                            const color = colorThief.getColor(img)
-                            applyDynamicColors(color)
-                        } catch (e) {
-                            console.error('Error extracting color:', e)
-                            applyDynamicColors(defaultSourceColor)
-                        }
-                    })
-                    img.addEventListener('error', () => {
-                        applyDynamicColors(defaultSourceColor)
-                    })
+
+                 try {
+                    const palette = colorThief.getPalette(
+                        img,
+                        3,
+                        10
+                    )
+                    const color =
+                        palette[Math.floor(Math.random() * palette.length)]
+                    applyDynamicColors(color)
+                } catch (e) {
+                    console.error('Error extracting color:', e)
+                    applyDynamicColors(defaultSourceColor)
                 }
             }
 
