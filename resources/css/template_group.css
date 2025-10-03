@@ -1,314 +1,573 @@
- @import url('https://font.onmicrosoft.cn/@fontsource/maple-mono@5.2.5/index.css');
- @import url('https://fonts.font.im/css?family=Noto+Sans+SC:100,300,400,500,700,900');
- @import url('https://fonts.font.im/css?family=Noto+Color+Emoji');
+@import url('https://fonts.font.im/css?family=Noto+Sans+SC');
+@import url('https://fonts.font.im/css?family=Noto+Color+Emoji');
 
- body {
-     font-family: 'Maple Mono','Noto Color Emoji', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei',
-         Helvetica, Arial, sans-serif;
-     background-color: #f4f6f8;
-     color: #333;
-     padding: 20px;
-     width: 800px;
-     box-sizing: border-box;
- }
+@font-face {
+    font-family: Torus;
+    font-weight: 400;
+    src: url(https://gcore.jsdelivr.net/gh/ppy/osu-web/resources/fonts/torus/Torus-Regular.otf)
+}
 
- .container {
-     background: #fff;
-     border-radius: 16px;
-     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
-     padding: 30px 40px;
- }
+@font-face {
+    font-family: Torus;
+    font-weight: 600;
+    src: url(https://gcore.jsdelivr.net/gh/ppy/osu-web/resources/fonts/torus/Torus-SemiBold.otf)
+}
 
- .header {
-     text-align: center;
-     border-bottom: 1px solid #e8e8e8;
-     padding-bottom: 20px;
-     margin-bottom: 25px;
- }
+@font-face {
+    font-family: Torus;
+    font-weight: 700;
+    src: url(https://gcore.jsdelivr.net/gh/ppy/osu-web/resources/fonts/torus/Torus-Bold.otf)
+}
 
- .header h1 {
-     font-size: 30px;
-     font-weight: 700;
-     color: #1f2329;
-     margin: 0;
-     letter-spacing: 1px;
- }
+@font-face {
+    font-family: Torus;
+    font-weight: 900;
+    src: url(https://gcore.jsdelivr.net/gh/ppy/osu-web/resources/fonts/torus/Torus-Heavy.otf)
+}
 
- .header .sub-title {
-     font-size: 14px;
-     color: #888;
-     margin-top: 8px;
- }
+:root {
+    /* Light Theme Colors */
+    --light-primary: #6750A4;
+    --light-on-primary: #FFFFFF;
+    --light-primary-container: #EADDFF;
+    --light-on-primary-container: #21005D;
 
- .summary {
-     display: grid;
-     grid-template-columns: repeat(4, 1fr);
-     gap: 20px;
-     margin-bottom: 35px;
- }
+    --light-secondary: #625B71;
+    --light-on-secondary: #FFFFFF;
+    --light-secondary-container: #E8DEF8;
+    --light-on-secondary-container: #1D192B;
 
- .summary-item {
-     background-color: #f9fafb;
-     padding: 20px;
-     border-radius: 12px;
-     text-align: center;
-     border: 1px solid #f0f0f0;
- }
+    --light-tertiary: #7D5260;
+    --light-on-tertiary: #FFFFFF;
+    --light-tertiary-container: #FFD8E4;
+    --light-on-tertiary-container: #31111D;
 
- .summary-item .label {
-     font-size: 14px;
-     color: #595959;
- }
+    --light-error: #B3261E;
+    --light-on-error: #FFFFFF;
+    --light-error-container: #F9DEDC;
+    --light-on-error-container: #410E0B;
 
- .summary-item .value {
-     font-size: 28px;
-     font-weight: 700;
-     color: #262626;
-     margin-top: 5px;
- }
+    --light-background: #FFFBFE;
+    --light-on-background: #1C1B1F;
 
- .section-title {
-     font-size: 22px;
-     font-weight: 600;
-     margin-top: 35px;
-     margin-bottom: 20px;
-     color: #262626;
-     display: flex;
-     align-items: center;
-     gap: 10px;
- }
+    --light-surface: #FFFBFE;
+    --light-on-surface: #1C1B1F;
+    --light-surface-dim: #DED8E1;
+    --light-surface-bright: #FFFBFE;
 
- .section-title::before {
-     content: '';
-     display: inline-block;
-     width: 5px;
-     height: 22px;
-     background-color: #1890ff;
-     border-radius: 3px;
- }
+    --light-surface-variant: #E7E0EC;
+    --light-on-surface-variant: #49454F;
 
- .card-grid {
-     display: grid;
-     gap: 15px;
- }
+    --light-outline: #79747E;
+    --light-outline-variant: #CAC4D0;
 
- .user-stat-card,
- .title-card {
-     display: flex;
-     align-items: center;
-     padding: 15px;
-     background: #fdfdfd;
-     border: 1px solid #f0f0f0;
-     border-radius: 12px;
-     transition: box-shadow .2s;
- }
+    --light-surface-container-lowest: #FFFFFF;
+    --light-surface-container-low: #F7F2FA;
+    --light-surface-container: #F3EDF7;
+    --light-surface-container-high: #ECE6F0;
+    --light-surface-container-highest: #E6E0E9;
 
- .user-stat-card:hover,
- .title-card:hover {
-     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
- }
+    --light-inverse-surface: #313033;
+    --light-inverse-on-surface: #F4EFF4;
+    --light-inverse-primary: #D0BCFF;
 
- .avatar {
-     width: 50px;
-     height: 50px;
-     border-radius: 50%;
-     margin-right: 15px;
-     flex-shrink: 0;
- }
+    --light-scrim: #000000;
+    --light-shadow: #000000;
 
- .user-details,
- .title-details {
-     flex-grow: 1;
- }
+    /* Dark Theme Colors */
+    --dark-primary: #D0BCFF;
+    --dark-on-primary: #381E72;
+    --dark-primary-container: #4F378B;
+    --dark-on-primary-container: #EADDFF;
 
- .nickname {
-     font-size: 17px;
-     font-weight: 600;
-     color: #333;
- }
+    --dark-secondary: #CCC2DC;
+    --dark-on-secondary: #332D41;
+    --dark-secondary-container: #4A4458;
+    --dark-on-secondary-container: #E8DEF8;
 
- .stats-grid {
-     display: grid;
-     grid-template-columns: 1fr 1fr;
-     gap: 5px 15px;
-     font-size: 13px;
-     color: #666;
-     margin-top: 5px;
- }
+    --dark-tertiary: #EFB8C8;
+    --dark-on-tertiary: #492532;
+    --dark-tertiary-container: #633B48;
+    --dark-on-tertiary-container: #FFD8E4;
 
- .stats-grid strong {
-     color: #333;
-     font-weight: 600;
- }
+    --dark-error: #F2B8B5;
+    --dark-on-error: #601410;
+    --dark-error-container: #8C1D18;
+    --dark-on-error-container: #F9DEDC;
 
- .title-badge {
-     font-size: 14px;
-     font-weight: 600;
-     color: #1890ff;
-     margin: 3px 0 5px;
- }
+    --dark-background: #1C1B1F;
+    --dark-on-background: #E6E1E5;
 
- .title-reason {
-     font-size: 13px;
-     color: #777;
-     margin: 0;
-     line-height: 1.5;
- }
+    --dark-surface: #1C1B1F;
+    --dark-on-surface: #E6E1E5;
+    --dark-surface-dim: #1C1B1F;
+    --dark-surface-bright: #3B383E;
 
- .topic-card,
- .quote-card {
-     background: #fdfdfd;
-     border: 1px solid #f0f0f0;
-     padding: 20px;
-     border-radius: 12px;
-     margin-bottom: 10px;
- }
+    --dark-surface-variant: #49454F;
+    --dark-on-surface-variant: #CAC4D0;
 
- .topic-title,
- .quote-content {
-     font-weight: 600;
-     font-size: 16px;
-     margin-bottom: 8px;
- }
+    --dark-outline: #938F99;
+    --dark-outline-variant: #49454F;
 
- .topic-contributors,
- .quote-sender {
-     font-size: 14px;
-     color: #8c8c8c;
-     margin-bottom: 10px;
- }
+    --dark-surface-container-lowest: #0F0D13;
+    --dark-surface-container-low: #1D1B20;
+    --dark-surface-container: #211F26;
+    --dark-surface-container-high: #2B2930;
+    --dark-surface-container-highest: #36343B;
 
- .topic-detail,
- .quote-reason {
-     font-size: 14px;
-     color: #595959;
-     line-height: 1.7;
-     margin: 0;
- }
+    --dark-inverse-surface: #E6E1E5;
+    --dark-inverse-on-surface: #313033;
+    --dark-inverse-primary: #6750A4;
 
- .quote-content {
-     font-style: italic;
-     color: #434343;
- }
+    --dark-scrim: #000000;
+    --dark-shadow: #000000;
+}
 
- .quote-footer {
-     margin-top: 10px;
-     border-top: 1px dashed #e8e8e8;
-     padding-top: 10px;
- }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
- .empty-state {
-     padding: 20px;
-     text-align: center;
-     color: #999;
-     background: #fafafa;
-     border-radius: 8px;
- }
+body {
+    font-family: 'Torus', 'Noto Color Emoji', 'Noto Sans SC', sans-serif;
+    background-color: var(--surface);
+    color: var(--on-surface);
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
 
- .activity-chart-container {
-     margin-top: 20px;
- }
+body.light-theme {
+    --primary: var(--dynamic-primary, var(--light-primary));
+    --on-primary: var(--dynamic-on-primary, var(--light-on-primary));
+    --primary-container: var(--dynamic-primary-container, var(--light-primary-container));
+    --on-primary-container: var(--dynamic-on-primary-container, var(--light-on-primary-container));
 
- .activity-chart {
-     display: flex;
-     align-items: flex-end;
-     gap: 3px;
-     height: 180px;
-     background: #fafafa;
-     border-radius: 8px;
-     padding: 20px 15px 15px;
- }
+    --secondary: var(--dynamic-secondary, var(--light-secondary));
+    --on-secondary: var(--dynamic-on-secondary, var(--light-on-secondary));
+    --secondary-container: var(--dynamic-secondary-container, var(--light-secondary-container));
+    --on-secondary-container: var(--dynamic-on-secondary-container, var(--light-on-secondary-container));
 
- .activity-bar {
-     flex: 1;
-     display: flex;
-     flex-direction: column;
-     align-items: center;
-     justify-content: flex-end;
-     min-width: 0;
-     height: 180px;
- }
+    --tertiary: var(--dynamic-tertiary, var(--light-tertiary));
+    --on-tertiary: var(--dynamic-on-tertiary, var(--light-on-tertiary));
+    --tertiary-container: var(--dynamic-tertiary-container, var(--light-tertiary-container));
+    --on-tertiary-container: var(--dynamic-on-tertiary-container, var(--light-on-tertiary-container));
 
- .activity-bar-bar {
-     width: 100%;
-     max-width: 20px;
-     background-image: linear-gradient(to top, #69b1ff, #a5d1ff);
-     border-radius: 4px 4px 0 0;
-     transition: all 0.3s ease;
- }
+    --error: var(--dynamic-error, var(--light-error));
+    --on-error: var(--dynamic-on-error, var(--light-on-error));
+    --error-container: var(--dynamic-error-container, var(--light-error-container));
+    --on-error-container: var(--dynamic-on-error-container, var(--light-on-error-container));
 
+    --background: var(--dynamic-background, var(--light-background));
+    --on-background: var(--dynamic-on-background, var(--light-on-background));
 
+    --surface: var(--dynamic-surface, var(--light-surface));
+    --on-surface: var(--dynamic-on-surface, var(--light-on-surface));
+    --surface-dim: var(--dynamic-surface-dim, var(--light-surface-dim));
+    --surface-bright: var(--dynamic-surface-bright, var(--light-surface-bright));
 
- .activity-bar:hover .activity-bar-bar {
+    --surface-variant: var(--dynamic-surface-variant, var(--light-surface-variant));
+    --on-surface-variant: var(--dynamic-on-surface-variant, var(--light-on-surface-variant));
 
-     background-image: linear-gradient(to top, #1890ff, #69b1ff);
+    --outline: var(--dynamic-outline, var(--light-outline));
+    --outline-variant: var(--dynamic-outline-variant, var(--light-outline-variant));
 
-     transform: translateY(-2px);
+    --surface-container-lowest: var(--dynamic-surface-container-lowest, var(--light-surface-container-lowest));
+    --surface-container-low: var(--dynamic-surface-container-low, var(--light-surface-container-low));
+    --surface-container: var(--dynamic-surface-container, var(--light-surface-container));
+    --surface-container-high: var(--dynamic-surface-container-high, var(--light-surface-container-high));
+    --surface-container-highest: var(--dynamic-surface-container-highest, var(--light-surface-container-highest));
 
- }
+    --inverse-surface: var(--dynamic-inverse-surface, var(--light-inverse-surface));
+    --inverse-on-surface: var(--dynamic-inverse-on-surface, var(--light-inverse-on-surface));
+    --inverse-primary: var(--dynamic-inverse-primary, var(--light-inverse-primary));
 
+    --scrim: var(--dynamic-scrim, var(--light-scrim));
+    --shadow: var(--dynamic-shadow, var(--light-shadow));
+}
 
+body.dark-theme {
+    --primary: var(--dynamic-primary, var(--dark-primary));
+    --on-primary: var(--dynamic-on-primary, var(--dark-on-primary));
+    --primary-container: var(--dynamic-primary-container, var(--dark-primary-container));
+    --on-primary-container: var(--dynamic-on-primary-container, var(--dark-on-primary-container));
 
- .activity-bar-count {
-    font-size: 10px;
-    color: #1890ff;
-    font-weight: bold;
-    margin-bottom: 4px;
+    --secondary: var(--dynamic-secondary, var(--dark-secondary));
+    --on-secondary: var(--dynamic-on-secondary, var(--dark-on-secondary));
+    --secondary-container: var(--dynamic-secondary-container, var(--dark-secondary-container));
+    --on-secondary-container: var(--dynamic-on-secondary-container, var(--dark-on-secondary-container));
+
+    --tertiary: var(--dynamic-tertiary, var(--dark-tertiary));
+    --on-tertiary: var(--dynamic-on-tertiary, var(--dark-on-tertiary));
+    --tertiary-container: var(--dynamic-tertiary-container, var(--dark-tertiary-container));
+    --on-tertiary-container: var(--dynamic-on-tertiary-container, var(--dark-on-tertiary-container));
+
+    --error: var(--dynamic-error, var(--dark-error));
+    --on-error: var(--dynamic-on-error, var(--dark-on-error));
+    --error-container: var(--dynamic-error-container, var(--dark-error-container));
+    --on-error-container: var(--dynamic-on-error-container, var(--dark-on-error-container));
+
+    --background: var(--dynamic-background, var(--dark-background));
+    --on-background: var(--dynamic-on-background, var(--dark-on-background));
+
+    --surface: var(--dynamic-surface, var(--dark-surface));
+    --on-surface: var(--dynamic-on-surface, var(--dark-on-surface));
+    --surface-dim: var(--dynamic-surface-dim, var(--dark-surface-dim));
+    --surface-bright: var(--dynamic-surface-bright, var(--dark-surface-bright));
+
+    --surface-variant: var(--dynamic-surface-variant, var(--dark-surface-variant));
+    --on-surface-variant: var(--dynamic-on-surface-variant, var(--dark-on-surface-variant));
+
+    --outline: var(--dynamic-outline, var(--dark-outline));
+    --outline-variant: var(--dynamic-outline-variant, var(--dark-outline-variant));
+
+    --surface-container-lowest: var(--dynamic-surface-container-lowest, var(--dark-surface-container-lowest));
+    --surface-container-low: var(--dynamic-surface-container-low, var(--dark-surface-container-low));
+    --surface-container: var(--dynamic-surface-container, var(--dark-surface-container));
+    --surface-container-high: var(--dynamic-surface-container-high, var(--dark-surface-container-high));
+    --surface-container-highest: var(--dynamic-surface-container-highest, var(--dark-surface-container-highest));
+
+    --inverse-surface: var(--dynamic-inverse-surface, var(--dark-inverse-surface));
+    --inverse-on-surface: var(--dynamic-inverse-on-surface, var(--dark-inverse-on-surface));
+    --inverse-primary: var(--dynamic-inverse-primary, var(--dark-inverse-primary));
+
+    --scrim: var(--dynamic-scrim, var(--dark-scrim));
+    --shadow: var(--dynamic-shadow, var(--dark-shadow));
+}
+
+.container {
+    width: 900px;
+    padding: 16px;
+}
+
+.header {
+    text-align: center;
+    padding: 24px 0;
+    margin-bottom: 24px;
+}
+
+.header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--on-surface);
+    margin: 0 0 8px 0;
+}
+
+.header .sub-title {
+    font-size: 16px;
+    color: var(--on-surface-variant);
+}
+
+/* 基础组件样式 */
+.card {
+    background-color: var(--surface-container);
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.card-elevated {
+    background-color: var(--surface-container-high);
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.stat-card {
+    background-color: var(--surface-container-high);
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+}
+
+.summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+/* 统计卡片 - 使用 primary-container 强调重要性 */
+.summary-item {
+    background-color: var(--surface-container);
+    padding: 20px 16px;
+    border-radius: 20px;
+    text-align: center;
+}
+
+.summary-item .label {
+    font-size: 14px;
+    color: var(--primary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.8;
+}
+
+.summary-item .value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.section-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-top: 24px;
+    margin-bottom: 12px;
+    color: var(--on-surface);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 4px;
+}
+
+.card-grid {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+/* 群友称号和龙王榜使用 2 列布局 */
+.card-grid.two-columns {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+/* 用户统计卡片和称号卡片 - 使用 surface-container-high 保持中性 */
+.user-stat-card,
+.title-card {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background: var(--surface-container-high);
+    border-radius: 16px;
+}
+
+.avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    margin-right: 16px;
+    flex-shrink: 0;
+    object-fit: cover;
+}
+
+.user-details,
+.title-details {
+    flex-grow: 1;
+}
+
+.nickname {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--on-surface);
+    margin-bottom: 8px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 16px;
+    font-size: 15px;
+    color: var(--on-surface-variant);
+}
+
+.stats-grid strong {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.title-badge {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 6px;
+}
+
+.title-reason {
+    font-size: 15px;
+    color: var(--on-surface-variant);
+    line-height: 1.6;
+}
+
+/* 热门话题卡片 - 使用 secondary-container */
+.topic-card {
+    background: var(--surface-container-high);
+    padding: 16px;
+    border-radius: 16px;
+    margin-bottom: 12px;
+}
+
+.topic-title {
+    font-weight: 600;
+    font-size: 19px;
+    margin-bottom: 10px;
+    color: var(-surface-container);
+}
+
+.topic-contributors {
+    font-size: 14px;
+    color: var(--on-surface-variant);
+    margin-bottom: 12px;
+    opacity: 0.8;
+}
+
+.topic-detail {
+    font-size: 16px;
+    color: var(--on-surface-variant);
+    line-height: 1.7;
+    opacity: 0.9;
+}
+
+/* 圣经语录卡片 - 使用 secondary-container */
+.quote-card {
+    background: var(--surface-container-high);
+    padding: 16px;
+    border-radius: 16px;
+    margin-bottom: 12px;
+}
+
+.quote-content {
+    font-weight: 600;
+    font-size: 19px;
+    margin-bottom: 10px;
+    color: var(--on-surface-variant);
+    font-style: normal;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    border-left: 0;
+}
+
+.quote-sender {
+    font-size: 14px;
+    color: var(--on-surface-variant);
+    margin-bottom: 12px;
+    opacity: 0.8;
+}
+
+.quote-reason {
+    font-size: 16px;
+    color: var(--on-surface-variant);
+    line-height: 1.7;
+    opacity: 0.9;
+}
+
+.quote-footer {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--outline-variant);
+}
+
+.empty-state {
+    padding: 32px;
+    text-align: center;
+    color: var(--on-surface-variant);
+    background: var(--surface-container);
+    border-radius: 16px;
+    font-size: 16px;
+}
+
+.activity-chart-container {
+    margin-top: 16px;
+}
+
+/* 活动图表容器 - 使用 primary-container */
+.activity-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 200px;
+    background: var(--surface-container);
+    border-radius: 20px;
+    padding: 24px 16px 16px;
+}
+
+.activity-bar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 0;
+    height: 100%;
+}
+
+.activity-bar-bar {
+    width: 100%;
+    max-width: 24px;
+    background: linear-gradient(to top, var(--primary), var(--secondary));
+    border-radius: 8px 8px 0 0;
+    transition: all 0.3s ease;
+}
+
+.activity-bar:hover .activity-bar-bar {
+    opacity: 0.8;
+    transform: translateY(-3px);
+}
+
+.activity-bar-count {
+    font-size: 13px;
+    color: var(--primary);
+    font-weight: 700;
+    margin-bottom: 6px;
     opacity: 1;
-    transition: opacity 0.3s ease;
- }
+}
 
- 
+.activity-bar-label {
+    font-size: 13px;
+    margin-top: 10px;
+    color: var(--primary);
+    white-space: nowrap;
+    opacity: 0.8;
+}
 
- .activity-bar-label {
+.chart-legend {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 15px;
+    color: var(--on-surface-variant);
+}
 
-     font-size: 11px;
+footer {
+    text-align: center;
+    margin-top: 32px;
+    margin-bottom: 16px;
+    color: var(--on-surface-variant);
+    font-size: 14px;
+    padding-top: 16px;
+    border-top: 1px solid var(--outline-variant);
+}
 
-     margin-top: 8px;     color: #8c8c8c;
-     white-space: nowrap;
- }
+/* 隐藏的图片用于动态取色 */
+#dynamic-color-source {
+    display: none;
+}
 
- .chart-legend {
-     text-align: center;
-     margin-top: 15px;
- }
-
- .chart-legend .legend-text {
-     font-size: 13px;
-     color: #666;
-     font-weight: 500;
- }
-
- footer {
-     text-align: center;
-     margin-top: 40px;
-     color: #b0b0b0;
-     font-size: 12px;
- }
-
- /* User Persona Specific Styles */
+/* User Persona Specific Styles */
 .user-header {
-    margin-bottom: 30px;
+    margin-bottom: 24px;
 }
 
 .avatar-large {
-    width: 80px;
-    height: 80px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
-    margin-bottom: 15px;
-    border: 3px solid #fff;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 12px;
+    object-fit: cover;
 }
 
+/* 用户画像摘要 - 使用 secondary-container */
 .persona-summary {
-    background: #f9fafb;
-    border-radius: 12px;
-    padding: 20px 25px;
-    font-size: 15px;
-    line-height: 1.8;
-    color: #333;
-    margin-bottom: 25px;
-    border: 1px solid #f0f0f0;
+    background: var(--surface-container);
+    border-radius: 16px;
+    padding: 16px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--on-surface-variant);
+    margin-bottom: 24px;
 }
 
 .tag-container {
@@ -319,23 +578,22 @@
 }
 
 .tag {
-    background-color: #eef5ff;
-    color: #1890ff;
-    padding: 8px 15px;
-    border-radius: 20px;
+    background: var(--secondary-container);
+    color: var(--on-secondary-container);
+    padding: 6px 12px;
+    border-radius: 8px;
     font-size: 14px;
     font-weight: 500;
-    border: 1px solid #d6eaff;
 }
 
+/* 沟通风格块 - 使用 secondary-container */
 .persona-block {
-    background: #fdfdfd;
-    border: 1px solid #f0f0f0;
-    padding: 20px 25px;
-    border-radius: 12px;
-    font-size: 14px;
-    line-height: 1.7;
-    color: #595959;
+    background: var(--surface-container);
+    padding: 16px;
+    border-radius: 16px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--on-surface-variant);
 }
 
 .persona-block p {
@@ -348,27 +606,27 @@
 }
 
 .persona-block.evidence ul {
-    color: #777;
-    font-size: 13px;
+    color: var(--on-surface-variant);
+    font-size: 15px;
     list-style-type: none;
     padding-left: 0;
 }
 
 .persona-block.evidence li {
-    border-left: 3px solid #e8e8e8;
+    border-left: 3px solid var(--primary);
     padding-left: 15px;
     margin-bottom: 15px !important;
 }
 
 .persona-block.evidence .evidence-quote {
-    color: #555;
+    color: var(--on-surface);
     font-weight: 500;
     line-height: 1.6;
 }
 
 .persona-block.evidence .evidence-meta {
-    color: #999;
-    font-size: 12px;
+    color: var(--on-surface-variant);
+    font-size: 14px;
     margin-top: 4px;
 }
 
@@ -379,3 +637,121 @@
 .persona-block li:last-child {
     margin-bottom: 0;
 }
+
+/* 事实依据卡片 - 使用 secondary-container */
+.card.outlined-card {
+    background: var(--surface-container);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+}
+
+.card.outlined-card p {
+    margin: 0;
+    color: var(--on-surface-variant);
+    line-height: 1.6;
+    font-size: 16px;
+}
+
+.chip {
+    display: inline-block;
+    background: var(--secondary-container);
+    color: var(--on-secondary-container);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/*
+ * Material Design 3 颜色使用规范
+ *
+ * Surface 系列 - 背景和容器层级:
+ * - surface: 页面主背景
+ * - surface-dim: 暗色表面变体
+ * - surface-bright: 亮色表面变体
+ * - surface-container-lowest: 最低层级容器
+ * - surface-container-low: 低层级容器
+ * - surface-container: 标准容器（默认卡片）
+ * - surface-container-high: 高层级容器（强调卡片，如统计卡）
+ * - surface-container-highest: 最高层级容器（特殊强调）
+ *
+ * 文本颜色:
+ * - on-surface: 主要文本（在 surface 上）
+ * - on-surface-variant: 次要文本（在 surface 上）
+ * - on-background: 背景上的文本
+ *
+ * Primary 强调色系统:
+ * - primary: 主要强调色（按钮、重点元素）
+ * - on-primary: primary 上的文本
+ * - primary-container: primary 容器背景
+ * - on-primary-container: primary 容器上的文本
+ *
+ * Secondary 次要色系统:
+ * - secondary: 次要强调色
+ * - on-secondary: secondary 上的文本
+ * - secondary-container: 次要容器（如标签、芯片）
+ * - on-secondary-container: 次要容器上的文本
+ *
+ * Tertiary 第三色系统:
+ * - tertiary: 第三强调色
+ * - on-tertiary: tertiary 上的文本
+ * - tertiary-container: 第三容器
+ * - on-tertiary-container: 第三容器上的文本
+ *
+ * Error 错误色系统:
+ * - error: 错误/警告色
+ * - on-error: error 上的文本
+ * - error-container: 错误容器
+ * - on-error-container: 错误容器上的文本
+ *
+ * Inverse 反色系统（用于高对比场景）:
+ * - inverse-surface: 反转表面色
+ * - inverse-on-surface: 反转表面上的文本
+ * - inverse-primary: 反转主色
+ *
+ * 分隔和边框:
+ * - outline: 主要边框
+ * - outline-variant: 次要边框/分隔线
+ *
+ * 阴影和遮罩:
+ * - scrim: 遮罩层（半透明黑色）
+ * - shadow: 阴影（通常为黑色）
+ *
+ * 动态颜色优先级：
+ * 所有颜色都优先使用 --dynamic-* 变量（从图片提取），
+ * 如果动态颜色不可用，则回退到静态的 --light-* 或 --dark-* 变量
+ *
+ * ===== 本项目颜色使用策略 =====
+ *
+ * 1. 统计数据卡片 (.summary-item)
+ *    - 背景: primary-container
+ *    - 文本: on-primary-container
+ *    - 用途: 突出重要的数据统计
+ *
+ * 2. 活动图表 (.activity-chart)
+ *    - 背景: primary-container
+ *    - 柱状图: primary → secondary 渐变
+ *    - 文本: on-primary-container
+ *    - 用途: 数据可视化
+ *
+ * 3. 所有内容卡片 (secondary-container)
+ *    - .persona-summary - 用户画像摘要
+ *    - .persona-block - 沟通风格块
+ *    - .topic-card - 热门话题卡片
+ *    - .quote-card - 圣经语录卡片
+ *    - .card.outlined-card - 事实依据卡片
+ *    - .tag, .chip - 标签/芯片
+ *    - 文本: on-secondary-container
+ *    - 用途: 统一的内容展示，保持视觉一致性
+ *
+ * 4. 用户统计/称号卡片 (.user-stat-card, .title-card)
+ *    - 背景: surface-container-high
+ *    - 文本: on-surface
+ *    - 用途: 中性列表项
+ *
+ * 5. 标题文本 (.section-title)
+ *    - 颜色: on-surface
+ *    - 用途: 保持简洁，不过度强调
+ */
+

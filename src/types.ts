@@ -1,3 +1,5 @@
+import { h } from "koishi"
+
 export interface OneBotMessage {
     message_id: number
     message_seq: number
@@ -59,8 +61,6 @@ export interface GoldenQuote {
     reason: string
 }
 
-
-
 export interface UserPersonaProfile {
     userId: string
     username: string
@@ -68,6 +68,7 @@ export interface UserPersonaProfile {
     keyTraits: string[]
     interests: string[]
     communicationStyle: string
+    analysisDate?: string
     evidence: string[]
     lastMergedFromHistory?: boolean
 }
@@ -106,4 +107,57 @@ export interface GroupMessageFetchFilter {
     endTime?: string
     limit?: number
     offset?: number
+}
+
+export interface MessageFilter {
+    guildId?: string
+    channelId?: string
+    userId?: string[]
+    selfId?: string
+    startTime?: Date
+    endTime?: Date
+    limit?: number
+    offset?: number
+}
+
+export interface StoredMessage {
+    id: string
+    platform: string
+    selfId: string
+    channelId: string
+    avatarUrl: string
+    guildId?: string
+    userId: string
+    username: string
+    content: string
+    timestamp: Date
+    messageId?: string
+    elements?: h[]
+}
+
+export interface ActivityStats {
+    windowStart: number
+    count: number
+}
+
+export interface PersistenceBuffer {
+    messages: StoredMessage[]
+    lastMessageAt: number
+}
+
+export interface PersonaRecord {
+    id: string
+    platform: string
+    selfId: string
+    userId: string
+    username: string
+    persona?: string
+    lastAnalysisAt?: Date
+    updatedAt?: Date
+}
+
+export interface PersonaCache {
+    record: PersonaRecord
+    pendingMessages: number
+    parsedPersona?: UserPersonaProfile | null
 }

@@ -43,6 +43,7 @@ export interface Config {
     personaMaxMessages: number
     personaMinMessages: number
     registerTools: boolean
+    theme: 'light' | 'dark' | 'auto'
 
     debug?: boolean
 }
@@ -59,7 +60,9 @@ export const Config: Schema<Config> = Schema.intersect([
         cronAnalysisDays: Schema.number()
             .description('定时任务分析的默认天数。')
             .default(1),
-        registerTools: Schema.boolean().default(true).description('是否注册用户画像和群聊分析工具到 ChatLuna。')
+        registerTools: Schema.boolean()
+            .default(true)
+            .description('是否注册用户画像和群聊分析工具到 ChatLuna。')
     }).description('基础设置'),
     Schema.object({
         alwaysPersistMessages: Schema.boolean()
@@ -87,9 +90,22 @@ export const Config: Schema<Config> = Schema.intersect([
         userTitleAnalysis: Schema.boolean()
             .description('是否启用用户称号分析（需要消耗更多 Token）。')
             .default(true),
-        outputFormat: Schema.union(['image', 'pdf', 'text'])
+        outputFormat: Schema.union([
+            Schema.const('image').description('图片'),
+            Schema.const('pdf').description('PDF'),
+            Schema.const('text').description('文本')
+        ])
             .description('默认输出格式。')
             .default('image'),
+        theme: Schema.union([
+            Schema.const('light').description('亮色主题'),
+            Schema.const('dark').description('暗色主题'),
+            Schema.const('auto').description('自动模式')
+        ])
+            .description(
+                '渲染模板的主题。auto 会在 19:00-06:00 期间自动切换到暗色模式。'
+            )
+            .default('auto'),
         filterWords: Schema.array(String)
             .role('table')
             .description('过滤词列表。消息内含有此词语时将不会记入统计消息。')
@@ -99,7 +115,7 @@ export const Config: Schema<Config> = Schema.intersect([
             .default(5),
         maxUserTitles: Schema.number()
             .description('最多生成的用户称号数量。')
-            .default(5),
+            .default(6),
         maxGoldenQuotes: Schema.number()
             .description('最多生成的金句数量。')
             .default(3)

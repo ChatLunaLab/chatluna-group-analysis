@@ -6,8 +6,7 @@ import { parseDate } from 'chrono-node'
 import { Context, Session } from 'koishi'
 import { array, z } from 'zod'
 import { Config } from '../config'
-import type { GroupMessageFetchFilter } from '../types'
-import type { MessageFilter } from '../service/message'
+import type { GroupMessageFetchFilter, MessageFilter } from '../types'
 
 export const inject = {
     chatluna_group_analysis: {

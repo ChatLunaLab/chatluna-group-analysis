@@ -2,6 +2,7 @@ import { Context, Service } from 'koishi'
 import { promises as fs } from 'fs'
 import path from 'path'
 import { GroupAnalysisResult, UserPersonaProfile } from '../types'
+import { Config } from '../config'
 import { fileURLToPath } from 'url'
 import {
     formatUserStats,
@@ -28,6 +29,31 @@ export class RendererService extends Service {
         this.ctx.on('ready', async () => {
             await this.init()
         })
+    }
+
+    private async imageToBase64(url: string): Promise<string> {
+        try {
+            this.ctx.logger.debug(`转换图片为 Base64: ${url}`)
+            const response = await fetch(url)
+            if (!response.ok) {
+                throw new Error(`Failed to fetch image: ${response.statusText}`)
+            }
+
+            const arrayBuffer = await response.arrayBuffer()
+            const buffer = Buffer.from(arrayBuffer)
+
+            // 根据 URL 或 Content-Type 推断 MIME 类型
+            const contentType = response.headers.get('content-type') || 'image/png'
+            const base64 = buffer.toString('base64')
+            const dataUrl = `data:${contentType};base64,${base64}`
+
+            this.ctx.logger.debug(`图片已转换为 Base64，大小: ${base64.length} 字符`)
+            return dataUrl
+        } catch (error) {
+            this.ctx.logger.warn(`图片转换 Base64 失败: ${url}`, error)
+            // 返回一个 1x1 透明 PNG 的 Base64
+            return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+        }
     }
 
     async init() {
@@ -82,7 +108,13 @@ export class RendererService extends Service {
     public async renderGroupAnalysisToPdf(
         data: GroupAnalysisResult
     ): Promise<Buffer> {
-        const page = await this._renderGroupAnalysis(data)
+        let theme = this.config.theme
+        if (theme === 'auto') {
+            const hour = new Date().getHours()
+            theme = hour >= 19 || hour < 6 ? 'dark' : 'light'
+        }
+
+        const page = await this._renderGroupAnalysis(data, theme)
 
         const pdfBuffer = await page.pdf({ format: 'A4' })
         await page.close()
@@ -91,10 +123,17 @@ export class RendererService extends Service {
     }
 
     public async renderGroupAnalysis(
-        data: GroupAnalysisResult
+        data: GroupAnalysisResult,
+        config: Config
     ): Promise<Buffer | string> {
         try {
-            const page = await this._renderGroupAnalysis(data)
+            let theme = config.theme
+            if (theme === 'auto') {
+                const hour = new Date().getHours()
+                theme = hour >= 19 || hour < 6 ? 'dark' : 'light'
+            }
+
+            const page = await this._renderGroupAnalysis(data, theme)
 
             // 找到页面中的 container 元素
             const element = await page.$('.container')
@@ -103,7 +142,7 @@ export class RendererService extends Service {
                 throw new Error('无法在渲染的 HTML 中找到 .container 元素。')
             }
 
-            const imageBuffer = await element.screenshot()
+            const imageBuffer = await element.screenshot({})
             await page.close()
 
             this.ctx.logger.info('图片渲染成功！')
@@ -118,7 +157,8 @@ export class RendererService extends Service {
     }
 
     private async _renderGroupAnalysis(
-        data: GroupAnalysisResult
+        data: GroupAnalysisResult,
+        theme: 'light' | 'dark'
     ): Promise<Awaited<ReturnType<Context['puppeteer']['page']>>> {
         // 检查 puppeteer 是否可用
         if (!this.ctx.puppeteer) {
@@ -135,6 +175,14 @@ export class RendererService extends Service {
             `${randomId}.html`
         )
 
+        const dynamicAvatarUrl =
+            data.userStats?.[Math.floor(Math.random() * data.userStats.length)]
+                ?.avatar ||
+            'https://cravatar.cn/avatar/00000000000000000000000000000000?d=mp'
+
+        // 将头像转换为 Base64
+        const dynamicAvatarBase64 = await this.imageToBase64(dynamicAvatarUrl)
+
         // 读取模板文件并替换占位符
         const templateHtml = await fs.readFile(templatePath, 'utf-8')
         const filledHtml = renderTemplate(templateHtml, {
@@ -150,7 +198,9 @@ export class RendererService extends Service {
             activeHoursChart: generateActiveHoursChart(
                 data.activeHoursData || {}
             ),
-            goldenQuotes: formatGoldenQuotes(data.goldenQuotes || [])
+            goldenQuotes: formatGoldenQuotes(data.goldenQuotes || []),
+            theme: theme,
+            dynamicAvatarUrl: dynamicAvatarBase64
         })
 
         // 写入临时 HTML 文件
@@ -195,10 +245,22 @@ export class RendererService extends Service {
     public async renderUserPersona(
         data: UserPersonaProfile,
         username: string,
-        avatar: string
+        avatar: string,
+        config: Config
     ): Promise<Buffer | string> {
         try {
-            const page = await this._renderUserPersona(data, username, avatar)
+            let theme = config.theme
+            if (theme === 'auto') {
+                const hour = new Date().getHours()
+                theme = hour >= 19 || hour < 6 ? 'dark' : 'light'
+            }
+
+            const page = await this._renderUserPersona(
+                data,
+                username,
+                avatar,
+                theme
+            )
 
             const element = await page.$('.container')
             if (!element) {
@@ -223,7 +285,8 @@ export class RendererService extends Service {
     private async _renderUserPersona(
         data: UserPersonaProfile,
         username: string,
-        avatar: string
+        avatar: string,
+        theme: 'light' | 'dark'
     ): Promise<Awaited<ReturnType<Context['puppeteer']['page']>>> {
         if (!this.ctx.puppeteer) {
             throw new Error('Puppeteer service is not available.')
@@ -242,7 +305,7 @@ export class RendererService extends Service {
         const formatTags = (tags: string[] | undefined) => {
             if (!tags || tags.length === 0)
                 return '<div class="empty-state">暂无数据</div>'
-            return tags.map((tag) => `<div class="tag">${tag}</div>`).join('')
+            return tags.map((tag) => `<div class="chip">${tag}</div>`).join('')
         }
 
         const formatList = (items: string[] | '无' | undefined) => {
@@ -257,10 +320,10 @@ export class RendererService extends Service {
             items: UserPersonaProfile['evidence']
         ): string => {
             if (!items || items.length === 0) {
-                return '<li>暂无事实依据</li>'
+                return '<div class="empty-state">暂无事实依据</div>'
             }
 
-            return items
+            const cards = items
                 .map((item) => {
                     const quoteHtml = (item || '')
                         .split('\n')
@@ -268,26 +331,35 @@ export class RendererService extends Service {
                         .filter(Boolean)
                         .join('<br/>')
                     return `
-                        <li>
-                            <div class="evidence-quote">${quoteHtml}</div>
-                        </li>
+                        <div class="card outlined-card evidence-card">
+                            <p>${quoteHtml}</p>
+                        </div>
                     `
                 })
                 .join('')
+
+            return `<div class="card-grid">${cards}</div>`
         }
+
+        const dynamicAvatarUrl =
+            avatar ||
+            'https://cravatar.cn/avatar/00000000000000000000000000000000?d=mp'
+
+        // 将头像转换为 Base64
+        const dynamicAvatarBase64 = await this.imageToBase64(dynamicAvatarUrl)
 
         const templateHtml = await fs.readFile(templatePath, 'utf-8')
         const filledHtml = renderTemplate(templateHtml, {
-            avatar:
-                avatar ||
-                'https://cravatar.cn/avatar/00000000000000000000000000000000?d=mp',
+            avatar: dynamicAvatarBase64,
             username,
-            analysisDate: new Date().toLocaleString(),
+            analysisDate: data.analysisDate || '暂无记录',
             summary: data.summary || '暂无摘要',
             keyTraits: formatTags(data.keyTraits),
             interests: formatTags(data.interests),
             communicationStyle: data.communicationStyle || '暂无记录',
-            evidence: formatEvidence(data.evidence)
+            evidence: formatEvidence(data.evidence),
+            theme: theme,
+            dynamicAvatarUrl: dynamicAvatarBase64
         })
 
         await fs.writeFile(outTemplateHtmlPath, filledHtml)

@@ -3,11 +3,11 @@ import { h } from 'koishi'
 import {
     BasicStatsResult,
     GroupAnalysisResult,
+    StoredMessage,
     SummaryTopic,
     UserPersonaProfile,
     UserStats
 } from './types'
-import { StoredMessage } from './service/message'
 import { Config } from './config'
 
 export function calculateBasicStats(
@@ -90,6 +90,7 @@ function getInitialUserStats(msg: StoredMessage): UserStats {
         nickname: msg.username,
         messageCount: 0,
         charCount: 0,
+        avatar: msg.avatarUrl,
         lastActive: new Date(0),
         replyCount: 0,
         atCount: 0,

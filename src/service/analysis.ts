@@ -5,9 +5,12 @@ import {
     GroupAnalysisResult,
     SummaryTopic,
     UserTitle,
-    UserPersonaProfile
+    UserPersonaProfile,
+    PersonaCache,
+    PersonaRecord,
+    StoredMessage
 } from '../types'
-import { Config, StoredMessage } from '..'
+import { Config } from '..'
 import {
     calculateBasicStats,
     generateActiveHoursChart,
@@ -18,25 +21,8 @@ import {
     normalizePersonaText,
     shouldListenToMessage
 } from '../utils'
-import { writeFile } from 'fs/promises'
 import type { GuildMember } from '@satorijs/protocol'
 
-interface PersonaRecord {
-    id: string
-    platform: string
-    selfId: string
-    userId: string
-    username: string
-    persona?: string
-    lastAnalysisAt?: Date
-    updatedAt?: Date
-}
-
-interface PersonaCache {
-    record: PersonaRecord
-    pendingMessages: number
-    parsedPersona?: UserPersonaProfile | null
-}
 
 export class AnalysisService extends Service {
     static readonly inject = [
@@ -393,7 +379,7 @@ export class AnalysisService extends Service {
         persona: UserPersonaProfile,
         messages: StoredMessage[]
     ): UserPersonaProfile {
-        writeFile('./persona.json', JSON.stringify(persona))
+
         if (!persona.evidence) {
             return persona
         }
@@ -522,7 +508,8 @@ export class AnalysisService extends Service {
                     {
                         const image =
                             await this.ctx.chatluna_group_analysis_renderer.renderGroupAnalysis(
-                                analysisResult
+                                analysisResult,
+                                this.config
                             )
                         message =
                             typeof image === 'string'
@@ -689,15 +676,18 @@ export class AnalysisService extends Service {
                 this.ctx.logger.warn(`获取用户 ${userId} 信息失败: ${e}`)
             }
 
-            if (!avatar && session.platform === 'onebot') {
+            if (session.platform === 'onebot') {
                 avatar = getAvatarUrl(userId)
             }
+
+            profile.analysisDate = cache.record.lastAnalysisAt.toLocaleString()
 
             const image =
                 await this.ctx.chatluna_group_analysis_renderer.renderUserPersona(
                     profile,
                     displayName,
-                    avatar
+                    avatar,
+                    this.config
                 )
 
             message =

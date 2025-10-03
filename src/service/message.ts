@@ -1,44 +1,11 @@
 import { $, Bot, Context, h, Query, Service, Session } from 'koishi'
 import { Config } from '../config'
-import { OneBotMessage } from '../types'
+import { ActivityStats, MessageFilter, OneBotMessage, PersistenceBuffer, StoredMessage } from '../types'
 import { type OneBotBot } from 'koishi-plugin-adapter-onebot'
-import { inferPlatformInfo } from '../utils'
+import { getAvatarUrl, inferPlatformInfo } from '../utils'
 import { CQCode } from '../onebot/cqcode'
 
-export interface MessageFilter {
-    guildId?: string
-    channelId?: string
-    userId?: string[]
-    selfId?: string
-    startTime?: Date
-    endTime?: Date
-    limit?: number
-    offset?: number
-}
 
-export interface StoredMessage {
-    id: string
-    platform: string
-    selfId: string
-    channelId: string
-    guildId?: string
-    userId: string
-    username: string
-    content: string
-    timestamp: Date
-    messageId?: string
-    elements?: h[]
-}
-
-interface ActivityStats {
-    windowStart: number
-    count: number
-}
-
-interface PersistenceBuffer {
-    messages: StoredMessage[]
-    lastMessageAt: number
-}
 
 export class MessageService extends Service {
     private messageCache = new Map<string, StoredMessage[]>()
@@ -83,6 +50,7 @@ export class MessageService extends Service {
                 userId: 'string',
                 username: 'string',
                 content: 'text',
+                avatarUrl: 'string',
                 timestamp: 'timestamp',
                 messageId: { type: 'string', nullable: true }
             },
@@ -125,6 +93,7 @@ export class MessageService extends Service {
             channelId: session.channelId || '0',
             guildId: session.guildId || '0',
             userId: session.userId,
+            avatarUrl: session.event.user?.avatar || '',
             username: session.username,
             content: session.content,
             timestamp: new Date(session.timestamp * 1000),
@@ -299,6 +268,7 @@ export class MessageService extends Service {
                     content: msg.content,
                     timestamp: new Date(msg.createdAt ?? msg.timestamp),
                     messageId: msg.id,
+                    avatarUrl: msg.user.avatar || '',
                     elements: h.parse(msg.content)
                 }))
 
@@ -468,6 +438,7 @@ export class MessageService extends Service {
                 userId: String(msg.sender.user_id),
                 username: msg.sender.nickname,
                 content: msg.raw_message || '',
+                avatarUrl: getAvatarUrl(msg.sender.user_id),
                 timestamp: new Date(msg.time * 1000),
                 messageId: String(msg.message_id),
                 elements: CQCode.parse(msg.raw_message)

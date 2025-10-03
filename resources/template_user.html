@@ -1,47 +1,183 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>用户画像报告</title>
-    <link rel="stylesheet" href="./css/template_group.css">
-</head>
-<body>
-    <div class="container">
-        <div class="header user-header">
-            <img src="${avatar}" alt="User Avatar" class="avatar-large">
-            <h1>${username} 的用户画像</h1>
-            <div class="sub-title">数据生成于: ${analysisDate}</div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="color-scheme" content="light dark" />
+        <title>用户画像报告</title>
+        <link rel="stylesheet" href="./css/template_group.css" />
+        <script src="https://cdnjs.onmicrosoft.cn/ajax/libs/color-thief/2.6.0/color-thief.umd.js"></script>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@material/material-color-utilities": "https://npm.onmicrosoft.cn/@materialx/material-color-utilities@0.4.8"
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <img id="dynamic-color-source" src="${dynamicAvatarUrl}" alt="" />
+        <div class="container">
+            <div class="header user-header">
+                <img src="${avatar}" alt="User Avatar" class="avatar-large" />
+                <h1>${username} 的用户画像</h1>
+                <div class="sub-title">数据生成于: ${analysisDate}</div>
+            </div>
+
+            <div class="section-title">个性摘要</div>
+            <div class="persona-summary">
+                <p>${summary}</p>
+            </div>
+
+            <div class="section-title">核心特质</div>
+            <div class="tag-container">${keyTraits}</div>
+
+            <div class="section-title">兴趣领域</div>
+            <div class="tag-container">${interests}</div>
+
+            <div class="section-title">沟通风格</div>
+            <div class="persona-block">
+                <p>${communicationStyle}</p>
+            </div>
+
+            <div class="section-title">事实依据</div>
+            ${evidence}
+
+            <footer>由 Koishi & ChatLuna 强力驱动</footer>
         </div>
 
-        <div class="section-title">📝 个性摘要</div>
-        <div class="persona-summary">
-            <p>${summary}</p>
-        </div>
+           <script type="module">
+            import * as material_color_utilities from '@material/material-color-utilities'
 
-        <div class="section-title">💡 核心特质</div>
-        <div class="tag-container">
-            ${keyTraits}
-        </div>
+            const colorThief = new ColorThief()
+            const {
+                themeFromSourceColor,
+                argbFromRgb,
+                Hct,
+                DynamicScheme,
+                SpecVersion,
+                Variant
+            } = material_color_utilities
 
-        <div class="section-title">🎨 兴趣领域</div>
-        <div class="tag-container">
-            ${interests}
-        </div>
+            const body = document.body
+            const root = document.documentElement
+            const themeSetting = '${theme}'
+            const defaultSourceColor = [103, 80, 164]
 
-        <div class="section-title">🗣️ 沟通风格</div>
-        <div class="persona-block">
-            <p>${communicationStyle}</p>
-        </div>
+            function applyTheme(themeName) {
+                body.className = themeName + '-theme'
+            }
 
-        <div class="section-title">📜 事实依据</div>
-        <div class="persona-block evidence">
-            <ul>
-                ${evidence}
-            </ul>
-        </div>
+            function setCssVariable(variable, value) {
+                root.style.setProperty(variable, value)
+            }
 
-        <footer>由 Koishi & ChatLuna 强力驱动</footer>
-    </div>
-</body>
+            function applyDynamicColors(color) {
+                try {
+                    const isDark = body.classList.contains('dark-theme')
+                    const sourceArgb = argbFromRgb(color[0], color[1], color[2])
+
+                    const scheme = DynamicScheme.from({
+                        isDark,
+                        specVersion: SpecVersion.SPEC_2025,
+                        // variant: Variant.EXPRESSIVE,
+                        sourceColorHct: Hct.fromInt(sourceArgb)
+                    })
+
+                    const tokenMap = {
+                        primary: 'primary',
+                        'on-primary': 'onPrimary',
+                        'primary-container': 'primaryContainer',
+                        'on-primary-container': 'onPrimaryContainer',
+                        secondary: 'secondary',
+                        'on-secondary': 'onSecondary',
+                        'secondary-container': 'secondaryContainer',
+                        'on-secondary-container': 'onSecondaryContainer',
+                        tertiary: 'tertiary',
+                        'on-tertiary': 'onTertiary',
+                        'tertiary-container': 'tertiaryContainer',
+                        'on-tertiary-container': 'onTertiaryContainer',
+                        error: 'error',
+                        'on-error': 'onError',
+                        'error-container': 'errorContainer',
+                        'on-error-container': 'onErrorContainer',
+                        background: 'background',
+                        'on-background': 'onBackground',
+                        surface: 'surface',
+                        'on-surface': 'onSurface',
+                        'surface-dim': 'surfaceDim',
+                        'surface-bright': 'surfaceBright',
+                        'surface-variant': 'surfaceVariant',
+                        'on-surface-variant': 'onSurfaceVariant',
+                        outline: 'outline',
+                        'outline-variant': 'outlineVariant',
+                        'surface-container-lowest': 'surfaceContainerLowest',
+                        'surface-container-low': 'surfaceContainerLow',
+                        'surface-container': 'surfaceContainer',
+                        'surface-container-high': 'surfaceContainerHigh',
+                        'surface-container-highest': 'surfaceContainerHighest',
+                        'inverse-surface': 'inverseSurface',
+                        'inverse-on-surface': 'inverseOnSurface',
+                        'inverse-primary': 'inversePrimary',
+                        scrim: 'scrim',
+                        shadow: 'shadow'
+                    }
+
+                    Object.entries(tokenMap).forEach(([cssToken, md3Token]) => {
+                        let colorValue = scheme[md3Token]
+                        if (colorValue === undefined) return
+
+                        const unsignedValue = colorValue >>> 0
+                        const r = (unsignedValue >> 16) & 255
+                        const g = (unsignedValue >> 8) & 255
+                        const b = unsignedValue & 255
+
+                        setCssVariable(
+                            '--dynamic-' + cssToken,
+                            'rgb(' + r + ', ' + g + ', ' + b + ')'
+                        )
+                    })
+                } catch (error) {
+                    console.error('Error applying dynamic colors:', error)
+                }
+            }
+
+            function init() {
+                if (themeSetting === 'auto') {
+                    const hour = new Date().getHours()
+                    const theme = hour >= 19 || hour < 6 ? 'dark' : 'light'
+                    applyTheme(theme)
+                } else {
+                    applyTheme(themeSetting)
+                }
+
+                const img = document.getElementById('dynamic-color-source')
+                img.setAttribute('crossOrigin', '')
+                if (img.complete && img.naturalWidth > 0) {
+                    try {
+                        const color = colorThief.getColor(img)
+                        applyDynamicColors(color)
+                    } catch (e) {
+                        console.error('Error extracting color:', e)
+                        applyDynamicColors(defaultSourceColor)
+                    }
+                } else {
+                    img.addEventListener('load', () => {
+                        try {
+                            const color = colorThief.getColor(img)
+                            applyDynamicColors(color)
+                        } catch (e) {
+                            console.error('Error extracting color:', e)
+                            applyDynamicColors(defaultSourceColor)
+                        }
+                    })
+                    img.addEventListener('error', () => {
+                        applyDynamicColors(defaultSourceColor)
+                    })
+                }
+            }
+
+            init()
+        </script>
+    </body>
 </html>
