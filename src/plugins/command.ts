@@ -13,6 +13,7 @@ export const inject = {
 
 export function apply(ctx: Context, config: Config) {
     const checkGroup = (session: Session) => {
+        if (!config.listenerGroups) return false
         return (
             config.listenerGroups.some(
                 (settings) =>
