@@ -4,7 +4,6 @@ import { AnalysisService } from '../service/analysis'
 import { RendererService } from '../service/renderer'
 import { Config } from '../config'
 
-
 export const inject = {
     chatluna_group_analysis: {
         required: true
@@ -180,10 +179,14 @@ export function apply(ctx: Context, config: Config) {
             if (!checkGroup(session))
                 return '本群未启用群分析功能，请使用 群分析.启用 来启用本群的群分析功能。'
 
-            const userId = user?.split(':')[1] ?? session.userId
+            let userId = user?.split(':')?.[1] ?? session.userId
 
-            if (userId !== session.userId && !(await ctx.permissions.check('authority:3', session))) {
-                return '你没有权限查看其他用户的画像。当前需要的权限为 3 级。'
+            if (
+                userId !== session.userId &&
+                !(await ctx.permissions.check('authority:3', session))
+            ) {
+                await session.send('你没有权限查看其他用户的画像。当前需要的权限为 3 级。将转为查看自己的画像。')
+                userId = session.userId
             }
 
             if (!userId) {

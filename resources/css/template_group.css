@@ -226,7 +226,7 @@
      align-items: center;
      justify-content: flex-end;
      min-width: 0;
-     height: 140px;
+     height: 180px;
  }
 
  .activity-bar-bar {
@@ -237,15 +237,34 @@
      transition: all 0.3s ease;
  }
 
+
+
  .activity-bar:hover .activity-bar-bar {
+
      background-image: linear-gradient(to top, #1890ff, #69b1ff);
+
      transform: translateY(-2px);
+
  }
 
+
+
+ .activity-bar-count {
+    font-size: 10px;
+    color: #1890ff;
+    font-weight: bold;
+    margin-bottom: 4px;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+ }
+
+ 
+
  .activity-bar-label {
+
      font-size: 11px;
-     margin-top: 8px;
-     color: #8c8c8c;
+
+     margin-top: 8px;     color: #8c8c8c;
      white-space: nowrap;
  }
 

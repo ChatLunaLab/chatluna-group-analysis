@@ -69,7 +69,7 @@ export class LLMService extends Service {
                 return data
             } catch (err) {
                 logger.error('解析 YAML 失败:', err)
-                logger.debug(
+                logger.error(
                     '待解析的 YAML 字符串:',
                     yamlMatch[1] || '[空字符串]'
                 )

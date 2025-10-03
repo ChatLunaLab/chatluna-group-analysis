@@ -231,7 +231,7 @@ export class AnalysisService extends Service {
         )
 
         if (historyMessages.length < this.config.personaMinMessages) {
-            this.ctx.logger.debug(
+            this.ctx.logger.info(
                 `用户 ${record.userId} 在设定时间窗内仅收集到 ${historyMessages.length} 条消息，低于触发阈值 ${this.config.personaMinMessages}，跳过画像分析。`
             )
             return
@@ -239,7 +239,7 @@ export class AnalysisService extends Service {
 
         const promptMessages = this.formatMessagesForPersona(historyMessages)
 
-        this.ctx.logger.debug(
+        this.ctx.logger.info(
             `开始分析用户 ${record.userId} 的画像 (${record.username})，收集到 ${historyMessages.length} 条消息。`
         )
 
@@ -282,7 +282,7 @@ export class AnalysisService extends Service {
         )
 
         if (!relevantGroups.length) {
-            this.ctx.logger.debug(
+            this.ctx.logger.wran(
                 `未在配置中找到用于用户 ${record.userId} 的监听群组，跳过画像分析。`
             )
             return []

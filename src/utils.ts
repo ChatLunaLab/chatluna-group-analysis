@@ -236,25 +236,30 @@ export function generateActiveHoursChart(
     const maxCount = values.length > 0 ? Math.max(...values) : 0
     const chartBars: string[] = []
 
+    // The container `.activity-bar` is 180px tall.
+    // The label at the bottom is approx 20px.
+    // The count at the top is approx 15px.
+    // Max available height for the bar is 180 - 20 - 15 = 145px.
+    const maxBarHeight = 145
+
     for (let i = 0; i < 24; i++) {
         const count = activeHours[i] || 0
-        let height = maxCount > 0 ? (count / maxCount) * 100 : 0
-        if (height > 0 && height < 5) {
-            height = 5 // 最小可见高度
+        let barHeight = maxCount > 0 ? (count / maxCount) * maxBarHeight : 0
+        if (count > 0 && barHeight < 3) {
+            barHeight = 3 // 最小可见高度
         }
-        height = Math.round(height * 100) / 100
 
         const percentage =
             maxCount > 0 ? Math.round((count / maxCount) * 100) : 0
 
-        // 使用内联样式，但加上 !important 确保优先级
         const barStyle =
-            height > 0
-                ? `style="height: ${height}% !important;"`
+            barHeight > 0
+                ? `style="height: ${barHeight}px !important;"`
                 : `style="height: 0px !important;"`
 
         chartBars.push(`
                 <div class="activity-bar" title="${i}:00 - ${count} 条消息 (${percentage}%)">
+                    <div class="activity-bar-count">${count > 0 ? count : ''}</div>
                     <div class="activity-bar-bar" ${barStyle}></div>
                     <span class="activity-bar-label">${String(i).padStart(2, '0')}</span>
                 </div>
