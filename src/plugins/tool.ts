@@ -133,7 +133,8 @@ class GroupMessageFetchTool extends StructuredTool {
             userId: raw.userId,
             selfId: session.selfId,
             limit: raw.limit,
-            offset: raw.offset
+            offset: raw.offset,
+            purpose: 'general'
         }
 
         const startTime = this.parseNaturalLanguageTime(raw.startTime)
@@ -252,6 +253,12 @@ class GroupUserPersonaTool extends StructuredTool {
         }
 
         const userId = input.user_id
+
+        // Check if user is in personaUserFilter
+        const config = this.ctx.config as Config
+        if (config.personaUserFilter.includes(userId)) {
+            return `User ${userId} is in the persona filter list and cannot be analyzed.`
+        }
 
         try {
             const result = await this.ctx.chatluna_group_analysis.getUserPersona(

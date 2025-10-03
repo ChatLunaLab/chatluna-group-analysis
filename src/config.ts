@@ -18,7 +18,9 @@ const GroupListener: Schema<GroupListener> = Schema.object({
 
 export interface Config {
     listenerGroups: GroupListener[]
-    filterWords: string[]
+    wordsFilter: string[]
+    userFilter: string[]
+    personaUserFilter: string[]
     model: string
     alwaysPersistMessages: boolean
     retentionDays: number
@@ -106,9 +108,17 @@ export const Config: Schema<Config> = Schema.intersect([
                 '渲染模板的主题。auto 会在 19:00-06:00 期间自动切换到暗色模式。'
             )
             .default('auto'),
-        filterWords: Schema.array(String)
+        wordsFilter: Schema.array(String)
             .role('table')
             .description('过滤词列表。消息内含有此词语时将不会记入统计消息。')
+            .default([]),
+        userFilter: Schema.array(String)
+            .role('table')
+            .description('用户过滤列表。在群分析中忽略这些用户 ID 的消息。')
+            .default([]),
+        personaUserFilter: Schema.array(String)
+            .role('table')
+            .description('用户画像过滤列表。这些用户 ID 将无法分析用户画像（包括自动分析和手动命令调用）。')
             .default([]),
         maxTopics: Schema.number()
             .description('最多生成的话题数量。')

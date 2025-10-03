@@ -193,6 +193,11 @@ export function apply(ctx: Context, config: Config) {
                 return '无法获取目标用户信息。'
             }
 
+            // Check if user is in personaUserFilter
+            if (config.personaUserFilter.includes(userId)) {
+                return '该用户已被设置为禁止分析用户画像。'
+            }
+
             try {
                 await ctx.chatluna_group_analysis.executeUserPersonaAnalysis(
                     session,

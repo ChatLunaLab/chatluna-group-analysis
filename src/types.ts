@@ -118,6 +118,7 @@ export interface MessageFilter {
     endTime?: Date
     limit?: number
     offset?: number
+    purpose?: 'group-analysis' | 'user-persona' | 'general'
 }
 
 export interface StoredMessage {

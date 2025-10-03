@@ -1,11 +1,15 @@
 import { $, Bot, Context, h, Query, Service, Session } from 'koishi'
 import { Config } from '../config'
-import { ActivityStats, MessageFilter, OneBotMessage, PersistenceBuffer, StoredMessage } from '../types'
+import {
+    ActivityStats,
+    MessageFilter,
+    OneBotMessage,
+    PersistenceBuffer,
+    StoredMessage
+} from '../types'
 import { type OneBotBot } from 'koishi-plugin-adapter-onebot'
 import { getAvatarUrl, inferPlatformInfo } from '../utils'
 import { CQCode } from '../onebot/cqcode'
-
-
 
 export class MessageService extends Service {
     private messageCache = new Map<string, StoredMessage[]>()
@@ -279,11 +283,31 @@ export class MessageService extends Service {
                         !filter.userId ||
                         filter.userId.length < 1 ||
                         filter.userId.includes(msg.userId)
-                    const hitFilterContent = !this.config.filterWords.some(
+                    const hitFilterContent = !this.config.wordsFilter.some(
                         (word) => msg.content.includes(word) /* ||
                             msg.username.includes(word) */
                     )
-                    return withinTimeRange && matchesUser && hitFilterContent
+
+                    // Apply purpose-based filtering
+                    let purposeFilter = true
+                    if (filter.purpose === 'group-analysis') {
+                        // Filter out users in userFilter for group analysis
+                        purposeFilter = !this.config.userFilter.includes(
+                            msg.userId
+                        )
+                    } else if (filter.purpose === 'user-persona') {
+                        // Filter out users in personaUserFilter for user persona
+                        purposeFilter = !this.config.personaUserFilter.includes(
+                            msg.userId
+                        )
+                    }
+
+                    return (
+                        withinTimeRange &&
+                        matchesUser &&
+                        hitFilterContent &&
+                        purposeFilter
+                    )
                 })
 
                 allMessages.unshift(...validMessages)
@@ -402,11 +426,28 @@ export class MessageService extends Service {
                         filter.userId.length < 1 ||
                         filter.userId.includes(userId)
 
-                    const hitFilterContent = !this.config.filterWords.some(
+                    const hitFilterContent = !this.config.wordsFilter.some(
                         (word) => msg.raw_message.includes(word) /* ||
                             msg.sender.nickname.includes(word) */
                     )
-                    return withinTimeRange && matchesUser && hitFilterContent
+
+                    // Apply purpose-based filtering
+                    let purposeFilter = true
+                    if (filter.purpose === 'group-analysis') {
+                        // Filter out users in userFilter for group analysis
+                        purposeFilter = !this.config.userFilter.includes(userId)
+                    } else if (filter.purpose === 'user-persona') {
+                        // Filter out users in personaUserFilter for user persona
+                        purposeFilter =
+                            !this.config.personaUserFilter.includes(userId)
+                    }
+
+                    return (
+                        withinTimeRange &&
+                        matchesUser &&
+                        hitFilterContent &&
+                        purposeFilter
+                    )
                 })
 
                 messages.unshift(...validMessages)
@@ -464,14 +505,44 @@ export class MessageService extends Service {
 
             if (filter.guildId) query.guildId = filter.guildId
             if (filter.channelId) query.channelId = filter.channelId
-            if (filter.userId) query.userId = {
-                $in: filter.userId
-            }
+            if (filter.userId)
+                query.userId = {
+                    $in: filter.userId
+                }
 
             if (filter.startTime || filter.endTime) {
                 query.timestamp = {}
                 if (filter.startTime) query.timestamp.$gte = filter.startTime
                 if (filter.endTime) query.timestamp.$lte = filter.endTime
+            }
+
+            // Apply purpose-based filtering
+            if (
+                filter.purpose === 'group-analysis' &&
+                this.config.userFilter.length > 0
+            ) {
+                // Exclude users in userFilter for group analysis
+                query.userId = query.userId
+                    ? {
+                          $in: filter.userId.filter(
+                              (userId) =>
+                                  !this.config.userFilter.includes(userId)
+                          )
+                      }
+                    : { $nin: this.config.userFilter }
+            } else if (
+                filter.purpose === 'user-persona' &&
+                this.config.personaUserFilter.length > 0
+            ) {
+                // Exclude users in personaUserFilter for user persona
+                query.userId = query.userId
+                    ? {
+                          $in: filter.userId.filter(
+                              (userId) =>
+                                  !this.config.userFilter.includes(userId)
+                          )
+                      }
+                    : { $nin: this.config.personaUserFilter }
             }
 
             const messages = await this.ctx.database

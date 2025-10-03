@@ -89,6 +89,12 @@ export class AnalysisService extends Service {
     private async handleIncomingMessageForPersona(session: Session) {
         if (this.config.personaAnalysisMessageInterval === 0) return
         if (!session.userId) return
+
+        // Skip users in personaUserFilter
+        if (this.config.personaUserFilter.includes(session.userId)) {
+            return
+        }
+
         const recordId = this.getPersonaRecordId(
             session.platform,
             session.selfId,
@@ -306,7 +312,8 @@ export class AnalysisService extends Service {
                         selfId: group.selfId,
                         startTime,
                         endTime: new Date(),
-                        limit: totalLimit
+                        limit: totalLimit,
+                        purpose: 'user-persona'
                     }
                 )
 
@@ -452,7 +459,8 @@ export class AnalysisService extends Service {
                     startTime,
                     selfId,
                     endTime,
-                    limit: this.config.maxMessages
+                    limit: this.config.maxMessages,
+                    purpose: 'group-analysis'
                 }
             )
 
