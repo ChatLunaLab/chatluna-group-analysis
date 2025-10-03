@@ -282,7 +282,7 @@ export class AnalysisService extends Service {
         )
 
         if (!relevantGroups.length) {
-            this.ctx.logger.wran(
+            this.ctx.logger.warn(
                 `未在配置中找到用于用户 ${record.userId} 的监听群组，跳过画像分析。`
             )
             return []

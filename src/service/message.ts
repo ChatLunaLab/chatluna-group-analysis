@@ -348,13 +348,18 @@ export class MessageService extends Service {
         )
 
         if (platform === 'onebot') {
+            this.ctx.logger.info('使用 OneBot 历史消息获取功能。')
             return this.getOneBotHistoricalMessages(filter)
         }
 
         if (bot?.['getMessageList']) {
+            this.ctx.logger.info('使用 Bot API 历史消息获取功能。')
             return this.getBotAPIHistoricalMessages(filter, bot)
         }
 
+        this.ctx.logger.warn(
+            '未找到可用的适配器，将使用数据库历史消息获取功能。'
+        )
         return this.getDatabaseHistoricalMessages(filter)
     }
 

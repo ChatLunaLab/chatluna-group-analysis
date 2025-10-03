@@ -57,6 +57,26 @@ export class RendererService extends Service {
             await fs.unlink(path.resolve(templateDir, file))
         }
 
+        const page = await this.ctx.puppeteer.page()
+
+        try {
+            await page.goto('file://' + templateDir + '/template_user.html', {
+                waitUntil: 'domcontentloaded'
+            })
+        } catch (error) {
+            this.ctx.logger.error('初始化模板文件时发生错误:', error)
+        }
+
+        this.ctx.setTimeout(
+            async () => {
+                try {
+                    page.close()
+                } catch (error) {
+                    this.ctx.logger.error('关闭页面时发生错误:', error)
+                }
+            },
+            3 * 60 * 1000
+        )
     }
 
     public async renderGroupAnalysisToPdf(
@@ -144,7 +164,7 @@ export class RendererService extends Service {
 
         // 重新加载页面并使用 goto 访问本地文件
         await page.goto('file://' + outTemplateHtmlPath, {
-            waitUntil: 'domcontentloaded',
+            waitUntil: 'domcontentloaded'
         })
 
         this.ctx.logger.info('网页加载完成，开始等待字体加载。')
@@ -276,11 +296,11 @@ export class RendererService extends Service {
             '用户画像 HTML 模板填充完成，正在调用 Puppeteer 进行渲染...'
         )
 
-       const page = await this.ctx.puppeteer.page()
+        const page = await this.ctx.puppeteer.page()
 
         // 重新加载页面并使用 goto 访问本地文件
         await page.goto('file://' + outTemplateHtmlPath, {
-            waitUntil: 'domcontentloaded',
+            waitUntil: 'domcontentloaded'
         })
 
         this.ctx.logger.info('网页加载完成，开始等待字体加载。')
@@ -289,7 +309,6 @@ export class RendererService extends Service {
         await page.evaluate(() => document.fonts.ready)
 
         this.ctx.logger.info('字体加载完成。')
-
 
         this.ctx.setTimeout(
             async () => {
