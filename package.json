@@ -1,7 +1,7 @@
 {
     "name": "koishi-plugin-chatluna-group-analysis",
     "description": "一个分析QQ群聊历史并生成精美报告的Koishi插件",
-    "version": "1.0.12",
+    "version": "1.0.13",
     "type": "module",
     "main": "lib/index.cjs",
     "module": "lib/index.mjs",
@@ -109,6 +109,7 @@
         "download-fonts": "yarn tsx scripts/download-fonts.ts"
     },
     "koishi": {
+        "category": "ai",
         "description": {
             "zh": "ChatLuna AI 群分析插件。支持 AI 分析群话题，分析群友的用户画像。并为 ChatLuna 提供消息拉取等模型工具。"
         },
