@@ -316,7 +316,7 @@ export class AnalysisService extends Service {
                     {
                         guildId: group.guildId,
                         channelId: group.channelId,
-                        userId: record.userId,
+                        userId: [record.userId],
                         selfId: group.selfId,
                         startTime,
                         endTime: new Date(),

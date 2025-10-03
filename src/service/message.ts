@@ -1,4 +1,4 @@
-import { Bot, Context, h, Query, Service, Session } from 'koishi'
+import { $, Bot, Context, h, Query, Service, Session } from 'koishi'
 import { Config } from '../config'
 import { OneBotMessage } from '../types'
 import { type OneBotBot } from 'koishi-plugin-adapter-onebot'
@@ -8,7 +8,7 @@ import { CQCode } from '../onebot/cqcode'
 export interface MessageFilter {
     guildId?: string
     channelId?: string
-    userId?: string | number
+    userId?: string[]
     selfId?: string
     startTime?: Date
     endTime?: Date
@@ -44,7 +44,8 @@ export class MessageService extends Service {
     private messageCache = new Map<string, StoredMessage[]>()
     private readonly cacheSize = 1000
     private readonly cacheExpiration = 1000 * 60 * 24 // 1 days
-    private messageHandlers: Array<(session: Session) => void | Promise<void>> = []
+    private messageHandlers: Array<(session: Session) => void | Promise<void>> =
+        []
     private activityStats = new Map<string, ActivityStats>()
     private persistenceBuffers = new Map<string, PersistenceBuffer>()
     private readonly activityWindowMs = 60 * 1000
@@ -182,13 +183,9 @@ export class MessageService extends Service {
     }
 
     private setupPersistenceTasks() {
-
-        this.ctx.setInterval(
-            () => {
-                void this.flushIdleBuffers()
-            },
-            this.bufferSweepIntervalMs
-        )
+        this.ctx.setInterval(() => {
+            void this.flushIdleBuffers()
+        }, this.bufferSweepIntervalMs)
 
         this.ctx.on('dispose', () => {
             void this.flushAllBuffers()
@@ -222,16 +219,25 @@ export class MessageService extends Service {
 
         const checkAndWarn = async () => {
             if (this.warnedOneBotPersistence) return
-            const targeted = await Promise.all(this.ctx.bots.map(async (bot) => {
-                if (bot.platform !== 'onebot') return false
-                const onebot = bot as OneBotBot<Context>
+            const targeted = await Promise.all(
+                this.ctx.bots.map(async (bot) => {
+                    if (bot.platform !== 'onebot') return false
+                    const onebot = bot as OneBotBot<Context>
 
-                const versionInfo = await onebot.internal._request("get_version_info", {})
+                    const versionInfo = await onebot.internal._request(
+                        'get_version_info',
+                        {}
+                    )
 
-                const name = (versionInfo.data['app_name'] as string).toLowerCase()
+                    const name = (
+                        versionInfo.data['app_name'] as string
+                    ).toLowerCase()
 
-                return name.includes('llonebot') || name.includes('lagrange')
-            })).then(targeted => targeted.filter(targeted => targeted))
+                    return (
+                        name.includes('llonebot') || name.includes('lagrange')
+                    )
+                })
+            ).then((targeted) => targeted.filter((targeted) => targeted))
 
             if (targeted.length) {
                 this.ctx.logger.info(
@@ -301,7 +307,8 @@ export class MessageService extends Service {
                         msg.timestamp >= startTime && msg.timestamp <= endTime
                     const matchesUser =
                         !filter.userId ||
-                        String(msg.userId) === String(filter.userId)
+                        filter.userId.length < 1 ||
+                        filter.userId.includes(msg.userId)
                     const hitFilterContent = !this.config.filterWords.some(
                         (word) => msg.content.includes(word) /* ||
                             msg.username.includes(word) */
@@ -311,7 +318,6 @@ export class MessageService extends Service {
 
                 allMessages.unshift(...validMessages)
                 fetchedCount += validMessages.length
-
 
                 const oldestMsg = batch[0]
                 logger.info(
@@ -420,9 +426,12 @@ export class MessageService extends Service {
                     const msgTime = new Date(msg.time * 1000)
                     const withinTimeRange =
                         msgTime >= startTime && msgTime <= endTime
+                    const userId = String(msg.sender?.user_id)
                     const matchesUser =
                         !filter.userId ||
-                        String(msg.sender?.user_id) === String(filter.userId)
+                        filter.userId.length < 1 ||
+                        filter.userId.includes(userId)
+
                     const hitFilterContent = !this.config.filterWords.some(
                         (word) => msg.raw_message.includes(word) /* ||
                             msg.sender.nickname.includes(word) */
@@ -433,12 +442,16 @@ export class MessageService extends Service {
                 messages.unshift(...validMessages)
                 fetchedCount += validMessages.length
 
-
                 logger.info(
                     `群 ${targetId} [第 ${queryRounds} 轮] 获取了 ${validMessages.length} 条消息。最旧消息: ${new Date(batch[0].time * 1000).toLocaleString()}`
                 )
 
-                if ((batch?.[0]?.time || 0) * 1000 < startTime.getTime() || batch[0].time === oldestMsg?.time || batch.length === 0) break
+                if (
+                    (batch?.[0]?.time || 0) * 1000 < startTime.getTime() ||
+                    batch[0].time === oldestMsg?.time ||
+                    batch.length === 0
+                )
+                    break
 
                 oldestMsg = batch[0]
 
@@ -480,7 +493,9 @@ export class MessageService extends Service {
 
             if (filter.guildId) query.guildId = filter.guildId
             if (filter.channelId) query.channelId = filter.channelId
-            if (filter.userId) query.userId = String(filter.userId)
+            if (filter.userId) query.userId = {
+                $in: filter.userId
+            }
 
             if (filter.startTime || filter.endTime) {
                 query.timestamp = {}
@@ -562,7 +577,6 @@ export class MessageService extends Service {
             await this.flushPendingBuffer(key)
         }
     }
-
 
     private async flushPendingBuffer(key: string) {
         const buffer = this.persistenceBuffers.get(key)

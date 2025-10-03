@@ -4,7 +4,7 @@ import type { ChatLunaToolRunnable } from 'koishi-plugin-chatluna/llm-core/platf
 import { ChatLunaPlugin } from 'koishi-plugin-chatluna/services/chat'
 import { parseDate } from 'chrono-node'
 import { Context, Session } from 'koishi'
-import { z } from 'zod'
+import { array, z } from 'zod'
 import { Config } from '../config'
 import type { GroupMessageFetchFilter } from '../types'
 import type { MessageFilter } from '../service/message'
@@ -132,7 +132,7 @@ class GroupMessageFetchTool extends StructuredTool {
             guildId: raw.guildId ?? session.guildId,
             channelId: raw.channelId ?? session.channelId,
             userId: raw.userId,
-            selfId: raw.selfId ?? session.selfId,
+            selfId: session.selfId,
             limit: raw.limit,
             offset: raw.offset
         }
@@ -177,15 +177,11 @@ const MAX_FETCH_LIMIT = 500
 const groupMessageFilterSchema = z
     .object({
         userId: z
-            .string()
+            .array(z.string())
             .min(1)
             .optional()
-            .describe('Only return messages sent by the specified user ID.'),
-        selfId: z
-            .string()
-            .min(1)
-            .optional()
-            .describe('Bot self ID used to route the request. Defaults to the invoking session self ID.'),
+            .describe('Only return messages sent by the specified user ID array.'),
+
         startTime: z
             .string()
             .min(1)

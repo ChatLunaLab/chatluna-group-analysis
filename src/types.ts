@@ -68,7 +68,7 @@ export interface UserPersonaProfile {
     keyTraits: string[]
     interests: string[]
     communicationStyle: string
-    evidence: string[] 
+    evidence: string[]
     lastMergedFromHistory?: boolean
 }
 
@@ -100,7 +100,7 @@ export interface BasicStatsResult {
 export interface GroupMessageFetchFilter {
     guildId?: string
     channelId?: string
-    userId?: string
+    userId?: string[]
     selfId?: string
     startTime?: string
     endTime?: string
