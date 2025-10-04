@@ -460,7 +460,7 @@ export class MessageService extends Service {
                     batch.length === 0
                 ) {
                     logger.info(
-                        `群 ${targetId} [第 ${queryRounds} 轮] 获取了 ${validMessages.length} 条消息。最旧消息: ${new Date(batch[0].time * 1000).toLocaleString()}`
+                        `群 ${targetId} [第 ${queryRounds} 轮] 获取了 ${validMessages.length} 条消息。最旧消息: ${new Date((batch[0]?.time || 0) * 1000).toLocaleString()}`
                     )
                     break
                 }
