@@ -314,14 +314,21 @@ export class MessageService extends Service {
                 fetchedCount += validMessages.length
 
                 const oldestMsg = batch[0]
-                logger.info(
-                    `群 ${targetId} [第 ${queryRounds} 轮] 获取了 ${validMessages.length} 条消息。最旧消息: ${oldestMsg.timestamp.toLocaleString()}`
-                )
 
-                if (oldestMsg.timestamp < startTime) break
+                if (oldestMsg.timestamp < startTime) {
+                    logger.info(
+                        `群 ${targetId} [第 ${queryRounds} 轮] 获取了 ${validMessages.length} 条消息。最旧消息: ${oldestMsg.timestamp.toLocaleString()}`
+                    )
+                    break
+                }
 
                 nextId = messageList.prev
-                if (fetchedCount >= limit || !nextId?.length) break
+                if (fetchedCount >= limit || !nextId?.length) {
+                    logger.info(
+                        `群 ${targetId} [第 ${queryRounds} 轮] 获取了 ${validMessages.length} 条消息。最旧消息: ${oldestMsg.timestamp.toLocaleString()}`
+                    )
+                    break
+                }
             }
 
             return allMessages.slice(0, limit)
@@ -411,7 +418,12 @@ export class MessageService extends Service {
                         (result) => result.data as { messages: OneBotMessage[] }
                     )
 
-                if (!result?.messages?.length) break
+                if (!result?.messages?.length) {
+                    logger.info(
+                        `群 ${targetId} [第 ${queryRounds} 轮] 最旧消息: ${new Date(oldestMsg.time * 1000).toLocaleString()}`
+                    )
+                    break
+                }
 
                 queryRounds++
 
@@ -453,16 +465,16 @@ export class MessageService extends Service {
                 messages.unshift(...validMessages)
                 fetchedCount += validMessages.length
 
-                logger.info(
-                    `群 ${targetId} [第 ${queryRounds} 轮] 获取了 ${validMessages.length} 条消息。最旧消息: ${new Date(batch[0].time * 1000).toLocaleString()}`
-                )
-
                 if (
                     (batch?.[0]?.time || 0) * 1000 < startTime.getTime() ||
                     batch[0].time === oldestMsg?.time ||
                     batch.length === 0
-                )
+                ) {
+                    logger.info(
+                        `群 ${targetId} [第 ${queryRounds} 轮] 获取了 ${validMessages.length} 条消息。最旧消息: ${new Date(batch[0].time * 1000).toLocaleString()}`
+                    )
                     break
+                }
 
                 oldestMsg = batch[0]
 
