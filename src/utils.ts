@@ -400,12 +400,14 @@ export function mergePersona(
 }
 
 export async function isLagrangeBot(bot: OneBotBot<Context>) {
-    if (bot.platform !== 'onebot') return false
+    if (bot.platform !== 'onebot') {
+        return { isRunningLagrange: false, botAppName: '' }
+    }
     const onebot = bot as OneBotBot<Context>
 
     const versionInfo = await onebot.internal._request('get_version_info', {})
 
     const name = (versionInfo.data['app_name'] as string).toLowerCase()
 
-    return name.includes('lagrange')
+    return { isRunningLagrange: name.includes('lagrange'), botAppName: name }
 }

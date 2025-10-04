@@ -368,7 +368,11 @@ export class MessageService extends Service {
             return []
         }
 
-        const isRunningLagrange = await isLagrangeBot(bot)
+        const { isRunningLagrange, botAppName } = await isLagrangeBot(bot)
+
+        logger.info(
+            `是否运行在 Lagrange: ${isRunningLagrange}, 具体的 OneBot 实例: ${botAppName}`
+        )
 
         const messages: OneBotMessage[] = []
         const limit = filter.limit || 100
@@ -383,20 +387,27 @@ export class MessageService extends Service {
 
         try {
             while (fetchedCount < limit) {
+                const requestPackage = {
+                    group_id: Number(targetId),
+                    message_seq: messageSeq,
+                    count: 50,
+                    reverseOrder: messageSeq !== 0
+                }
+
+                if (isRunningLagrange) {
+                    delete requestPackage.reverseOrder
+                    requestPackage.count = 30
+                }
+
                 const result = await bot.internal
-                    ._request('get_group_msg_history', {
-                        group_id: Number(targetId),
-                        message_seq: messageSeq,
-                        count: 50,
-                        reverseOrder: messageSeq !== 0
-                    })
+                    ._request('get_group_msg_history', requestPackage)
                     .then(
                         (result) => result.data as { messages: OneBotMessage[] }
                     )
 
                 if (!result?.messages?.length) {
                     logger.info(
-                        `群 ${targetId} [第 ${queryRounds} 轮] 最旧消息: ${new Date(oldestMsg.time * 1000).toLocaleString()}`
+                        `群 ${targetId} [第 ${queryRounds} 轮] 最旧消息: ${new Date((oldestMsg?.time || 0) * 1000).toLocaleString()}`
                     )
                     break
                 }
