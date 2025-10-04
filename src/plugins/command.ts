@@ -166,9 +166,10 @@ export function apply(ctx: Context, config: Config) {
             return `当前群 ${guildName} (${guildId}) 分析功能状态: ${enabled}`
         })
 
-    settings
-        .subcommand('.用户画像 [user:user]', '查看指定用户的画像')
-        .alias('.persona')
+    ctx
+        .command('用户画像 [user:user]', '查看指定用户的画像')
+        .alias('group-analysis.persona')
+        .alias('群分析.用户画像')
         .usage(
             '使用方法：/群分析.用户画像 @用户 或 /群分析.用户画像 <用户ID> 或 /群分析.用户画像。不带参数时查看当前用户。查看其他用户需要为 bot 管理员。'
         )
