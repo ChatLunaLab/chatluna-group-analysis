@@ -274,6 +274,7 @@ export const Config: Schema<Config> = Schema.intersect([
 
 历史画像：{previousAnalysis}
 最新聊天记录：{messages}
+用户角色: {roles}
 
 请严格按照以下 YAML 格式返回，放在代码块中：
 \`\`\`yaml

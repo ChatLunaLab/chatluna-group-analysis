@@ -152,6 +152,7 @@ export interface PersonaRecord {
     selfId: string
     userId: string
     username: string
+    roles: string[]
     persona?: string
     lastAnalysisAt?: Date
     updatedAt?: Date

@@ -7,7 +7,7 @@ import {
     PersistenceBuffer,
     StoredMessage
 } from '../types'
-import { type OneBotBot } from 'koishi-plugin-adapter-onebot'
+import type { OneBotBot } from 'koishi-plugin-adapter-onebot'
 import { getAvatarUrl, inferPlatformInfo } from '../utils'
 import { CQCode } from '../onebot/cqcode'
 

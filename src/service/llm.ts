@@ -120,6 +120,7 @@ export class LLMService extends Service {
     public async analyzeUserPersona(
         userId: string,
         username: string,
+        roles: string[],
         recentMessages: string,
         previousAnalysis?: string
     ): Promise<UserPersonaProfile | null> {
@@ -129,6 +130,7 @@ export class LLMService extends Service {
                 '{previousAnalysis}',
                 previousAnalysis || '（无历史画像，请从零开始）'
             )
+            .replace('{roles}', roles.join(', ') || '（无角色）')
             .replace('{userId}', userId)
             .replace('{username}', username || userId)
             .replace(

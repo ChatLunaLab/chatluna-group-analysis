@@ -45,14 +45,15 @@ export function calculateBasicStats(
         for (const el of elements) {
             if (el.type === 'text') {
                 pureText += el.attrs.content
-            } else if (el.type === 'quote') {
+                // onebot 兼容，添加 reply
+            } else if (el.type === 'quote' || el.type === 'reply' ) {
                 stat.replyCount++
             } else if (el.type === 'at') {
                 stat.atCount++
             } else if (el.type === 'face') {
                 stat.emojiStats['face'] = (stat.emojiStats['face'] || 0) + 1
                 totalEmojiCount++
-            } else if (el.type === 'image' && el.attrs.type === 'sticker') {
+            } else if (el.type === 'image' && el.attrs.subType != null && el.attrs.subType !== 0) {
                 stat.emojiStats['sticker'] =
                     (stat.emojiStats['sticker'] || 0) + 1
                 totalEmojiCount++

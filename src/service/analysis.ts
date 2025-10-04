@@ -21,8 +21,8 @@ import {
     normalizePersonaText,
     shouldListenToMessage
 } from '../utils'
-import type { GuildMember } from '@satorijs/protocol'
-
+import type { GuildMember, User } from '@satorijs/protocol'
+import type { OneBotBot } from 'koishi-plugin-adapter-onebot'
 
 export class AnalysisService extends Service {
     static readonly inject = [
@@ -241,6 +241,7 @@ export class AnalysisService extends Service {
             await this.ctx.chatluna_group_analysis_llm.analyzeUserPersona(
                 record.userId,
                 record.username,
+                record.roles,
                 promptMessages,
                 previousText
             )
@@ -288,10 +289,15 @@ export class AnalysisService extends Service {
             let userGroupInfo: GuildMember | null = null
 
             try {
-                userGroupInfo = await bot.getGuildMember(
-                    group.channelId || group.guildId,
-                    record.userId
-                )
+                if (bot.platform === 'onebot') {
+                    userGroupInfo = await (bot as OneBotBot<Context>).internal.getGroupMemberInfo(group.guildId, record.userId, true)
+                } else {
+                    userGroupInfo = await bot.getGuildMember(
+                        group.channelId || group.guildId,
+                        record.userId
+                    )
+                }
+
                 if (userGroupInfo == null) {
                     continue
                 }
@@ -302,6 +308,8 @@ export class AnalysisService extends Service {
                 )
                 continue
             }
+
+            record.roles = userGroupInfo.roles
 
             const history =
                 await this.ctx.chatluna_group_analysis_message.getHistoricalMessages(
@@ -331,10 +339,6 @@ export class AnalysisService extends Service {
         }
 
         results.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-
-        if (results.length > totalLimit) {
-            return results.slice(-totalLimit)
-        }
 
         return results
     }
@@ -386,7 +390,6 @@ export class AnalysisService extends Service {
         persona: UserPersonaProfile,
         messages: StoredMessage[]
     ): UserPersonaProfile {
-
         if (!persona.evidence) {
             return persona
         }
@@ -627,16 +630,23 @@ export class AnalysisService extends Service {
                 userId
             )
 
+            let avatar: string | undefined
+            let user: User
+
+            try {
+                user = await bot.getUser(userId)
+            } catch (error) {
+                this.ctx.logger.warn(`获取用户 ${userId} 信息失败: ${error}`)
+            }
+
             const cache = await this.ensurePersonaCache(recordId, {
                 platform: session.platform,
                 selfId: session.selfId,
                 userId,
-                username: session.username || userId
+                username: user.nick || user.name || userId
             })
 
-            if (session.username) {
-                cache.record.username = session.username
-            }
+            let displayName = cache.record.username
 
             const cacheExpired = this.isPersonaCacheExpired(
                 cache.record.lastAnalysisAt
@@ -668,10 +678,7 @@ export class AnalysisService extends Service {
 
             const profile = cache.parsedPersona!
 
-            let displayName = cache.record.username
-            let avatar: string | undefined
-            try {
-                const user = await bot.getUser(userId, session.guildId)
+            if (user) {
                 avatar = user.avatar
                 const resolvedName =
                     (user as { nick?: string; name?: string }).nick ||
@@ -680,8 +687,6 @@ export class AnalysisService extends Service {
                     displayName = resolvedName
                     cache.record.username = resolvedName
                 }
-            } catch (e) {
-                this.ctx.logger.warn(`获取用户 ${userId} 信息失败: ${e}`)
             }
 
             if (session.platform === 'onebot') {
