@@ -410,7 +410,7 @@ export class AnalysisService extends Service {
             let resolvedMessage: StoredMessage | undefined = messageIndex[entry]
 
             if (resolvedMessage) {
-                updated.push(resolvedMessage.elements.join(''))
+                updated.push(resolvedMessage.content)
             } else {
                 this.ctx.logger.warn(
                     `无法找到画像证据 ${entry} 对应的消息，请检查消息服务是否正常。`

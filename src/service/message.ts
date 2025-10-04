@@ -24,7 +24,6 @@ export class MessageService extends Service {
     private readonly bufferFlushSize = 50
     private readonly bufferIdleFlushMs = 30 * 1000
     private readonly bufferSweepIntervalMs = 30 * 1000
-    private warnedOneBotPersistence = true
 
     constructor(
         ctx: Context,
@@ -593,7 +592,7 @@ export class MessageService extends Service {
         }
 
         if (session.platform !== 'onebot' && !session.bot['getMessageList']) {
-            await this.persistMessages([storedMessage])
+            await this.enqueueMessageForPersistence(storedMessage)
         }
     }
 

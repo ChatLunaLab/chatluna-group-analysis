@@ -130,7 +130,7 @@ export class LLMService extends Service {
                 '{previousAnalysis}',
                 previousAnalysis || '（无历史画像，请从零开始）'
             )
-            .replace('{roles}', roles.join(', ') || '（无角色）')
+            .replace('{roles}', roles?.join(', ') || '（未知角色）')
             .replace('{userId}', userId)
             .replace('{username}', username || userId)
             .replace(
