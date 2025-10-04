@@ -8,7 +8,7 @@ import {
     StoredMessage
 } from '../types'
 import type { OneBotBot } from 'koishi-plugin-adapter-onebot'
-import { getAvatarUrl, inferPlatformInfo } from '../utils'
+import { getAvatarUrl, inferPlatformInfo, isLagrangeBot } from '../utils'
 import { CQCode } from '../onebot/cqcode'
 
 export class MessageService extends Service {
@@ -35,7 +35,6 @@ export class MessageService extends Service {
         this.setupMessageListener()
         this.setupCacheCleanup()
         this.setupPersistenceTasks()
-        this.warnForOneBotVariants()
     }
 
     public onUserMessage(handler: (session: Session) => void | Promise<void>) {
@@ -187,43 +186,6 @@ export class MessageService extends Service {
         }
     }
 
-    private warnForOneBotVariants() {
-        if (this.config.alwaysPersistMessages) return
-
-        const checkAndWarn = async () => {
-            if (this.warnedOneBotPersistence) return
-            const targeted = await Promise.all(
-                this.ctx.bots.map(async (bot) => {
-                    if (bot.platform !== 'onebot') return false
-                    const onebot = bot as OneBotBot<Context>
-
-                    const versionInfo = await onebot.internal._request(
-                        'get_version_info',
-                        {}
-                    )
-
-                    const name = (
-                        versionInfo.data['app_name'] as string
-                    ).toLowerCase()
-
-                    return (
-                        name.includes('llonebot') || name.includes('lagrange')
-                    )
-                })
-            ).then((targeted) => targeted.filter((targeted) => targeted))
-
-            if (targeted.length) {
-                this.ctx.logger.info(
-                    '检测到 OneBot (LLOneBot/Lagrange) 适配器，建议启用消息持久化功能。否则将无法正常获取消息'
-                )
-                this.warnedOneBotPersistence = true
-            }
-        }
-
-        checkAndWarn()
-        this.ctx.on('bot-added', checkAndWarn)
-    }
-
     private async getBotAPIHistoricalMessages(
         filter: MessageFilter,
         bot: Bot
@@ -273,7 +235,19 @@ export class MessageService extends Service {
                     timestamp: new Date(msg.createdAt ?? msg.timestamp),
                     messageId: msg.id,
                     avatarUrl: msg.user.avatar || '',
-                    elements: h.parse(msg.content)
+                    elements: h.parse(msg.content).concat(
+                        msg.quote
+                            ? h(
+                                  'quote',
+                                  {
+                                      id: msg.quote.id,
+                                      userId: msg.quote.user.id,
+                                      name: msg.quote.user.name
+                                  },
+                                  msg.quote.elements
+                              )
+                            : []
+                    )
                 }))
 
                 const validMessages = batch.filter((msg) => {
@@ -322,7 +296,7 @@ export class MessageService extends Service {
                     break
                 }
 
-                nextId = messageList.prev
+                nextId = messageList.prev || oldestMsg.messageId
                 if (fetchedCount >= limit || !nextId?.length) {
                     logger.info(
                         `群 ${targetId} [第 ${queryRounds} 轮] 获取了 ${validMessages.length} 条消息。最旧消息: ${oldestMsg.timestamp.toLocaleString()}`
@@ -394,6 +368,8 @@ export class MessageService extends Service {
             return []
         }
 
+        const isRunningLagrange = await isLagrangeBot(bot)
+
         const messages: OneBotMessage[] = []
         const limit = filter.limit || 100
         const startTime =
@@ -427,7 +403,9 @@ export class MessageService extends Service {
 
                 queryRounds++
 
-                const batch: OneBotMessage[] = result.messages
+                const batch: OneBotMessage[] = isRunningLagrange
+                    ? result.messages.reverse()
+                    : result.messages
                 const validMessages = batch.filter((msg) => {
                     const msgTime = new Date(msg.time * 1000)
                     const withinTimeRange =

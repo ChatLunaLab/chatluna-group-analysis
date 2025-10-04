@@ -1,4 +1,4 @@
-import { h } from 'koishi'
+import { Context, h } from 'koishi'
 
 import {
     BasicStatsResult,
@@ -9,6 +9,7 @@ import {
     UserStats
 } from './types'
 import { Config } from './config'
+import type { OneBotBot } from 'koishi-plugin-adapter-onebot'
 
 export function calculateBasicStats(
     messages: StoredMessage[]
@@ -46,14 +47,18 @@ export function calculateBasicStats(
             if (el.type === 'text') {
                 pureText += el.attrs.content
                 // onebot 兼容，添加 reply
-            } else if (el.type === 'quote' || el.type === 'reply' ) {
+            } else if (el.type === 'quote' || el.type === 'reply') {
                 stat.replyCount++
             } else if (el.type === 'at') {
                 stat.atCount++
             } else if (el.type === 'face') {
                 stat.emojiStats['face'] = (stat.emojiStats['face'] || 0) + 1
                 totalEmojiCount++
-            } else if (el.type === 'image' && el.attrs.subType != null && el.attrs.subType !== 0) {
+            } else if (
+                el.type === 'image' &&
+                el.attrs.subType != null &&
+                el.attrs.subType !== 0
+            ) {
                 stat.emojiStats['sticker'] =
                     (stat.emojiStats['sticker'] || 0) + 1
                 totalEmojiCount++
@@ -374,7 +379,6 @@ export function finalizePersonaList(list: string[]): string[] | '无' {
     return list.length ? list : '无'
 }
 
-
 export function normalizePersonaText(text: string | undefined): string {
     return text ? text.replace(/\s+/g, ' ').trim() : ''
 }
@@ -393,4 +397,15 @@ export function mergePersona(
         evidence: preferArray(current.evidence, previous.evidence),
         lastMergedFromHistory: true
     }
+}
+
+export async function isLagrangeBot(bot: OneBotBot<Context>) {
+    if (bot.platform !== 'onebot') return false
+    const onebot = bot as OneBotBot<Context>
+
+    const versionInfo = await onebot.internal._request('get_version_info', {})
+
+    const name = (versionInfo.data['app_name'] as string).toLowerCase()
+
+    return name.includes('lagrange')
 }
