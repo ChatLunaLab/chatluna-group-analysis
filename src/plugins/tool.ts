@@ -26,7 +26,6 @@ export function apply(ctx: Context, config: Config) {
     )
 
     ctx.on('ready', () => {
-
         if (!config.registerTools) {
             return
         }
@@ -126,7 +125,10 @@ class GroupMessageFetchTool extends StructuredTool {
         }
     }
 
-    private buildFilter(raw: GroupMessageFetchFilter, session: Session): MessageFilter {
+    private buildFilter(
+        raw: GroupMessageFetchFilter,
+        session: Session
+    ): MessageFilter {
         const filter: MessageFilter = {
             guildId: raw.guildId ?? session.guildId,
             channelId: raw.channelId ?? session.channelId,
@@ -143,7 +145,11 @@ class GroupMessageFetchTool extends StructuredTool {
         if (startTime) filter.startTime = startTime
         if (endTime) filter.endTime = endTime
 
-        if (filter.startTime && filter.endTime && filter.startTime > filter.endTime) {
+        if (
+            filter.startTime &&
+            filter.endTime &&
+            filter.startTime > filter.endTime
+        ) {
             throw new Error('startTime must be earlier than endTime.')
         }
 
@@ -171,27 +177,28 @@ class GroupMessageFetchTool extends StructuredTool {
     }
 }
 
-
 const MAX_FETCH_LIMIT = 500
 
 const groupMessageFilterSchema = z
     .object({
         userId: z
             .array(z.string())
-            .min(1)
+
             .optional()
-            .describe('Only return messages sent by the specified user ID array.'),
+            .describe(
+                'Only return messages sent by the specified user ID array.'
+            ),
 
         startTime: z
             .string()
-            .min(1)
+
             .optional()
             .describe(
                 'Start time expressed in natural English (e.g., "2 hours ago", "yesterday 8pm").'
             ),
         endTime: z
             .string()
-            .min(1)
+
             .optional()
             .describe(
                 'End time expressed in natural English (e.g., "now", "10 minutes ago").'
@@ -200,7 +207,6 @@ const groupMessageFilterSchema = z
             .number()
             .int()
             .positive()
-            .max(MAX_FETCH_LIMIT)
             .optional()
             .describe(
                 `Maximum number of messages to retrieve (1-${MAX_FETCH_LIMIT}). Defaults to the service setting.`
@@ -208,9 +214,10 @@ const groupMessageFilterSchema = z
         offset: z
             .number()
             .int()
-            .min(0)
             .optional()
-            .describe('Offset for pagination when reading from the persisted database store.')
+            .describe(
+                'Offset for pagination when reading from the persisted database store.'
+            )
     })
     .describe(
         'Filter options copied from the service definitions. Start and end time must use natural English phrases instead of raw timestamps.'
@@ -223,10 +230,8 @@ const groupMessageFetchSchema = z.object({
 const groupUserPersonaSchema = z.object({
     user_id: z
         .string()
-        .min(1)
         .describe('The target user ID whose persona should be retrieved.')
 })
-
 
 type GroupUserPersonaInput = z.infer<typeof groupUserPersonaSchema>
 
@@ -261,11 +266,12 @@ class GroupUserPersonaTool extends StructuredTool {
         }
 
         try {
-            const result = await this.ctx.chatluna_group_analysis.getUserPersona(
-                session.platform,
-                session.selfId,
-                userId
-            )
+            const result =
+                await this.ctx.chatluna_group_analysis.getUserPersona(
+                    session.platform,
+                    session.selfId,
+                    userId
+                )
 
             if (!result) {
                 return `No persona profile found for user ${userId}.`
@@ -294,4 +300,3 @@ class GroupUserPersonaTool extends StructuredTool {
         }
     }
 }
-
