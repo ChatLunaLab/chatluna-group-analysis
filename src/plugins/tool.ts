@@ -183,7 +183,6 @@ const groupMessageFilterSchema = z
     .object({
         userId: z
             .array(z.string())
-
             .optional()
             .describe(
                 'Only return messages sent by the specified user ID array.'
@@ -191,29 +190,24 @@ const groupMessageFilterSchema = z
 
         startTime: z
             .string()
-
             .optional()
             .describe(
                 'Start time expressed in natural English (e.g., "2 hours ago", "yesterday 8pm").'
             ),
         endTime: z
             .string()
-
             .optional()
             .describe(
                 'End time expressed in natural English (e.g., "now", "10 minutes ago").'
             ),
         limit: z
             .number()
-            .int()
-            .positive()
             .optional()
             .describe(
                 `Maximum number of messages to retrieve (1-${MAX_FETCH_LIMIT}). Defaults to the service setting.`
             ),
         offset: z
             .number()
-            .int()
             .optional()
             .describe(
                 'Offset for pagination when reading from the persisted database store.'
