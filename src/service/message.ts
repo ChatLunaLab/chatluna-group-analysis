@@ -1,4 +1,4 @@
-import { $, Bot, Context, h, Query, Service, Session } from 'koishi'
+import { Bot, Context, h, Query, Service, Session } from 'koishi'
 import { Config } from '../config'
 import {
     ActivityStats,
@@ -15,8 +15,8 @@ export class MessageService extends Service {
     private messageCache = new Map<string, StoredMessage[]>()
     private readonly cacheSize = 1000
     private readonly cacheExpiration = 1000 * 60 * 24 // 1 days
-    private messageHandlers: Array<(session: Session) => void | Promise<void>> =
-        []
+    private messageHandlers: ((session: Session) => void | Promise<void>)[] = []
+
     private activityStats = new Map<string, ActivityStats>()
     private persistenceBuffers = new Map<string, PersistenceBuffer>()
     private readonly activityWindowMs = 60 * 1000
@@ -154,24 +154,24 @@ export class MessageService extends Service {
     }
 
     private setupPersistenceTasks() {
-        this.ctx.setInterval(() => {
-            void this.flushIdleBuffers()
+        this.ctx.setInterval(async () => {
+            await this.flushIdleBuffers()
         }, this.bufferSweepIntervalMs)
 
-        this.ctx.on('dispose', () => {
-            void this.flushAllBuffers()
+        this.ctx.on('dispose', async () => {
+            this.flushAllBuffers()
         })
 
         const retentionDays = this.config.retentionDays
         if (retentionDays > 0) {
             const retentionMs = retentionDays * 24 * 60 * 60 * 1000
             this.ctx.setInterval(
-                () => {
+                async () => {
                     const cutoff = new Date(Date.now() - retentionMs)
                     const removalQuery: Query<StoredMessage> = {
                         timestamp: { $lt: cutoff }
                     }
-                    void this.ctx.database
+                    await this.ctx.database
                         .remove('chatluna_messages', removalQuery)
                         .catch((error) =>
                             this.ctx.logger.warn(
@@ -636,7 +636,7 @@ export class MessageService extends Service {
 
     private async flushIdleBuffers() {
         const now = Date.now()
-        const tasks: Array<Promise<void>> = []
+        const tasks: Promise<void>[] = []
 
         for (const [key, buffer] of this.persistenceBuffers.entries()) {
             if (buffer.messages.length === 0) {

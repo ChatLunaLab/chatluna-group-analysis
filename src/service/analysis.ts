@@ -21,7 +21,7 @@ import {
     normalizePersonaText,
     shouldListenToMessage
 } from '../utils'
-import type { GuildMember, User } from '@satorijs/protocol'
+import type { GuildMember } from '@satorijs/protocol'
 import type { OneBotBot } from 'koishi-plugin-adapter-onebot'
 
 export class AnalysisService extends Service {
@@ -117,6 +117,8 @@ export class AnalysisService extends Service {
             !this.personaProcessing.has(recordId)
         ) {
             this.personaProcessing.add(recordId)
+
+            // eslint-disable-next-line no-void
             void this.runPersonaAnalysis(cache)
                 .catch((error) =>
                     this.ctx.logger.error(
@@ -643,10 +645,13 @@ export class AnalysisService extends Service {
             )
 
             let avatar: string | undefined
-            let user: User
+            let user: GuildMember
 
             try {
-                user = await bot.getUser(userId)
+                user = await bot.getGuildMember(
+                    session.channelId || session.guildId,
+                    userId
+                )
             } catch (error) {
                 this.ctx.logger.warn(`获取用户 ${userId} 信息失败: ${error}`)
             }
