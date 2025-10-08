@@ -1,14 +1,14 @@
 import { Context, h, Service, Session } from 'koishi'
-import { load as yamlLoad, dump as yamlDump } from 'js-yaml'
+import { dump as yamlDump, load as yamlLoad } from 'js-yaml'
 import {
     GoldenQuote,
     GroupAnalysisResult,
-    SummaryTopic,
-    UserTitle,
-    UserPersonaProfile,
     PersonaCache,
     PersonaRecord,
-    StoredMessage
+    StoredMessage,
+    SummaryTopic,
+    UserPersonaProfile,
+    UserTitle
 } from '../types'
 import { Config } from '..'
 import {
@@ -141,7 +141,7 @@ export class AnalysisService extends Service {
         const cached = this.personaCache.get(id)
         if (cached) return cached
 
-        let existing = await this.ctx.database
+        const existing = await this.ctx.database
             .select('chatluna_user_personas')
             .where({ id })
             .execute()
@@ -418,7 +418,8 @@ export class AnalysisService extends Service {
         const updated: string[] = []
 
         for (const entry of evidenceEntries) {
-            let resolvedMessage: StoredMessage | undefined = messageIndex[entry]
+            const resolvedMessage: StoredMessage | undefined =
+                messageIndex[entry]
 
             if (resolvedMessage) {
                 updated.push(resolvedMessage.content)
@@ -654,7 +655,7 @@ export class AnalysisService extends Service {
                 platform: session.platform,
                 selfId: session.selfId,
                 userId,
-                username: user.nick || user.name || userId
+                username: user?.nick || user?.name || userId
             })
 
             let displayName = cache.record.username
