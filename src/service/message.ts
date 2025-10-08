@@ -327,6 +327,11 @@ export class MessageService extends Service {
             (b) => b.platform === platform && b.selfId === selfId
         )
 
+        if (this.config.alwaysPersistMessages) {
+            this.ctx.logger.info('使用数据库历史消息获取功能。')
+            return this.getDatabaseHistoricalMessages(filter)
+        }
+
         if (platform === 'onebot') {
             this.ctx.logger.info('使用 OneBot 历史消息获取功能。')
             return this.getOneBotHistoricalMessages(filter)

@@ -290,7 +290,13 @@ export class AnalysisService extends Service {
 
             try {
                 if (bot.platform === 'onebot') {
-                    userGroupInfo = await (bot as OneBotBot<Context>).internal.getGroupMemberInfo(group.guildId, record.userId, true)
+                    userGroupInfo = await (
+                        bot as OneBotBot<Context>
+                    ).internal.getGroupMemberInfo(
+                        group.guildId,
+                        record.userId,
+                        true
+                    )
                 } else {
                     userGroupInfo = await bot.getGuildMember(
                         group.channelId || group.guildId,
@@ -353,7 +359,12 @@ export class AnalysisService extends Service {
                 const scope = message.guildId
                     ? `群:${message.guildId}`
                     : `频道:${message.channelId}`
-                const normalized = normalizePersonaText(message.content)
+                const normalized = normalizePersonaText(
+                    h
+                        .select(message.elements, 'text')
+                        .map((text) => text.attrs.content)
+                        .join('')
+                )
                 const referenceId = message.messageId || message.id
                 const referenceLabel = referenceId
                     ? `msgid:${referenceId}`
