@@ -70,9 +70,7 @@ export class AnalysisService extends Service {
 
     private setupPersonaMessageListener() {
         if (this.config.personaAnalysisMessageInterval === 0) {
-            this.ctx.logger.info(
-                '已关闭自动用户画像分析（personaAnalysisMessageInterval = 0）。'
-            )
+            this.ctx.logger.info('已关闭自动用户画像分析。')
             return
         }
 

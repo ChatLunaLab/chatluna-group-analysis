@@ -75,7 +75,7 @@ export const Config: Schema<Config> = Schema.intersect([
         retentionDays: Schema.number()
             .description('数据库中缓存消息的最长保留时间（天）。')
             .min(1)
-            .default(14)
+            .default(7)
     }).description('消息存储设置'),
     Schema.object({
         maxMessages: Schema.number()
@@ -118,7 +118,9 @@ export const Config: Schema<Config> = Schema.intersect([
             .default([]),
         personaUserFilter: Schema.array(String)
             .role('table')
-            .description('用户画像过滤列表。这些用户 ID 将无法分析用户画像（包括自动分析和手动命令调用）。')
+            .description(
+                '用户画像过滤列表。这些用户 ID 将无法分析用户画像（包括自动分析和手动命令调用）。'
+            )
             .default([]),
         maxTopics: Schema.number()
             .description('最多生成的话题数量。')

@@ -8,7 +8,7 @@ import {
     StoredMessage
 } from '../types'
 import type { OneBotBot } from 'koishi-plugin-adapter-onebot'
-import { getAvatarUrl, inferPlatformInfo, isLagrangeBot } from '../utils'
+import { getAvatarUrl, inferPlatformInfo, isNapCatBot } from '../utils'
 import { CQCode } from '../onebot/cqcode'
 
 export class MessageService extends Service {
@@ -98,7 +98,7 @@ export class MessageService extends Service {
             avatarUrl: session.event.user?.avatar || '',
             username: session.username,
             content: session.content,
-            timestamp: new Date(session.timestamp * 1000),
+            timestamp: new Date(session.timestamp),
             messageId: session.messageId
         }
 
@@ -163,26 +163,29 @@ export class MessageService extends Service {
         })
 
         const retentionDays = this.config.retentionDays
-        if (retentionDays > 0) {
-            const retentionMs = retentionDays * 24 * 60 * 60 * 1000
-            this.ctx.setInterval(
-                async () => {
-                    const cutoff = new Date(Date.now() - retentionMs)
-                    const removalQuery: Query<StoredMessage> = {
-                        timestamp: { $lt: cutoff }
-                    }
-                    await this.ctx.database
-                        .remove('chatluna_messages', removalQuery)
-                        .catch((error) =>
-                            this.ctx.logger.warn(
-                                'Failed to cleanup expired cached messages:',
-                                error
-                            )
-                        )
-                },
-                6 * 60 * 60 * 1000
-            )
+
+        if (retentionDays === 0) {
+            return
         }
+
+        const retentionMs = retentionDays * 24 * 60 * 60 * 1000
+        this.ctx.setInterval(
+            async () => {
+                const cutoff = new Date(Date.now() - retentionMs)
+                const removalQuery: Query<StoredMessage> = {
+                    timestamp: { $lt: cutoff }
+                }
+                await this.ctx.database
+                    .remove('chatluna_messages', removalQuery)
+                    .catch((error) =>
+                        this.ctx.logger.warn(
+                            'Failed to cleanup expired cached messages:',
+                            error
+                        )
+                    )
+            },
+            6 * 60 * 60 * 1000
+        )
     }
 
     private async getBotAPIHistoricalMessages(
@@ -372,10 +375,10 @@ export class MessageService extends Service {
             return []
         }
 
-        const { isRunningLagrange, botAppName } = await isLagrangeBot(bot)
+        const { isRunningNapCat, botAppName } = await isNapCatBot(bot)
 
         logger.info(
-            `是否运行在 Lagrange: ${isRunningLagrange}, 具体的 OneBot 实例: ${botAppName}`
+            `是否运行在 NapCat: ${isRunningNapCat}, 具体的 OneBot 实例: ${botAppName}`
         )
 
         const messages: OneBotMessage[] = []
@@ -394,11 +397,13 @@ export class MessageService extends Service {
                 const requestPackage = {
                     group_id: Number(targetId),
                     message_seq: messageSeq,
+                    // message id: /lagrange
+                    message_id: messageSeq,
                     count: 50,
                     reverseOrder: messageSeq !== 0
                 }
 
-                if (isRunningLagrange) {
+                if (!isRunningNapCat) {
                     delete requestPackage.reverseOrder
                     requestPackage.count = 30
                 }
@@ -418,7 +423,7 @@ export class MessageService extends Service {
 
                 queryRounds++
 
-                const batch: OneBotMessage[] = isRunningLagrange
+                const batch: OneBotMessage[] = !isRunningNapCat
                     ? result.messages.reverse()
                     : result.messages
                 const validMessages = batch.filter((msg) => {
@@ -510,7 +515,7 @@ export class MessageService extends Service {
 
             if (filter.guildId) query.guildId = filter.guildId
             if (filter.channelId) query.channelId = filter.channelId
-            if (filter.userId)
+            if (filter.userId && filter.userId.length > 0)
                 query.userId = {
                     $in: filter.userId
                 }

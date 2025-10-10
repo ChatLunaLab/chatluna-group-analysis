@@ -3,9 +3,9 @@ import { Config } from '../index'
 import {
     GoldenQuote,
     SummaryTopic,
+    UserPersonaProfile,
     UserStats,
-    UserTitle,
-    UserPersonaProfile
+    UserTitle
 } from '../types'
 import { ComputedRef } from 'koishi-plugin-chatluna'
 import { ChatLunaChatModel } from 'koishi-plugin-chatluna/llm-core/platform/model'
@@ -84,7 +84,9 @@ export class LLMService extends Service {
         const prompt = this.config.promptTopic
             .replace('{messages}', messagesText)
             .replace('{maxTopics}', this.config.maxTopics.toString())
-        return this._callLLM<SummaryTopic[]>(prompt, '话题分析').then((data) => data ?? [])
+        return this._callLLM<SummaryTopic[]>(prompt, '话题分析').then(
+            (data) => data ?? []
+        )
     }
 
     public async analyzeUserTitles(users: UserStats[]): Promise<UserTitle[]> {
@@ -104,7 +106,9 @@ export class LLMService extends Service {
             '{users}',
             userSummaries
         )
-        return this._callLLM<UserTitle[]>(prompt, '用户称号分析').then((data) => data ?? [])
+        return this._callLLM<UserTitle[]>(prompt, '用户称号分析').then(
+            (data) => data ?? []
+        )
     }
 
     public async analyzeGoldenQuotes(
@@ -114,7 +118,9 @@ export class LLMService extends Service {
         const prompt = this.config.promptGoldenQuotes
             .replace('{messages}', messagesText)
             .replace('{maxGoldenQuotes}', String(maxQuotes))
-        return this._callLLM<GoldenQuote[]>(prompt, '金句分析').then((data) => data ?? [])
+        return this._callLLM<GoldenQuote[]>(prompt, '金句分析').then(
+            (data) => data ?? []
+        )
     }
 
     public async analyzeUserPersona(

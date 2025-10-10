@@ -399,9 +399,9 @@ export function mergePersona(
     }
 }
 
-export async function isLagrangeBot(bot: OneBotBot<Context>) {
+export async function isNapCatBot(bot: OneBotBot<Context>) {
     if (bot.platform !== 'onebot') {
-        return { isRunningLagrange: false, botAppName: '' }
+        return { isRunningNapCat: false, botAppName: '' }
     }
     const onebot = bot as OneBotBot<Context>
 
@@ -409,5 +409,5 @@ export async function isLagrangeBot(bot: OneBotBot<Context>) {
 
     const name = (versionInfo.data['app_name'] as string).toLowerCase()
 
-    return { isRunningLagrange: name.includes('lagrange'), botAppName: name }
+    return { isRunningNapCat: name.includes('napcat'), botAppName: name }
 }

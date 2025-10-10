@@ -5,11 +5,11 @@ import { GroupAnalysisResult, UserPersonaProfile } from '../types'
 import { Config } from '../config'
 import { fileURLToPath } from 'url'
 import {
-    formatUserStats,
+    formatGoldenQuotes,
     formatTopics,
+    formatUserStats,
     formatUserTitles,
     generateActiveHoursChart,
-    formatGoldenQuotes,
     renderTemplate
 } from '../utils'
 
@@ -43,11 +43,14 @@ export class RendererService extends Service {
             const buffer = Buffer.from(arrayBuffer)
 
             // 根据 URL 或 Content-Type 推断 MIME 类型
-            const contentType = response.headers.get('content-type') || 'image/png'
+            const contentType =
+                response.headers.get('content-type') || 'image/png'
             const base64 = buffer.toString('base64')
             const dataUrl = `data:${contentType};base64,${base64}`
 
-            this.ctx.logger.debug(`图片已转换为 Base64，大小: ${base64.length} 字符`)
+            this.ctx.logger.debug(
+                `图片已转换为 Base64，大小: ${base64.length} 字符`
+            )
             return dataUrl
         } catch (error) {
             this.ctx.logger.warn(`图片转换 Base64 失败: ${url}`, error)
@@ -199,7 +202,7 @@ export class RendererService extends Service {
                 data.activeHoursData || {}
             ),
             goldenQuotes: formatGoldenQuotes(data.goldenQuotes || []),
-            theme: theme,
+            theme,
             dynamicAvatarUrl: dynamicAvatarBase64
         })
 
@@ -308,14 +311,6 @@ export class RendererService extends Service {
             return tags.map((tag) => `<div class="chip">${tag}</div>`).join('')
         }
 
-        const formatList = (items: string[] | '无' | undefined) => {
-            if (!items || items === '无' || items.length === 0)
-                return '<li>暂无数据</li>'
-            return (items as string[])
-                .map((item) => `<li>${item}</li>`)
-                .join('')
-        }
-
         const formatEvidence = (
             items: UserPersonaProfile['evidence']
         ): string => {
@@ -358,7 +353,7 @@ export class RendererService extends Service {
             interests: formatTags(data.interests),
             communicationStyle: data.communicationStyle || '暂无记录',
             evidence: formatEvidence(data.evidence),
-            theme: theme,
+            theme,
             dynamicAvatarUrl: dynamicAvatarBase64
         })
 

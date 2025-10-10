@@ -4,7 +4,7 @@ import type { ChatLunaToolRunnable } from 'koishi-plugin-chatluna/llm-core/platf
 import { ChatLunaPlugin } from 'koishi-plugin-chatluna/services/chat'
 import { parseDate } from 'chrono-node'
 import { Context, Session } from 'koishi'
-import { array, z } from 'zod'
+import { z } from 'zod'
 import { Config } from '../config'
 import type { GroupMessageFetchFilter, MessageFilter } from '../types'
 

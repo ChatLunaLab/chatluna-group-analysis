@@ -1,7 +1,5 @@
 /* eslint-disable max-len */
 import { Context, Session } from 'koishi'
-import { AnalysisService } from '../service/analysis'
-import { RendererService } from '../service/renderer'
 import { Config } from '../config'
 
 export const inject = {
@@ -138,6 +136,27 @@ export function apply(ctx: Context, config: Config) {
         })
 
     settings
+        .subcommand('clear', '清理当前群分析的某些缓存')
+        .alias('.清理')
+        .action(async ({ session }) => {
+            if (session.isDirect) return '请在群聊中使用此命令。'
+
+            const guildId = session.event.guild.id
+
+            const guildName =
+                (await session.bot
+                    .getGuild(guildId)
+                    .then((guild) => guild.name)) || session.event.guild.name
+
+            ctx.database.remove('chatluna_messages', {
+                guildId: session.guildId,
+                channelId: session.channelId || session.guildId
+            })
+
+            return `已清理当前群 ${guildName} (${guildId}) 的分析缓存。`
+        })
+
+    settings
         .subcommand('.status', '查看当前分析设置')
         .alias('.状态')
         .action(async ({ session }) => {
@@ -166,8 +185,7 @@ export function apply(ctx: Context, config: Config) {
             return `当前群 ${guildName} (${guildId}) 分析功能状态: ${enabled}`
         })
 
-    ctx
-        .command('用户画像 [user:user]', '查看指定用户的画像')
+    ctx.command('用户画像 [user:user]', '查看指定用户的画像')
         .alias('group-analysis.persona')
         .alias('群分析.用户画像')
         .usage(
@@ -186,7 +204,9 @@ export function apply(ctx: Context, config: Config) {
                 userId !== session.userId &&
                 !(await ctx.permissions.check('authority:3', session))
             ) {
-                await session.send('你没有权限查看其他用户的画像。当前需要的权限为 3 级。将转为查看自己的画像。')
+                await session.send(
+                    '你没有权限查看其他用户的画像。当前需要的权限为 3 级。将转为查看自己的画像。'
+                )
                 userId = session.userId
             }
 
