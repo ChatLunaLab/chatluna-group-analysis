@@ -387,7 +387,7 @@ export class MessageService extends Service {
             filter.startTime || new Date(Date.now() - 24 * 60 * 60 * 1000) // Default 1 day
         const endTime = filter.endTime || new Date()
 
-        let messageSeq = 0
+        let messageSeq: number | undefined
         let fetchedCount = 0
         let queryRounds = 0
         let oldestMsg: OneBotMessage | null = null
@@ -400,12 +400,17 @@ export class MessageService extends Service {
                     // message id: /lagrange
                     message_id: messageSeq,
                     count: 50,
-                    reverseOrder: messageSeq !== 0
+                    reverseOrder: typeof messageSeq === 'number'
                 }
 
                 if (!isRunningNapCat) {
                     delete requestPackage.reverseOrder
                     requestPackage.count = 30
+                }
+
+                if (messageSeq === undefined) {
+                    delete requestPackage.message_id
+                    delete requestPackage.message_seq
                 }
 
                 const result = await bot.internal
