@@ -411,7 +411,8 @@ export class AnalysisService extends Service {
         for (const message of messages) {
             const key = message.messageId || message.id
             if (key && !messageIndex[key]) {
-                messageIndex[key] = message
+                messageIndex[message.messageId] = message
+                messageIndex[message.id] = message
             }
         }
 

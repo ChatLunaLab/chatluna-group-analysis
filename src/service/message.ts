@@ -388,6 +388,7 @@ export class MessageService extends Service {
         const endTime = filter.endTime || new Date()
 
         let messageSeq: number | undefined
+        let messageId: number | undefined
         let fetchedCount = 0
         let queryRounds = 0
         let oldestMsg: OneBotMessage | null = null
@@ -398,7 +399,7 @@ export class MessageService extends Service {
                     group_id: Number(targetId),
                     message_seq: messageSeq,
                     // message id: /lagrange
-                    message_id: messageSeq,
+                    message_id: messageId,
                     count: 50,
                     reverseOrder: typeof messageSeq === 'number'
                 }
@@ -428,9 +429,7 @@ export class MessageService extends Service {
 
                 queryRounds++
 
-                const batch: OneBotMessage[] = !isRunningNapCat
-                    ? result.messages.reverse()
-                    : result.messages
+                const batch: OneBotMessage[] = result.messages
                 const validMessages = batch.filter((msg) => {
                     const msgTime = new Date(msg.time * 1000)
                     const withinTimeRange =
@@ -482,6 +481,7 @@ export class MessageService extends Service {
                 oldestMsg = batch[0]
 
                 messageSeq = oldestMsg.message_seq
+                messageId = oldestMsg.message_id
             }
 
             // Convert to StoredMessage format
