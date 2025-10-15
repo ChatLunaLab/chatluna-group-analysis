@@ -1,123 +1,123 @@
-@import url('https://fonts.font.im/css?family=Noto+Sans+SC');
-@import url('https://fonts.font.im/css?family=Noto+Color+Emoji');
+@import url('https://google-fonts.mirrors.sjtug.sjtu.edu.cn/css?family=Noto+Sans+SC');
+@import url('https://google-fonts.mirrors.sjtug.sjtu.edu.cn/css?family=Noto+Color+Emoji');
 
 @font-face {
     font-family: Torus;
     font-weight: 400;
-    src: url(https://gcore.jsdelivr.net/gh/ppy/osu-web/resources/fonts/torus/Torus-Regular.otf)
+    src: url(https://gcore.jsdelivr.net/gh/ppy/osu-web/resources/fonts/torus/Torus-Regular.otf);
 }
 
 @font-face {
     font-family: Torus;
     font-weight: 600;
-    src: url(https://gcore.jsdelivr.net/gh/ppy/osu-web/resources/fonts/torus/Torus-SemiBold.otf)
+    src: url(https://gcore.jsdelivr.net/gh/ppy/osu-web/resources/fonts/torus/Torus-SemiBold.otf);
 }
 
 @font-face {
     font-family: Torus;
     font-weight: 700;
-    src: url(https://gcore.jsdelivr.net/gh/ppy/osu-web/resources/fonts/torus/Torus-Bold.otf)
+    src: url(https://gcore.jsdelivr.net/gh/ppy/osu-web/resources/fonts/torus/Torus-Bold.otf);
 }
 
 @font-face {
     font-family: Torus;
     font-weight: 900;
-    src: url(https://gcore.jsdelivr.net/gh/ppy/osu-web/resources/fonts/torus/Torus-Heavy.otf)
+    src: url(https://gcore.jsdelivr.net/gh/ppy/osu-web/resources/fonts/torus/Torus-Heavy.otf);
 }
 
 :root {
     /* Light Theme Colors */
-    --light-primary: #6750A4;
-    --light-on-primary: #FFFFFF;
-    --light-primary-container: #EADDFF;
-    --light-on-primary-container: #21005D;
+    --light-primary: #6750a4;
+    --light-on-primary: #ffffff;
+    --light-primary-container: #eaddff;
+    --light-on-primary-container: #21005d;
 
-    --light-secondary: #625B71;
-    --light-on-secondary: #FFFFFF;
-    --light-secondary-container: #E8DEF8;
-    --light-on-secondary-container: #1D192B;
+    --light-secondary: #625b71;
+    --light-on-secondary: #ffffff;
+    --light-secondary-container: #e8def8;
+    --light-on-secondary-container: #1d192b;
 
-    --light-tertiary: #7D5260;
-    --light-on-tertiary: #FFFFFF;
-    --light-tertiary-container: #FFD8E4;
-    --light-on-tertiary-container: #31111D;
+    --light-tertiary: #7d5260;
+    --light-on-tertiary: #ffffff;
+    --light-tertiary-container: #ffd8e4;
+    --light-on-tertiary-container: #31111d;
 
-    --light-error: #B3261E;
-    --light-on-error: #FFFFFF;
-    --light-error-container: #F9DEDC;
-    --light-on-error-container: #410E0B;
+    --light-error: #b3261e;
+    --light-on-error: #ffffff;
+    --light-error-container: #f9dedc;
+    --light-on-error-container: #410e0b;
 
-    --light-background: #FFFBFE;
-    --light-on-background: #1C1B1F;
+    --light-background: #fffbfe;
+    --light-on-background: #1c1b1f;
 
-    --light-surface: #FFFBFE;
-    --light-on-surface: #1C1B1F;
-    --light-surface-dim: #DED8E1;
-    --light-surface-bright: #FFFBFE;
+    --light-surface: #fffbfe;
+    --light-on-surface: #1c1b1f;
+    --light-surface-dim: #ded8e1;
+    --light-surface-bright: #fffbfe;
 
-    --light-surface-variant: #E7E0EC;
-    --light-on-surface-variant: #49454F;
+    --light-surface-variant: #e7e0ec;
+    --light-on-surface-variant: #49454f;
 
-    --light-outline: #79747E;
-    --light-outline-variant: #CAC4D0;
+    --light-outline: #79747e;
+    --light-outline-variant: #cac4d0;
 
-    --light-surface-container-lowest: #FFFFFF;
-    --light-surface-container-low: #F7F2FA;
-    --light-surface-container: #F3EDF7;
-    --light-surface-container-high: #ECE6F0;
-    --light-surface-container-highest: #E6E0E9;
+    --light-surface-container-lowest: #ffffff;
+    --light-surface-container-low: #f7f2fa;
+    --light-surface-container: #f3edf7;
+    --light-surface-container-high: #ece6f0;
+    --light-surface-container-highest: #e6e0e9;
 
     --light-inverse-surface: #313033;
-    --light-inverse-on-surface: #F4EFF4;
-    --light-inverse-primary: #D0BCFF;
+    --light-inverse-on-surface: #f4eff4;
+    --light-inverse-primary: #d0bcff;
 
     --light-scrim: #000000;
     --light-shadow: #000000;
 
     /* Dark Theme Colors */
-    --dark-primary: #D0BCFF;
-    --dark-on-primary: #381E72;
-    --dark-primary-container: #4F378B;
-    --dark-on-primary-container: #EADDFF;
+    --dark-primary: #d0bcff;
+    --dark-on-primary: #381e72;
+    --dark-primary-container: #4f378b;
+    --dark-on-primary-container: #eaddff;
 
-    --dark-secondary: #CCC2DC;
-    --dark-on-secondary: #332D41;
-    --dark-secondary-container: #4A4458;
-    --dark-on-secondary-container: #E8DEF8;
+    --dark-secondary: #ccc2dc;
+    --dark-on-secondary: #332d41;
+    --dark-secondary-container: #4a4458;
+    --dark-on-secondary-container: #e8def8;
 
-    --dark-tertiary: #EFB8C8;
+    --dark-tertiary: #efb8c8;
     --dark-on-tertiary: #492532;
-    --dark-tertiary-container: #633B48;
-    --dark-on-tertiary-container: #FFD8E4;
+    --dark-tertiary-container: #633b48;
+    --dark-on-tertiary-container: #ffd8e4;
 
-    --dark-error: #F2B8B5;
+    --dark-error: #f2b8b5;
     --dark-on-error: #601410;
-    --dark-error-container: #8C1D18;
-    --dark-on-error-container: #F9DEDC;
+    --dark-error-container: #8c1d18;
+    --dark-on-error-container: #f9dedc;
 
-    --dark-background: #1C1B1F;
-    --dark-on-background: #E6E1E5;
+    --dark-background: #1c1b1f;
+    --dark-on-background: #e6e1e5;
 
-    --dark-surface: #1C1B1F;
-    --dark-on-surface: #E6E1E5;
-    --dark-surface-dim: #1C1B1F;
-    --dark-surface-bright: #3B383E;
+    --dark-surface: #1c1b1f;
+    --dark-on-surface: #e6e1e5;
+    --dark-surface-dim: #1c1b1f;
+    --dark-surface-bright: #3b383e;
 
-    --dark-surface-variant: #49454F;
-    --dark-on-surface-variant: #CAC4D0;
+    --dark-surface-variant: #49454f;
+    --dark-on-surface-variant: #cac4d0;
 
-    --dark-outline: #938F99;
-    --dark-outline-variant: #49454F;
+    --dark-outline: #938f99;
+    --dark-outline-variant: #49454f;
 
-    --dark-surface-container-lowest: #0F0D13;
-    --dark-surface-container-low: #1D1B20;
-    --dark-surface-container: #211F26;
-    --dark-surface-container-high: #2B2930;
-    --dark-surface-container-highest: #36343B;
+    --dark-surface-container-lowest: #0f0d13;
+    --dark-surface-container-low: #1d1b20;
+    --dark-surface-container: #211f26;
+    --dark-surface-container-high: #2b2930;
+    --dark-surface-container-highest: #36343b;
 
-    --dark-inverse-surface: #E6E1E5;
+    --dark-inverse-surface: #e6e1e5;
     --dark-inverse-on-surface: #313033;
-    --dark-inverse-primary: #6750A4;
+    --dark-inverse-primary: #6750a4;
 
     --dark-scrim: #000000;
     --dark-shadow: #000000;
@@ -144,23 +144,47 @@ body {
 body.light-theme {
     --primary: var(--dynamic-primary, var(--light-primary));
     --on-primary: var(--dynamic-on-primary, var(--light-on-primary));
-    --primary-container: var(--dynamic-primary-container, var(--light-primary-container));
-    --on-primary-container: var(--dynamic-on-primary-container, var(--light-on-primary-container));
+    --primary-container: var(
+        --dynamic-primary-container,
+        var(--light-primary-container)
+    );
+    --on-primary-container: var(
+        --dynamic-on-primary-container,
+        var(--light-on-primary-container)
+    );
 
     --secondary: var(--dynamic-secondary, var(--light-secondary));
     --on-secondary: var(--dynamic-on-secondary, var(--light-on-secondary));
-    --secondary-container: var(--dynamic-secondary-container, var(--light-secondary-container));
-    --on-secondary-container: var(--dynamic-on-secondary-container, var(--light-on-secondary-container));
+    --secondary-container: var(
+        --dynamic-secondary-container,
+        var(--light-secondary-container)
+    );
+    --on-secondary-container: var(
+        --dynamic-on-secondary-container,
+        var(--light-on-secondary-container)
+    );
 
     --tertiary: var(--dynamic-tertiary, var(--light-tertiary));
     --on-tertiary: var(--dynamic-on-tertiary, var(--light-on-tertiary));
-    --tertiary-container: var(--dynamic-tertiary-container, var(--light-tertiary-container));
-    --on-tertiary-container: var(--dynamic-on-tertiary-container, var(--light-on-tertiary-container));
+    --tertiary-container: var(
+        --dynamic-tertiary-container,
+        var(--light-tertiary-container)
+    );
+    --on-tertiary-container: var(
+        --dynamic-on-tertiary-container,
+        var(--light-on-tertiary-container)
+    );
 
     --error: var(--dynamic-error, var(--light-error));
     --on-error: var(--dynamic-on-error, var(--light-on-error));
-    --error-container: var(--dynamic-error-container, var(--light-error-container));
-    --on-error-container: var(--dynamic-on-error-container, var(--light-on-error-container));
+    --error-container: var(
+        --dynamic-error-container,
+        var(--light-error-container)
+    );
+    --on-error-container: var(
+        --dynamic-on-error-container,
+        var(--light-on-error-container)
+    );
 
     --background: var(--dynamic-background, var(--light-background));
     --on-background: var(--dynamic-on-background, var(--light-on-background));
@@ -168,23 +192,59 @@ body.light-theme {
     --surface: var(--dynamic-surface, var(--light-surface));
     --on-surface: var(--dynamic-on-surface, var(--light-on-surface));
     --surface-dim: var(--dynamic-surface-dim, var(--light-surface-dim));
-    --surface-bright: var(--dynamic-surface-bright, var(--light-surface-bright));
+    --surface-bright: var(
+        --dynamic-surface-bright,
+        var(--light-surface-bright)
+    );
 
-    --surface-variant: var(--dynamic-surface-variant, var(--light-surface-variant));
-    --on-surface-variant: var(--dynamic-on-surface-variant, var(--light-on-surface-variant));
+    --surface-variant: var(
+        --dynamic-surface-variant,
+        var(--light-surface-variant)
+    );
+    --on-surface-variant: var(
+        --dynamic-on-surface-variant,
+        var(--light-on-surface-variant)
+    );
 
     --outline: var(--dynamic-outline, var(--light-outline));
-    --outline-variant: var(--dynamic-outline-variant, var(--light-outline-variant));
+    --outline-variant: var(
+        --dynamic-outline-variant,
+        var(--light-outline-variant)
+    );
 
-    --surface-container-lowest: var(--dynamic-surface-container-lowest, var(--light-surface-container-lowest));
-    --surface-container-low: var(--dynamic-surface-container-low, var(--light-surface-container-low));
-    --surface-container: var(--dynamic-surface-container, var(--light-surface-container));
-    --surface-container-high: var(--dynamic-surface-container-high, var(--light-surface-container-high));
-    --surface-container-highest: var(--dynamic-surface-container-highest, var(--light-surface-container-highest));
+    --surface-container-lowest: var(
+        --dynamic-surface-container-lowest,
+        var(--light-surface-container-lowest)
+    );
+    --surface-container-low: var(
+        --dynamic-surface-container-low,
+        var(--light-surface-container-low)
+    );
+    --surface-container: var(
+        --dynamic-surface-container,
+        var(--light-surface-container)
+    );
+    --surface-container-high: var(
+        --dynamic-surface-container-high,
+        var(--light-surface-container-high)
+    );
+    --surface-container-highest: var(
+        --dynamic-surface-container-highest,
+        var(--light-surface-container-highest)
+    );
 
-    --inverse-surface: var(--dynamic-inverse-surface, var(--light-inverse-surface));
-    --inverse-on-surface: var(--dynamic-inverse-on-surface, var(--light-inverse-on-surface));
-    --inverse-primary: var(--dynamic-inverse-primary, var(--light-inverse-primary));
+    --inverse-surface: var(
+        --dynamic-inverse-surface,
+        var(--light-inverse-surface)
+    );
+    --inverse-on-surface: var(
+        --dynamic-inverse-on-surface,
+        var(--light-inverse-on-surface)
+    );
+    --inverse-primary: var(
+        --dynamic-inverse-primary,
+        var(--light-inverse-primary)
+    );
 
     --scrim: var(--dynamic-scrim, var(--light-scrim));
     --shadow: var(--dynamic-shadow, var(--light-shadow));
@@ -193,23 +253,47 @@ body.light-theme {
 body.dark-theme {
     --primary: var(--dynamic-primary, var(--dark-primary));
     --on-primary: var(--dynamic-on-primary, var(--dark-on-primary));
-    --primary-container: var(--dynamic-primary-container, var(--dark-primary-container));
-    --on-primary-container: var(--dynamic-on-primary-container, var(--dark-on-primary-container));
+    --primary-container: var(
+        --dynamic-primary-container,
+        var(--dark-primary-container)
+    );
+    --on-primary-container: var(
+        --dynamic-on-primary-container,
+        var(--dark-on-primary-container)
+    );
 
     --secondary: var(--dynamic-secondary, var(--dark-secondary));
     --on-secondary: var(--dynamic-on-secondary, var(--dark-on-secondary));
-    --secondary-container: var(--dynamic-secondary-container, var(--dark-secondary-container));
-    --on-secondary-container: var(--dynamic-on-secondary-container, var(--dark-on-secondary-container));
+    --secondary-container: var(
+        --dynamic-secondary-container,
+        var(--dark-secondary-container)
+    );
+    --on-secondary-container: var(
+        --dynamic-on-secondary-container,
+        var(--dark-on-secondary-container)
+    );
 
     --tertiary: var(--dynamic-tertiary, var(--dark-tertiary));
     --on-tertiary: var(--dynamic-on-tertiary, var(--dark-on-tertiary));
-    --tertiary-container: var(--dynamic-tertiary-container, var(--dark-tertiary-container));
-    --on-tertiary-container: var(--dynamic-on-tertiary-container, var(--dark-on-tertiary-container));
+    --tertiary-container: var(
+        --dynamic-tertiary-container,
+        var(--dark-tertiary-container)
+    );
+    --on-tertiary-container: var(
+        --dynamic-on-tertiary-container,
+        var(--dark-on-tertiary-container)
+    );
 
     --error: var(--dynamic-error, var(--dark-error));
     --on-error: var(--dynamic-on-error, var(--dark-on-error));
-    --error-container: var(--dynamic-error-container, var(--dark-error-container));
-    --on-error-container: var(--dynamic-on-error-container, var(--dark-on-error-container));
+    --error-container: var(
+        --dynamic-error-container,
+        var(--dark-error-container)
+    );
+    --on-error-container: var(
+        --dynamic-on-error-container,
+        var(--dark-on-error-container)
+    );
 
     --background: var(--dynamic-background, var(--dark-background));
     --on-background: var(--dynamic-on-background, var(--dark-on-background));
@@ -219,21 +303,54 @@ body.dark-theme {
     --surface-dim: var(--dynamic-surface-dim, var(--dark-surface-dim));
     --surface-bright: var(--dynamic-surface-bright, var(--dark-surface-bright));
 
-    --surface-variant: var(--dynamic-surface-variant, var(--dark-surface-variant));
-    --on-surface-variant: var(--dynamic-on-surface-variant, var(--dark-on-surface-variant));
+    --surface-variant: var(
+        --dynamic-surface-variant,
+        var(--dark-surface-variant)
+    );
+    --on-surface-variant: var(
+        --dynamic-on-surface-variant,
+        var(--dark-on-surface-variant)
+    );
 
     --outline: var(--dynamic-outline, var(--dark-outline));
-    --outline-variant: var(--dynamic-outline-variant, var(--dark-outline-variant));
+    --outline-variant: var(
+        --dynamic-outline-variant,
+        var(--dark-outline-variant)
+    );
 
-    --surface-container-lowest: var(--dynamic-surface-container-lowest, var(--dark-surface-container-lowest));
-    --surface-container-low: var(--dynamic-surface-container-low, var(--dark-surface-container-low));
-    --surface-container: var(--dynamic-surface-container, var(--dark-surface-container));
-    --surface-container-high: var(--dynamic-surface-container-high, var(--dark-surface-container-high));
-    --surface-container-highest: var(--dynamic-surface-container-highest, var(--dark-surface-container-highest));
+    --surface-container-lowest: var(
+        --dynamic-surface-container-lowest,
+        var(--dark-surface-container-lowest)
+    );
+    --surface-container-low: var(
+        --dynamic-surface-container-low,
+        var(--dark-surface-container-low)
+    );
+    --surface-container: var(
+        --dynamic-surface-container,
+        var(--dark-surface-container)
+    );
+    --surface-container-high: var(
+        --dynamic-surface-container-high,
+        var(--dark-surface-container-high)
+    );
+    --surface-container-highest: var(
+        --dynamic-surface-container-highest,
+        var(--dark-surface-container-highest)
+    );
 
-    --inverse-surface: var(--dynamic-inverse-surface, var(--dark-inverse-surface));
-    --inverse-on-surface: var(--dynamic-inverse-on-surface, var(--dark-inverse-on-surface));
-    --inverse-primary: var(--dynamic-inverse-primary, var(--dark-inverse-primary));
+    --inverse-surface: var(
+        --dynamic-inverse-surface,
+        var(--dark-inverse-surface)
+    );
+    --inverse-on-surface: var(
+        --dynamic-inverse-on-surface,
+        var(--dark-inverse-on-surface)
+    );
+    --inverse-primary: var(
+        --dynamic-inverse-primary,
+        var(--dark-inverse-primary)
+    );
 
     --scrim: var(--dynamic-scrim, var(--dark-scrim));
     --shadow: var(--dynamic-shadow, var(--dark-shadow));
@@ -761,4 +878,3 @@ footer {
  *    - 颜色: on-surface
  *    - 用途: 保持简洁，不过度强调
  */
-
