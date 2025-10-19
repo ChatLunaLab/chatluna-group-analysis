@@ -423,7 +423,16 @@ export class AnalysisService extends Service {
                 messageIndex[entry]
 
             if (resolvedMessage) {
-                updated.push(resolvedMessage.content)
+                updated.push(
+                    h
+                        .select(
+                            resolvedMessage.elements || [
+                                h.text(resolvedMessage.content)
+                            ],
+                            'text'
+                        )
+                        .toString()
+                )
             } else {
                 this.ctx.logger.warn(
                     `无法找到画像证据 ${entry} 对应的消息，请检查消息服务是否正常。`

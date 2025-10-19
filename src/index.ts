@@ -19,7 +19,16 @@ export function apply(ctx: Context, config: Config) {
     ctx.plugin(AnalysisService, config)
     ctx.plugin(RendererService, config)
 
-    plugin(ctx, config)
+    ctx.inject(
+        [
+            'chatluna_group_analysis_message',
+            'chatluna_group_analysis_llm',
+            'chatluna_group_analysis_renderer'
+        ],
+        (ctx) => {
+            plugin(ctx, config)
+        }
+    )
 
     ctx.inject(['cron'], (ctx) => {
         if (!config.cronSchedule && !ctx.cron) {
