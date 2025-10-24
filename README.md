@@ -12,6 +12,10 @@ _Koishi 群聊分析插件_
 
 一个为 Koishi 设计的群聊分析插件，灵感来源于 `astrbot-qq-group-daily-analysis`，支持多维度统计和智能话题总结。
 
+## 截图
+
+![群聊分析示例](./screenshots/default.png)
+
 ## 特性
 
 1. **多维度统计** - 分析群聊的总消息数、参与人数、总字数、最活跃时段、发言排行榜等
@@ -40,3 +44,8 @@ _Koishi 群聊分析插件_
 - `cronSchedule` - 定时发送报告的 CRON 表达式
 - `cronAnalysisDays` - 定时任务分析的天数
 - `promptTopic` - 用于话题总结的 Prompt 模板
+
+## 感谢
+
+- [lumia1998/koishi-plugin-group-analysis](https://github.com/lumia1998/koishi-plugin-group-analysis) Fork 的原始项目
+- [SXP-Simon/astrbot-qq-group-daily-analysis](https://github.com/SXP-Simon/astrbot-qq-group-daily-analysis) AstrBot 的原始项目灵感来源，部分代码参考。

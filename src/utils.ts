@@ -29,11 +29,10 @@ export function calculateBasicStats(
 
         const stat = userStats[userId]
         stat.messageCount++
-        stat.charCount += msg.content.length
+
         stat.lastActive = new Date(
             Math.max(stat.lastActive.getTime(), msg.timestamp.getTime())
         )
-        totalChars += msg.content.length
 
         const hour = msg.timestamp.getHours()
         stat.activeHours[hour] = (stat.activeHours[hour] || 0) + 1
@@ -69,6 +68,9 @@ export function calculateBasicStats(
                 `${msg.username}(${msg.userId}): ${pureText.trim()}`
             )
         }
+
+        stat.charCount += pureText.length || msg.content.length
+        totalChars += pureText.length || msg.content.length
     }
 
     for (const userId in userStats) {
