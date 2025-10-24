@@ -14,7 +14,7 @@ _Koishi 群聊分析插件_
 
 ## 截图
 
-![群聊分析示例](./screenshots/default.png)
+<img src="./screenshots/default.png" width="400" />
 
 ## 特性
 
