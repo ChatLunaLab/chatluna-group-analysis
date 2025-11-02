@@ -281,7 +281,6 @@ export const Config: Schema<Config> = Schema.intersect([
 请严格按照以下 YAML 格式返回，放在代码块中：
 \`\`\`yaml
 - userId: "{userId}"
-  username: "{username}"
   summary: |-
     对整体聊天记录的提炼（性格特点，发言语气等，几段话）（如果和之前的用户画像合一起，太多了的话，超过了300字，需要精简）
   keyTraits:

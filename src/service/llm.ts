@@ -64,7 +64,7 @@ export class LLMService extends Service {
             try {
                 const data = load(yamlMatch[1]) as T
                 if (Array.isArray(data)) {
-                    logger.warn(`成功解析 ${data.length} 条数据。`)
+                    logger.info(`成功解析 ${data.length} 条数据。`)
                 }
                 return data
             } catch (err) {
@@ -144,12 +144,14 @@ export class LLMService extends Service {
                 String(this.config.personaLookbackDays)
             )
 
-        const result = await this._callLLM<UserPersonaProfile>(
+        const resultArray = await this._callLLM<UserPersonaProfile[]>(
             filledPrompt,
             '用户画像分析'
         )
-
-        return result?.[0]
+        const result = resultArray[0] || null
+        if (!result) return null
+        result.username = username
+        return result
     }
 }
 
