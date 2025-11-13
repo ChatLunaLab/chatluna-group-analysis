@@ -332,12 +332,22 @@ export class MessageService extends Service {
 
         if (this.config.alwaysPersistMessages) {
             this.ctx.logger.info('使用数据库历史消息获取功能。')
-            return this.getDatabaseHistoricalMessages(filter)
+            return this.getDatabaseHistoricalMessages(filter).then(
+                (messages) => {
+                    return messages.sort(
+                        (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+                    )
+                }
+            )
         }
 
         if (platform === 'onebot') {
             this.ctx.logger.info('使用 OneBot 历史消息获取功能。')
-            return this.getOneBotHistoricalMessages(filter)
+            return this.getOneBotHistoricalMessages(filter).then((messages) => {
+                return messages.sort(
+                    (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+                )
+            })
         }
 
         if (bot?.['getMessageList']) {

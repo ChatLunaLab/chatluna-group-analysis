@@ -11,20 +11,13 @@ export const inject = {
 export function apply(ctx: Context, config: Config) {
     const checkGroup = (session: Session) => {
         if (!config.listenerGroups) return false
-        return (
-            config.listenerGroups.some(
-                (settings) =>
-                    (settings.channelId === session.channelId &&
-                        session.channelId != null) ||
-                    (settings.guildId !== null &&
-                        settings.guildId === session.guildId)
-            ) &&
-            config.listenerGroups.some(
-                (settings) =>
-                    settings.enabled &&
-                    settings.channelId === session.channelId &&
-                    session.channelId != null
-            )
+        return config.listenerGroups.some(
+            (settings) =>
+                (settings.channelId === session.channelId &&
+                    session.channelId != null) ||
+                (settings.guildId !== null &&
+                    settings.guildId === session.guildId &&
+                    settings.enabled)
         )
     }
 
