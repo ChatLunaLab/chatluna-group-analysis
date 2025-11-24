@@ -46,6 +46,7 @@ export interface Config {
     personaMinMessages: number
     registerTools: boolean
     theme: 'light' | 'dark' | 'auto'
+    skin: string
 
     debug?: boolean
 }
@@ -108,6 +109,11 @@ export const Config: Schema<Config> = Schema.intersect([
                 '渲染模板的主题。auto 会在 19:00-06:00 期间自动切换到暗色模式。'
             )
             .default('auto'),
+        skin: Schema.union([
+            Schema.const('md3').description('Material Design 3')
+        ])
+            .description('渲染界面皮肤。')
+            .default('md3'),
         wordsFilter: Schema.array(String)
             .role('table')
             .description('过滤词列表。消息内含有此词语时将不会记入统计消息。')

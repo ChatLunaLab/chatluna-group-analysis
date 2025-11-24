@@ -17,10 +17,12 @@ export class RendererService extends Service {
     static inject = ['puppeteer']
 
     templateDir: string
+    private _config: Config
 
-    constructor(ctx: Context) {
+    constructor(ctx: Context, config: Config) {
         super(ctx, 'chatluna_group_analysis_renderer', true)
 
+        this._config = config
         this.templateDir = path.resolve(
             ctx.baseDir,
             'data/chatluna/group_analysis'
@@ -29,6 +31,11 @@ export class RendererService extends Service {
         this.ctx.on('ready', async () => {
             await this.init()
         })
+    }
+
+    private getSkinPath(filename: string): string {
+        const skin = this._config.skin || 'md3'
+        return path.resolve(this.templateDir, skin, filename)
     }
 
     private async imageToBase64(url: string): Promise<string> {
@@ -65,31 +72,35 @@ export class RendererService extends Service {
         const templateHtmlDir = dirname + '/../resources'
 
         const templateDir = this.templateDir
+        const skin = this._config.skin || 'md3'
 
         /* try {
             await fs.access(templateDir)
         } catch (error) { */
         await fs.mkdir(templateDir, { recursive: true })
+
+        // Copy the entire resources directory including skin folders
         await fs.cp(templateHtmlDir, templateDir, { recursive: true })
         /*   } */
 
         const tempHtmlFiles = await fs
-            .readdir(templateDir)
+            .readdir(path.resolve(templateDir, skin))
             .then((files) =>
                 files.filter(
                     (file) =>
                         file.endsWith('.html') && !file.startsWith('template')
                 )
             )
+            .catch(() => [])
 
         for (const file of tempHtmlFiles) {
-            await fs.unlink(path.resolve(templateDir, file))
+            await fs.unlink(path.resolve(templateDir, skin, file))
         }
 
         const page = await this.ctx.puppeteer.page()
 
         try {
-            await page.goto('file://' + templateDir + '/template_user.html', {
+            await page.goto('file://' + this.getSkinPath('template_user.html'), {
                 waitUntil: 'domcontentloaded'
             })
         } catch (error) {
@@ -168,13 +179,12 @@ export class RendererService extends Service {
             throw new Error('Puppeteer service is not available.')
         }
 
-        const templatePath = path.resolve(
-            this.templateDir,
-            'template_group.html'
-        )
+        const templatePath = this.getSkinPath('template_group.html')
         const randomId = Math.random().toString(36).substring(2, 15)
+        const skin = this._config.skin || 'md3'
         const outTemplateHtmlPath = path.resolve(
             this.templateDir,
+            skin,
             `${randomId}.html`
         )
 
@@ -295,13 +305,12 @@ export class RendererService extends Service {
             throw new Error('Puppeteer service is not available.')
         }
 
-        const templatePath = path.resolve(
-            this.templateDir,
-            'template_user.html'
-        )
+        const templatePath = this.getSkinPath('template_user.html')
         const randomId = Math.random().toString(36).substring(2, 15)
+        const skin = this._config.skin || 'md3'
         const outTemplateHtmlPath = path.resolve(
             this.templateDir,
+            skin,
             `${randomId}.html`
         )
 
