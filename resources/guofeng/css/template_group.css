@@ -1,0 +1,627 @@
+@import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&family=ZCOOL+XiaoWei&display=swap');
+
+:root {
+    /* Guofeng Variables */
+    --ui-padding: 24px;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    /* Fonts */
+    --font-title: 'Ma Shan Zheng', cursive;
+    /* Calligraphy for titles */
+    --font-body: 'Noto Serif SC', serif;
+    /* Readable serif for body */
+    --font-ui: 'ZCOOL XiaoWei', serif;
+    /* Elegant serif for UI elements */
+
+    /* Colors - Traditional Chinese Palette */
+    --bg-paper: #f4f0e6;
+    /* Rice Paper */
+    --bg-ink-wash: rgba(43, 43, 43, 0.03);
+
+    --color-ink: #2b2b2b;
+    /* Ink Black */
+    --color-ink-light: #595959;
+
+    --color-vermilion: #b22c2c;
+    /* Seal Red */
+    --color-jade: #3d5a4b;
+    /* Jade Green */
+    --color-gold: #cfa972;
+    /* Muted Gold */
+    --color-indigo: #30475e;
+    /* Indigo */
+
+    --card-bg: rgba(255, 255, 255, 0.85);
+    --card-border: #dcd6cc;
+
+    --shadow-ink: 2px 2px 8px rgba(43, 43, 43, 0.1);
+
+    /* Semantic Colors */
+    --window-bg: rgba(244, 240, 230, 0.98);
+    --header-grad-start: rgba(255, 255, 255, 0.5);
+    --icon-bg: rgba(255, 255, 255, 0.5);
+}
+
+/* 
+ * ---------------------------------------
+ * Theme Setup
+ * ---------------------------------------
+ */
+body {
+    font-family: var(--font-body);
+    background-color: var(--bg-paper);
+    background-image: url('../images/bg_light.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+
+    color: var(--color-ink);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+    padding: 40px;
+}
+
+body.dark-theme {
+    --bg-paper: #1a1a1a;
+    --color-ink: #e6e6e6;
+    --color-ink-light: #a6a6a6;
+    --card-bg: rgba(40, 40, 40, 0.9);
+    --card-border: #404040;
+    --color-vermilion: #d44c4c;
+    --color-jade: #5c8a70;
+
+    /* Dark Theme Semantics */
+    --window-bg: rgba(30, 30, 30, 0.98);
+    --header-grad-start: rgba(0, 0, 0, 0.4);
+    --icon-bg: rgba(255, 255, 255, 0.05);
+    --shadow-ink: 2px 2px 8px rgba(0, 0, 0, 0.6);
+
+    background-image: url('../images/bg_dark.jpg');
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 
+ * =========================================
+ * Main Window (Scroll / Painting Mount)
+ * =========================================
+ */
+.game-window {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    background: var(--window-bg);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--card-border);
+
+    /* Traditional border decoration */
+    border-top: 8px solid var(--color-vermilion);
+    border-bottom: 8px solid var(--color-vermilion);
+}
+
+/* 
+ * =========================================
+ * Decorations
+ * =========================================
+ */
+.corner-decoration {
+    position: absolute;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.corner-decoration.top-left {
+    top: 0;
+    left: 0;
+    width: 100px;
+    height: 100px;
+    border-top: 4px solid var(--color-vermilion);
+    border-left: 4px solid var(--color-vermilion);
+}
+
+.corner-decoration.top-left::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 100%;
+    height: 100%;
+    border-top: 1px solid var(--color-gold);
+    border-left: 1px solid var(--color-gold);
+}
+
+.corner-decoration.bottom-right {
+    bottom: 0;
+    right: 0;
+    width: 300px;
+    height: 300px;
+    background-image: url('../images/decoration.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: bottom right;
+    opacity: 0.8;
+}
+
+.bg-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(var(--color-ink-light) 1px, transparent 1px);
+    background-size: 30px 30px;
+    opacity: 0.05;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.seal-mark {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    border: 3px solid var(--color-vermilion);
+    color: var(--color-vermilion);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: var(--font-title);
+    font-weight: bold;
+    font-size: 16px;
+    border-radius: 4px;
+    opacity: 0.7;
+    z-index: 15;
+    transform: rotate(8deg);
+    background: rgba(255, 255, 255, 0.1);
+    pointer-events: none;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+}
+
+/* 
+ * =========================================
+ * Header
+ * =========================================
+ */
+.hud-header {
+    padding: 40px 40px 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--color-gold);
+    background: linear-gradient(to bottom, var(--header-grad-start), transparent);
+}
+
+.game-title h1 {
+    font-family: var(--font-title);
+    font-size: 48px;
+    font-weight: 400;
+    color: var(--color-ink);
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+    /* Vertical text effect for title could be cool, but horizontal is safer for variable length */
+}
+
+.game-title .subtitle {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--color-vermilion);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-top: 1px solid var(--color-vermilion);
+    display: inline-block;
+    padding-top: 4px;
+}
+
+.hud-date-box {
+    text-align: right;
+    writing-mode: vertical-rl;
+    /* Vertical text for date/location */
+    border-left: 1px solid var(--color-ink-light);
+    padding-left: 12px;
+    height: 80px;
+}
+
+.hud-date {
+    font-family: var(--font-ui);
+    font-size: 16px;
+    color: var(--color-ink);
+    margin-bottom: 8px;
+}
+
+.hud-location {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--color-vermilion);
+    font-weight: bold;
+}
+
+/* 
+ * =========================================
+ * Content Area
+ * =========================================
+ */
+.scroll-content {
+    padding: 40px;
+}
+
+/* 
+ * =========================================
+ * Components
+ * =========================================
+ */
+
+/* Section Headers */
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 48px 0 24px 0;
+    position: relative;
+}
+
+.section-header::after {
+    content: '';
+    flex-grow: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--color-ink-light), transparent);
+}
+
+.section-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--color-jade);
+    color: var(--color-jade);
+    border-radius: 50%;
+    /* Or square with rounded corners */
+    font-size: 20px;
+    background: var(--icon-bg);
+}
+
+.section-header h2 {
+    font-family: var(--font-title);
+    font-size: 28px;
+    color: var(--color-ink);
+    font-weight: 400;
+}
+
+/* Status Grid */
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.status-item {
+    background: var(--card-bg);
+    padding: 20px;
+    border: 1px solid var(--card-border);
+    text-align: center;
+    position: relative;
+}
+
+/* Corner accents */
+.status-item::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 8px;
+    height: 8px;
+    border-top: 2px solid var(--color-gold);
+    border-left: 2px solid var(--color-gold);
+}
+
+.status-item::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    border-bottom: 2px solid var(--color-gold);
+    border-right: 2px solid var(--color-gold);
+}
+
+.status-label {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--color-ink-light);
+    margin-bottom: 8px;
+}
+
+.status-value {
+    font-family: var(--font-body);
+    font-size: 24px;
+    color: var(--color-vermilion);
+    font-weight: bold;
+}
+
+/* Character Cards */
+.grid-2-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.char-card {
+    background: var(--card-bg);
+    padding: 20px;
+    border: 1px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: transform 0.3s ease;
+}
+
+.char-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-ink);
+}
+
+.char-avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 3px solid var(--color-jade);
+    object-fit: cover;
+    padding: 2px;
+    background: var(--bg-paper);
+}
+
+.char-info {
+    flex: 1;
+}
+
+.char-name {
+    font-family: var(--font-title);
+    font-size: 22px;
+    color: var(--color-ink);
+    margin-bottom: 8px;
+}
+
+.char-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--color-ink-light);
+    font-family: var(--font-ui);
+}
+
+.char-stats strong {
+    color: var(--color-vermilion);
+}
+
+/* Title Badges */
+.title-badge {
+    display: inline-block;
+    border: 1px solid var(--color-vermilion);
+    color: var(--color-vermilion);
+    padding: 2px 10px;
+    font-size: 12px;
+    font-family: var(--font-ui);
+    margin-bottom: 6px;
+    background: rgba(178, 44, 44, 0.05);
+}
+
+/* Dialogue Box */
+.dialogue-box {
+    background: var(--card-bg);
+    padding: 24px;
+    border-left: 4px solid var(--color-jade);
+    margin-bottom: 24px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.quote-text {
+    font-family: var(--font-title);
+    font-size: 24px;
+    color: var(--color-ink);
+    text-align: center;
+    padding: 10px;
+    line-height: 1.6;
+}
+
+.dialogue-meta {
+    text-align: right;
+    font-size: 13px;
+    color: var(--color-ink-light);
+    margin-top: 12px;
+    font-family: var(--font-ui);
+    font-style: italic;
+}
+
+.dialogue-header {
+    font-family: var(--font-title);
+    font-size: 20px;
+    color: var(--color-jade);
+    margin-bottom: 12px;
+    border-bottom: 1px dashed var(--color-jade);
+    padding-bottom: 8px;
+}
+
+.dialogue-text {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--color-ink);
+}
+
+/* Chart Area */
+.chart-container {
+    background: var(--card-bg);
+    padding: 30px;
+    height: 250px;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    border: 1px solid var(--card-border);
+}
+
+.chart-bar-wrapper {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.chart-bar {
+    width: 100%;
+    background: var(--color-jade);
+    opacity: 0.8;
+    border-radius: 2px 2px 0 0;
+}
+
+.chart-bar-wrapper:nth-child(odd) .chart-bar {
+    background: var(--color-vermilion);
+}
+
+.chart-label {
+    font-size: 11px;
+    color: var(--color-ink-light);
+    margin-top: 8px;
+    font-family: var(--font-ui);
+}
+
+/* 
+ * =========================================
+ * Profile Page Specifics
+ * =========================================
+ */
+.profile-header {
+    text-align: center;
+    padding: 40px 0;
+    position: relative;
+}
+
+/* Ink wash circle background for avatar */
+.profile-header::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 240px;
+    height: 240px;
+    background: radial-gradient(circle, rgba(61, 90, 75, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 0;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid var(--bg-paper);
+    box-shadow: 0 0 0 2px var(--color-gold);
+    margin-bottom: 20px;
+    object-fit: cover;
+    position: relative;
+    z-index: 1;
+}
+
+.profile-name {
+    font-family: var(--font-title);
+    font-size: 48px;
+    color: var(--color-ink);
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.profile-meta {
+    display: inline-block;
+    border-top: 1px solid var(--color-vermilion);
+    border-bottom: 1px solid var(--color-vermilion);
+    color: var(--color-vermilion);
+    padding: 6px 24px;
+    font-size: 14px;
+    font-family: var(--font-ui);
+    position: relative;
+    z-index: 1;
+}
+
+.tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+}
+
+.game-tag {
+    background: transparent;
+    border: 1px solid var(--color-jade);
+    color: var(--color-jade);
+    padding: 6px 16px;
+    font-size: 14px;
+    font-family: var(--font-ui);
+    transition: all 0.3s;
+}
+
+.game-tag:hover {
+    background: var(--color-jade);
+    color: white;
+}
+
+/* Evidence List */
+.evidence-list {
+    list-style: none;
+}
+
+.evidence-item {
+    padding: 16px;
+    border-bottom: 1px solid var(--card-border);
+    margin-bottom: 8px;
+}
+
+.evidence-quote {
+    font-size: 16px;
+    color: var(--color-ink);
+    line-height: 1.6;
+    font-family: var(--font-body);
+}
+
+.game-footer {
+    text-align: center;
+    padding-top: 40px;
+    font-size: 12px;
+    color: var(--color-ink-light);
+    font-family: var(--font-ui);
+    opacity: 0.6;
+}
+
+/* Seal (Chop) decoration */
+.game-footer::after {
+    content: 'ChatLuna';
+    display: block;
+    width: 60px;
+    height: 60px;
+    margin: 20px auto 0;
+    border: 3px solid var(--color-vermilion);
+    color: var(--color-vermilion);
+    line-height: 54px;
+    font-family: var(--font-title);
+    font-size: 16px;
+    border-radius: 4px;
+    opacity: 0.8;
+}

@@ -15,8 +15,7 @@ _Koishi 群聊分析插件_
 
 ## 截图
 
-<img src="./screenshots/default.png" width="400" />
-<img src="./screenshots/anime.png" width="400" />
+<img src="./screenshots/default.png" width="400" /> <img src="./screenshots/anime.png" width="400" />
 
 ## 特性
 

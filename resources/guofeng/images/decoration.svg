@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <!-- Gradients for ink wash effect -->
+    <linearGradient id="farMountainGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#595959" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#595959" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="midMountainGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3d5a4b" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#2b2b2b" stop-opacity="0.6"/>
+    </linearGradient>
+    <radialGradient id="mistGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background Layer: Distant peaks -->
+  <path d="M 0 350 Q 100 280 200 320 T 400 280 V 400 H 0 Z" fill="url(#farMountainGrad)" />
+  
+  <!-- Mid Layer: Rolling hills -->
+  <path d="M 100 400 Q 200 300 320 340 L 400 380 V 400 Z" fill="url(#midMountainGrad)" />
+
+  <!-- Foreground: Ink Rock & Pine -->
+  <g transform="translate(0,0)">
+    <!-- Rock Mass -->
+    <path d="M 250 400 C 280 340 380 320 400 350 V 400 Z" fill="#2b2b2b" opacity="0.85" />
+    
+    <!-- Pine Branch extending left -->
+    <path d="M 400 380 Q 350 380 320 340 T 260 300 Q 240 290 220 310" 
+          fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" />
+    <path d="M 320 340 Q 300 360 290 380" 
+          fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" />
+          
+    <!-- Pine Needles (Clusters) -->
+    <g fill="#3d5a4b" opacity="0.8">
+      <!-- Cluster 1 -->
+      <circle cx="220" cy="310" r="12" opacity="0.4" />
+      <path d="M 220 310 L 210 300 M 220 310 L 230 300 M 220 310 L 220 295" stroke="#3d5a4b" stroke-width="1" />
+      
+      <!-- Cluster 2 -->
+      <circle cx="260" cy="300" r="10" opacity="0.4" />
+      <path d="M 260 300 L 250 290 M 260 300 L 270 290 M 260 300 L 260 285" stroke="#3d5a4b" stroke-width="1" />
+      
+      <!-- Cluster 3 -->
+      <circle cx="290" cy="380" r="8" opacity="0.4" />
+    </g>
+  </g>
+
+  <!-- Mist effects -->
+  <ellipse cx="200" cy="380" rx="100" ry="20" fill="url(#mistGrad)" />
+
+  <!-- Birds -->
+  <g opacity="0.6" transform="translate(150, 250) scale(0.8)">
+    <path d="M 0 0 Q 10 -5 20 0" stroke="#2b2b2b" stroke-width="1.5" fill="none" />
+    <path d="M 0 0 Q 5 5 10 0" stroke="#2b2b2b" stroke-width="0.5" fill="none" opacity="0.5" />
+    <path d="M 30 -10 Q 40 -15 50 -10" stroke="#2b2b2b" stroke-width="1.5" fill="none" />
+  </g>
+
+  <!-- Seal (Chop) -->
+  <g transform="translate(330, 50) rotate(5)">
+    <rect width="40" height="40" rx="2" fill="none" stroke="#b22c2c" stroke-width="2.5" />
+    <path d="M 8 8 H 32 V 32 H 8 Z" fill="#b22c2c" opacity="0.1" />
+    <!-- Character 'Feng' (Wind/Style) stylized -->
+    <path d="M 12 12 L 28 12 L 28 28 L 12 28 Z" fill="none" stroke="#b22c2c" stroke-width="2" opacity="0.5"/> 
+    <text x="20" y="29" font-family="serif" font-size="22" fill="#b22c2c" text-anchor="middle" font-weight="bold">风</text>
+  </g>
+</svg>
