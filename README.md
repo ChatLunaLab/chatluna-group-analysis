@@ -9,12 +9,14 @@ _Koishi 群聊分析插件_
 </div>
 
 > 此项目 fork 自 [lumia1998/koishi-plugin-group-analysis](https://github.com/lumia1998/koishi-plugin-group-analysis)，感谢原作者的贡献。
+> 自 1.2.0 起，群分析插件支持设置皮肤，并默认内置两种皮肤风格。
 
 一个为 Koishi 设计的群聊分析插件，灵感来源于 `astrbot-qq-group-daily-analysis`，支持多维度统计和智能话题总结。
 
 ## 截图
 
 <img src="./screenshots/default.png" width="400" />
+<img src="./screenshots/anime.png" width="400" />
 
 ## 特性
 

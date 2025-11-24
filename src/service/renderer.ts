@@ -12,6 +12,7 @@ import {
     generateActiveHoursChart,
     renderTemplate
 } from '../utils'
+import { skinRegistry } from '../skins'
 
 export class RendererService extends Service {
     static inject = ['puppeteer']
@@ -155,7 +156,8 @@ export class RendererService extends Service {
             const page = await this._renderGroupAnalysis(data, theme)
 
             // 找到页面中的 container 元素
-            const selector = config.skin === 'anime' ? '.game-window' : '.container'
+            const renderer = skinRegistry.getSafe(config.skin || 'md3')
+            const selector = renderer.containerSelector
             const element = await page.$(selector)
             if (!element) {
                 await page.close()
@@ -200,31 +202,31 @@ export class RendererService extends Service {
             'https://cravatar.cn/avatar/00000000000000000000000000000000?d=mp'
 
         // 将头像转换为 Base64
-                    const dynamicAvatarBase64 = await this.imageToBase64(dynamicAvatarUrl)
-        
-                // 读取模板文件并替换占位符
-                const templateHtml = await fs.readFile(templatePath, 'utf-8')
-                const filledHtml = renderTemplate(templateHtml, {
-                    groupName: data.groupName,
-                    analysisDate: data.analysisDate,
-                    totalMessages: data.totalMessages.toString(),
-                    totalParticipants: data.totalParticipants.toString(),
-                    totalChars: data.totalChars.toString(),
-                    mostActivePeriod: data.mostActivePeriod,
-                    userStats: formatUserStats(data.userStats, skin),
-                    topics: formatTopics(data.topics || [], skin),
-                    userTitles: formatUserTitles(data.userTitles || [], skin),
-                    activeHoursChart: generateActiveHoursChart(
-                        data.activeHoursData || {},
-                        skin
-                    ),
-                    goldenQuotes: formatGoldenQuotes(data.goldenQuotes || [], skin),
-                    theme,
-                    dynamicAvatarUrl: dynamicAvatarBase64
-                })
-        
-                // 写入临时 HTML 文件
-                await fs.writeFile(outTemplateHtmlPath, filledHtml)
+        const dynamicAvatarBase64 = await this.imageToBase64(dynamicAvatarUrl)
+
+        // 读取模板文件并替换占位符
+        const templateHtml = await fs.readFile(templatePath, 'utf-8')
+        const filledHtml = renderTemplate(templateHtml, {
+            groupName: data.groupName,
+            analysisDate: data.analysisDate,
+            totalMessages: data.totalMessages.toString(),
+            totalParticipants: data.totalParticipants.toString(),
+            totalChars: data.totalChars.toString(),
+            mostActivePeriod: data.mostActivePeriod,
+            userStats: formatUserStats(data.userStats, skin),
+            topics: formatTopics(data.topics || [], skin),
+            userTitles: formatUserTitles(data.userTitles || [], skin),
+            activeHoursChart: generateActiveHoursChart(
+                data.activeHoursData || {},
+                skin
+            ),
+            goldenQuotes: formatGoldenQuotes(data.goldenQuotes || [], skin),
+            theme,
+            dynamicAvatarUrl: dynamicAvatarBase64
+        })
+
+        // 写入临时 HTML 文件
+        await fs.writeFile(outTemplateHtmlPath, filledHtml)
         this.ctx.logger.info(
             'HTML 模板填充完成，正在调用 Puppeteer 进行渲染...'
         )
@@ -281,7 +283,8 @@ export class RendererService extends Service {
                 theme
             )
 
-            const selector = config.skin === 'anime' ? '.game-window' : '.container'
+            const renderer = skinRegistry.getSafe(config.skin || 'md3')
+            const selector = renderer.containerSelector
             const element = await page.$(selector)
             if (!element) {
                 await page.close()
@@ -321,44 +324,28 @@ export class RendererService extends Service {
             `${randomId}.html`
         )
 
+        const renderer = skinRegistry.getSafe(skin)
+
         const formatTags = (tags: string[] | undefined) => {
-            if (!tags || tags.length === 0)
-                return skin === 'anime'
-                    ? '<div class="empty-state">暂无数据</div>'
-                    : '<div class="empty-state">暂无数据</div>'
-
-            if (skin === 'anime') {
-                return tags
-                    .map((tag) => `<span class="game-tag">${tag}</span>`)
-                    .join('')
+            if (renderer.formatTags) {
+                return renderer.formatTags(tags)
             }
-
+            // Fallback if skin doesn't implement formatTags
+            if (!tags || tags.length === 0) {
+                return '<div class="empty-state">暂无数据</div>'
+            }
             return tags.map((tag) => `<div class="chip">${tag}</div>`).join('')
         }
 
         const formatEvidence = (
             items: UserPersonaProfile['evidence']
         ): string => {
+            if (renderer.formatEvidence) {
+                return renderer.formatEvidence(items)
+            }
+            // Fallback if skin doesn't implement formatEvidence
             if (!items || items.length === 0) {
                 return '<div class="empty-state">暂无事实依据</div>'
-            }
-
-            if (skin === 'anime') {
-                const listItems = items
-                    .map((item) => {
-                        const quoteHtml = (item || '')
-                            .split('\n')
-                            .map((line) => line.trim())
-                            .filter(Boolean)
-                            .join('<br/>')
-                        return `
-                            <li class="evidence-item">
-                                <div class="evidence-quote">${quoteHtml}</div>
-                            </li>
-                        `
-                    })
-                    .join('')
-                return `<ul class="evidence-list">${listItems}</ul>`
             }
 
             const cards = items
