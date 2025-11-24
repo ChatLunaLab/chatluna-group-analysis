@@ -110,7 +110,8 @@ export const Config: Schema<Config> = Schema.intersect([
             )
             .default('auto'),
         skin: Schema.union([
-            Schema.const('md3').description('Material Design 3')
+            Schema.const('md3').description('Material Design 3'),
+            Schema.const('anime').description('二次元风格')
         ])
             .description('渲染界面皮肤。')
             .default('md3'),

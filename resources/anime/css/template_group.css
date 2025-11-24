@@ -1,0 +1,509 @@
+@import url('https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&family=Kosugi+Maru&family=M+PLUS+Rounded+1c:wght@400;500;700&display=swap');
+
+:root {
+    /* Common Kawaii UI Variables */
+    --ui-padding: 20px;
+    --radius-sm: 12px;
+    --radius-md: 20px;
+    --radius-lg: 32px;
+    --radius-pill: 50px;
+    
+    /* Fonts - Rounded & Cute */
+    --font-title: 'M PLUS Rounded 1c', sans-serif;
+    --font-body: 'Kosugi Maru', sans-serif; 
+    --font-ui: 'Kiwi Maru', serif;
+}
+
+/* 
+ * ---------------------------------------
+ * Light Theme (Pop & Cute - Oreimo Style)
+ * Concept: Pastel, Candy, Sticker, Dot Pattern
+ * ---------------------------------------
+ */
+body, body.light-theme {
+    --bg-image: url('../images/bg_light.jpg'); /* Keeping ref, but we overlay pattern */
+    
+    --ui-bg-color: #fffaf0; /* Floral White */
+    --ui-bg-overlay: rgba(255, 255, 255, 0.6);
+    
+    --color-primary: #ff8fa3; /* Pastel Pink */
+    --color-secondary: #80deea; /* Pastel Cyan */
+    --color-accent: #ffb74d; /* Pastel Orange */
+    --color-text-main: #5d4037; /* Brown text is softer than black */
+    --color-text-sub: #8d6e63;
+    
+    --card-bg: #ffffff;
+    --card-border: #ffd1dc; /* Light Pink Border */
+    
+    --shadow-pop: 4px 4px 0px rgba(255, 143, 163, 0.4); /* Hard shadow for pop effect */
+    
+    /* Cute Polka Dot Background Pattern */
+    --pattern-bg: radial-gradient(#ffcdd2 20%, transparent 20%),
+                  radial-gradient(#b2ebf2 20%, transparent 20%);
+    --pattern-size: 20px 20px;
+    --pattern-pos: 0 0, 10px 10px;
+}
+
+/* 
+ * ---------------------------------------
+ * Dark Theme (Electric Pop / Cyber Cute)
+ * Concept: Neon, Night City, Glow
+ * ---------------------------------------
+ */
+body.dark-theme {
+    --bg-image: url('../images/bg_dark.jpg');
+    
+    --ui-bg-color: #23232e;
+    --ui-bg-overlay: rgba(20, 20, 35, 0.8);
+    
+    --color-primary: #ff4081; /* Hot Pink */
+    --color-secondary: #00e5ff; /* Cyan Neon */
+    --color-accent: #ffd740; /* Yellow Neon */
+    --color-text-main: #ffffff;
+    --color-text-sub: #b0bec5;
+    
+    --card-bg: #2d2d3a;
+    --card-border: #3f3f50;
+    
+    --shadow-pop: 0 0 10px rgba(255, 64, 129, 0.4);
+    
+    --pattern-bg: linear-gradient(45deg, #303040 25%, transparent 25%, transparent 75%, #303040 75%, #303040),
+                  linear-gradient(45deg, #303040 25%, transparent 25%, transparent 75%, #303040 75%, #303040);
+    --pattern-size: 20px 20px;
+    --pattern-pos: 0 0, 10px 10px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-body);
+    background-color: var(--ui-bg-color);
+    /* Combine Pattern + Image */
+    background-image: var(--pattern-bg), var(--bg-image);
+    background-size: var(--pattern-size), cover;
+    background-position: var(--pattern-pos), center;
+    background-attachment: fixed, fixed;
+    
+    color: var(--color-text-main);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+    padding: 40px;
+}
+
+/* 
+ * =========================================
+ * Game Window (Sticker / Pop Up Look)
+ * =========================================
+ */
+.game-window {
+    position: relative;
+    width: 100%;
+    max-width: 900px; /* Slightly narrower for cuteness */
+    background: var(--ui-bg-color);
+    border-radius: var(--radius-lg);
+    
+    /* Double border effect for sticker look */
+    border: 6px solid #ffffff;
+    outline: 4px dashed var(--color-primary); 
+    
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: popIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* 
+ * =========================================
+ * Header (Ribbon Style)
+ * =========================================
+ */
+.hud-header {
+    background: var(--color-primary);
+    padding: 24px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Striped pattern overlay on header */
+.hud-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+        45deg,
+        rgba(255,255,255,0.1),
+        rgba(255,255,255,0.1) 10px,
+        transparent 10px,
+        transparent 20px
+    );
+    pointer-events: none;
+}
+
+.game-title h1 {
+    font-family: var(--font-title);
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+}
+
+.game-title .subtitle {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    background: rgba(255,255,255,0.2);
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    display: inline-block;
+    margin-top: 6px;
+    font-weight: bold;
+}
+
+.hud-date-box {
+    text-align: right;
+}
+
+.hud-date {
+    font-family: var(--font-title);
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.hud-location {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+/* 
+ * =========================================
+ * Content Area
+ * =========================================
+ */
+.scroll-content {
+    padding: 32px;
+    background: rgba(255, 255, 255, 0.4); /* Slight transparency */
+}
+
+/* 
+ * =========================================
+ * Components
+ * =========================================
+ */
+
+/* Section Headers */
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 32px 0 20px 0;
+}
+
+.section-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 36px;
+    height: 36px;
+    background: var(--color-secondary);
+    color: white;
+    border-radius: 50%;
+    font-size: 18px;
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+}
+
+.section-header h2 {
+    font-family: var(--font-title);
+    font-size: 22px;
+    color: var(--color-primary);
+    border-bottom: 3px dotted var(--color-secondary);
+    padding-bottom: 4px;
+    flex-grow: 1;
+}
+
+/* Status Grid (Bubbles) */
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.status-item {
+    background: var(--card-bg);
+    padding: 16px;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--card-border);
+    text-align: center;
+    box-shadow: var(--shadow-pop);
+    transition: transform 0.2s;
+}
+
+.status-item:hover {
+    transform: translateY(-4px) rotate(-2deg);
+}
+
+.status-label {
+    font-size: 12px;
+    color: var(--color-text-sub);
+    font-weight: bold;
+}
+
+.status-value {
+    font-family: var(--font-title);
+    font-size: 28px;
+    color: var(--color-secondary);
+    margin-top: 4px;
+}
+
+/* Character Cards (Kawaii Box) */
+.grid-2-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.char-card {
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    border: 2px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--shadow-pop);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Cute corner accent */
+.char-card::after {
+    content: '';
+    position: absolute;
+    top: -15px; right: -15px;
+    width: 40px; height: 40px;
+    background: var(--color-accent);
+    transform: rotate(45deg);
+}
+
+.char-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid var(--color-secondary);
+    object-fit: cover;
+    background: #fff;
+}
+
+.char-info {
+    flex: 1;
+}
+
+.char-name {
+    font-family: var(--font-title);
+    font-size: 18px;
+    color: var(--color-text-main);
+    margin-bottom: 8px;
+}
+
+.char-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--color-text-sub);
+}
+
+.char-stats strong {
+    color: var(--color-primary);
+}
+
+/* Title Badges */
+.title-badge {
+    display: inline-block;
+    background: var(--color-accent);
+    color: white;
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: bold;
+    box-shadow: 1px 1px 0 rgba(0,0,0,0.1);
+    margin-bottom: 4px;
+}
+
+/* Dialogue Box (Speech Bubble) */
+.dialogue-box {
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    border: 2px solid var(--color-secondary);
+    margin-bottom: 20px;
+    position: relative;
+    box-shadow: var(--shadow-pop);
+}
+
+/* Quote text */
+.quote-text {
+    font-family: var(--font-title);
+    font-size: 22px;
+    color: var(--color-primary);
+    text-align: center;
+    padding: 10px;
+    font-style: italic;
+}
+
+.dialogue-meta {
+    text-align: right;
+    font-size: 12px;
+    color: var(--color-text-sub);
+    margin-top: 8px;
+    font-weight: bold;
+}
+
+.dialogue-header {
+    font-family: var(--font-title);
+    font-size: 18px;
+    color: var(--color-secondary);
+    margin-bottom: 8px;
+}
+
+/* Chart Area */
+.chart-container {
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    height: 250px;
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    border: 2px solid var(--card-border);
+}
+
+.chart-bar-wrapper {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.chart-bar {
+    width: 100%;
+    background: var(--color-secondary);
+    border-radius: 8px 8px 0 0;
+    opacity: 0.8;
+}
+
+/* Alternating colors for bars */
+.chart-bar-wrapper:nth-child(odd) .chart-bar {
+    background: var(--color-primary);
+}
+
+.chart-label {
+    font-size: 10px;
+    color: var(--color-text-sub);
+    margin-top: 6px;
+    transform: rotate(-90deg);
+    white-space: nowrap;
+}
+
+/* 
+ * =========================================
+ * Profile Page Specifics
+ * =========================================
+ */
+.profile-header {
+    text-align: center;
+    padding: 40px 0;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.8) 0%, transparent 70%);
+}
+
+.profile-avatar {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 5px solid #fff;
+    box-shadow: 0 0 0 4px var(--color-primary);
+    margin-bottom: 16px;
+    object-fit: cover;
+}
+
+.profile-name {
+    font-family: var(--font-title);
+    font-size: 42px;
+    color: var(--color-primary);
+    text-shadow: 2px 2px 0 #fff;
+    margin-bottom: 8px;
+}
+
+.profile-meta {
+    display: inline-block;
+    background: var(--color-secondary);
+    color: white;
+    padding: 6px 16px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.game-tag {
+    background: #fff;
+    border: 2px solid var(--color-accent);
+    color: var(--color-text-main);
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: bold;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.05);
+}
+
+/* Evidence List */
+.evidence-list {
+    list-style: none;
+}
+
+.evidence-item {
+    background: #fff;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    border-left: 5px solid var(--color-secondary);
+    box-shadow: 1px 1px 4px rgba(0,0,0,0.05);
+}
+
+.evidence-quote {
+    font-size: 15px;
+    color: var(--color-text-main);
+    line-height: 1.5;
+}
+
+.game-footer {
+    text-align: center;
+    padding-top: 30px;
+    font-size: 12px;
+    color: var(--color-text-sub);
+    opacity: 0.7;
+}

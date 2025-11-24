@@ -69,22 +69,27 @@ export class RendererService extends Service {
     async init() {
         const dirname =
             __dirname?.length > 0 ? __dirname : fileURLToPath(import.meta.url)
-        const templateHtmlDir = dirname + '/../resources'
+        const resourcesDir = dirname + '/../resources'
 
         const templateDir = this.templateDir
         const skin = this._config.skin || 'md3'
 
-        /* try {
-            await fs.access(templateDir)
-        } catch (error) { */
-        await fs.mkdir(templateDir, { recursive: true })
+        // Source: resources/md3 (or other skin)
+        const skinSourceDir = path.resolve(resourcesDir, skin)
+        // Destination: data/chatluna/group_analysis/md3
+        const skinDestDir = path.resolve(templateDir, skin)
 
-        // Copy the entire resources directory including skin folders
-        await fs.cp(templateHtmlDir, templateDir, { recursive: true })
+        /* try {
+            await fs.access(skinDestDir)
+        } catch (error) { */
+        await fs.mkdir(skinDestDir, { recursive: true })
+
+        // Copy only the configured skin directory
+        await fs.cp(skinSourceDir, skinDestDir, { recursive: true })
         /*   } */
 
         const tempHtmlFiles = await fs
-            .readdir(path.resolve(templateDir, skin))
+            .readdir(skinDestDir)
             .then((files) =>
                 files.filter(
                     (file) =>
@@ -94,7 +99,7 @@ export class RendererService extends Service {
             .catch(() => [])
 
         for (const file of tempHtmlFiles) {
-            await fs.unlink(path.resolve(templateDir, skin, file))
+            await fs.unlink(path.resolve(skinDestDir, file))
         }
 
         const page = await this.ctx.puppeteer.page()
@@ -150,10 +155,11 @@ export class RendererService extends Service {
             const page = await this._renderGroupAnalysis(data, theme)
 
             // 找到页面中的 container 元素
-            const element = await page.$('.container')
+            const selector = config.skin === 'anime' ? '.game-window' : '.container'
+            const element = await page.$(selector)
             if (!element) {
                 await page.close()
-                throw new Error('无法在渲染的 HTML 中找到 .container 元素。')
+                throw new Error(`无法在渲染的 HTML 中找到 ${selector} 元素。`)
             }
 
             const imageBuffer = await element.screenshot({})
@@ -194,31 +200,31 @@ export class RendererService extends Service {
             'https://cravatar.cn/avatar/00000000000000000000000000000000?d=mp'
 
         // 将头像转换为 Base64
-        const dynamicAvatarBase64 = await this.imageToBase64(dynamicAvatarUrl)
-
-        // 读取模板文件并替换占位符
-        const templateHtml = await fs.readFile(templatePath, 'utf-8')
-        const filledHtml = renderTemplate(templateHtml, {
-            groupName: data.groupName,
-            analysisDate: data.analysisDate,
-            totalMessages: data.totalMessages.toString(),
-            totalParticipants: data.totalParticipants.toString(),
-            totalChars: data.totalChars.toString(),
-            mostActivePeriod: data.mostActivePeriod,
-            userStats: formatUserStats(data.userStats),
-            topics: formatTopics(data.topics || []),
-            userTitles: formatUserTitles(data.userTitles || []),
-            activeHoursChart: generateActiveHoursChart(
-                data.activeHoursData || {}
-            ),
-            goldenQuotes: formatGoldenQuotes(data.goldenQuotes || []),
-            theme,
-            dynamicAvatarUrl: dynamicAvatarBase64
-        })
-
-        // 写入临时 HTML 文件
-        await fs.writeFile(outTemplateHtmlPath, filledHtml)
-
+                    const dynamicAvatarBase64 = await this.imageToBase64(dynamicAvatarUrl)
+        
+                // 读取模板文件并替换占位符
+                const templateHtml = await fs.readFile(templatePath, 'utf-8')
+                const filledHtml = renderTemplate(templateHtml, {
+                    groupName: data.groupName,
+                    analysisDate: data.analysisDate,
+                    totalMessages: data.totalMessages.toString(),
+                    totalParticipants: data.totalParticipants.toString(),
+                    totalChars: data.totalChars.toString(),
+                    mostActivePeriod: data.mostActivePeriod,
+                    userStats: formatUserStats(data.userStats, skin),
+                    topics: formatTopics(data.topics || [], skin),
+                    userTitles: formatUserTitles(data.userTitles || [], skin),
+                    activeHoursChart: generateActiveHoursChart(
+                        data.activeHoursData || {},
+                        skin
+                    ),
+                    goldenQuotes: formatGoldenQuotes(data.goldenQuotes || [], skin),
+                    theme,
+                    dynamicAvatarUrl: dynamicAvatarBase64
+                })
+        
+                // 写入临时 HTML 文件
+                await fs.writeFile(outTemplateHtmlPath, filledHtml)
         this.ctx.logger.info(
             'HTML 模板填充完成，正在调用 Puppeteer 进行渲染...'
         )
@@ -275,10 +281,11 @@ export class RendererService extends Service {
                 theme
             )
 
-            const element = await page.$('.container')
+            const selector = config.skin === 'anime' ? '.game-window' : '.container'
+            const element = await page.$(selector)
             if (!element) {
                 await page.close()
-                throw new Error('无法在渲染的 HTML 中找到 .container 元素。')
+                throw new Error(`无法在渲染的 HTML 中找到 ${selector} 元素。`)
             }
 
             const imageBuffer = await element.screenshot()
@@ -316,7 +323,16 @@ export class RendererService extends Service {
 
         const formatTags = (tags: string[] | undefined) => {
             if (!tags || tags.length === 0)
-                return '<div class="empty-state">暂无数据</div>'
+                return skin === 'anime'
+                    ? '<div class="empty-state">暂无数据</div>'
+                    : '<div class="empty-state">暂无数据</div>'
+
+            if (skin === 'anime') {
+                return tags
+                    .map((tag) => `<span class="game-tag">${tag}</span>`)
+                    .join('')
+            }
+
             return tags.map((tag) => `<div class="chip">${tag}</div>`).join('')
         }
 
@@ -325,6 +341,24 @@ export class RendererService extends Service {
         ): string => {
             if (!items || items.length === 0) {
                 return '<div class="empty-state">暂无事实依据</div>'
+            }
+
+            if (skin === 'anime') {
+                const listItems = items
+                    .map((item) => {
+                        const quoteHtml = (item || '')
+                            .split('\n')
+                            .map((line) => line.trim())
+                            .filter(Boolean)
+                            .join('<br/>')
+                        return `
+                            <li class="evidence-item">
+                                <div class="evidence-quote">${quoteHtml}</div>
+                            </li>
+                        `
+                    })
+                    .join('')
+                return `<ul class="evidence-list">${listItems}</ul>`
             }
 
             const cards = items
