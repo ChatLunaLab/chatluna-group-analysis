@@ -1,0 +1,15 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Cute Mascot / Heart shape for Bottom Right -->
+  <g transform="translate(50, 50) rotate(-15)">
+    <path d="M50 90 C 10 60, 10 10, 50 30 C 90 10, 90 60, 50 90" fill="#FF8FA3" stroke="white" stroke-width="5"/>
+    <circle cx="35" cy="45" r="5" fill="#5D4037"/>
+    <circle cx="65" cy="45" r="5" fill="#5D4037"/>
+    <path d="M45 55 Q 50 60 55 55" stroke="#5D4037" stroke-width="2" fill="none"/>
+    <!-- Blush -->
+    <ellipse cx="30" cy="55" rx="5" ry="3" fill="#FFCDD2"/>
+    <ellipse cx="70" cy="55" rx="5" ry="3" fill="#FFCDD2"/>
+  </g>
+  <!-- Decorative lines -->
+  <path d="M10 150 L190 150" stroke="#80DEEA" stroke-width="4" stroke-dasharray="10 5"/>
+  <path d="M20 165 L180 165" stroke="#FFD740" stroke-width="4" stroke-dasharray="5 5"/>
+</svg>

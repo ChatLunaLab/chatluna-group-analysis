@@ -1,7 +1,7 @@
 import { SkinRenderer } from './types'
 import { Md3SkinRenderer } from './md3'
 import { AnimeSkinRenderer } from './anime'
-import { GuofengSkinRenderer } from './guofeng'
+import { NewspaperSkinRenderer } from './newspaper'
 
 /**
  * Skin registry
@@ -14,7 +14,7 @@ class SkinRegistry {
         // Register built-in skins
         this.register(new Md3SkinRenderer())
         this.register(new AnimeSkinRenderer())
-        this.register(new GuofengSkinRenderer())
+        this.register(new NewspaperSkinRenderer())
     }
 
     /**
@@ -76,4 +76,4 @@ export const skinRegistry = new SkinRegistry()
 export { SkinRenderer, getAvatarUrl } from './types'
 export { Md3SkinRenderer } from './md3'
 export { AnimeSkinRenderer } from './anime'
-export { GuofengSkinRenderer } from './guofeng'
+export { NewspaperSkinRenderer } from './newspaper'

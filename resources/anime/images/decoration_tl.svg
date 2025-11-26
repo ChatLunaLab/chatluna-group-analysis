@@ -1,0 +1,9 @@
+<svg width="150" height="150" viewBox="0 0 150 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Cute Cat Paw / Cloud shape for Top Left -->
+  <path d="M20 20 C 20 20, 50 0, 80 20 C 110 40, 130 30, 140 60 C 150 90, 120 110, 100 100 C 80 90, 60 110, 40 100 C 20 90, 0 70, 20 20 Z" fill="#FF8FA3" fill-opacity="0.8"/>
+  <circle cx="50" cy="50" r="10" fill="white"/>
+  <circle cx="80" cy="40" r="8" fill="white"/>
+  <circle cx="100" cy="70" r="6" fill="white"/>
+  <!-- Sparkles -->
+  <path d="M110 10 L115 25 L130 30 L115 35 L110 50 L105 35 L90 30 L105 25 Z" fill="#FFD740"/>
+</svg>

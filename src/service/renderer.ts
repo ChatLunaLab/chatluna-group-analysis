@@ -106,9 +106,12 @@ export class RendererService extends Service {
         const page = await this.ctx.puppeteer.page()
 
         try {
-            await page.goto('file://' + this.getSkinPath('template_user.html'), {
-                waitUntil: 'domcontentloaded'
-            })
+            await page.goto(
+                'file://' + this.getSkinPath('template_user.html'),
+                {
+                    waitUntil: 'domcontentloaded'
+                }
+            )
         } catch (error) {
             this.ctx.logger.error('初始化模板文件时发生错误:', error)
         }

@@ -1,4 +1,4 @@
-import { SkinRenderer, getAvatarUrl } from './types'
+import { getAvatarUrl, SkinRenderer } from './types'
 import { GroupAnalysisResult, UserStats } from '../types'
 
 /**
@@ -35,9 +35,7 @@ export class Md3SkinRenderer implements SkinRenderer {
             .join('')
     }
 
-    formatGoldenQuotes(
-        quotes: GroupAnalysisResult['goldenQuotes']
-    ): string {
+    formatGoldenQuotes(quotes: GroupAnalysisResult['goldenQuotes']): string {
         if (!quotes || quotes.length === 0) {
             return '<div class="empty-state">本次未发现逆天神人发言</div>'
         }
@@ -57,9 +55,7 @@ export class Md3SkinRenderer implements SkinRenderer {
             .join('')
     }
 
-    formatUserTitles(
-        userTitles: GroupAnalysisResult['userTitles']
-    ): string {
+    formatUserTitles(userTitles: GroupAnalysisResult['userTitles']): string {
         if (!userTitles || userTitles.length === 0) {
             return '<div class="empty-state">本次无人获得特殊称号</div>'
         }

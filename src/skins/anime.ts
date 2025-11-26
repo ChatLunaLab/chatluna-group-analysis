@@ -1,14 +1,14 @@
-import { SkinRenderer, getAvatarUrl } from './types'
+import { getAvatarUrl, SkinRenderer } from './types'
 import { GroupAnalysisResult, UserStats } from '../types'
 
 /**
- * Anime skin renderer
- * Game-style interface with character cards and dialogue boxes
+ * Anime skin renderer (Updated 2.0)
+ * Supports new Glassmorphism/Pop layout and Night Mode
  */
 export class AnimeSkinRenderer implements SkinRenderer {
     readonly id = 'anime'
     readonly name = '二次元风格'
-    readonly containerSelector = '.game-window'
+    readonly containerSelector = '.anime-window'
 
     formatUserStats(userStats: UserStats[]): string {
         if (!userStats || userStats.length === 0) {
@@ -23,10 +23,10 @@ export class AnimeSkinRenderer implements SkinRenderer {
             <div class="char-info">
               <div class="char-name">${user.nickname}</div>
               <div class="char-stats">
-                <span>发言数: <strong>${user.messageCount}</strong></span>
+                <span>发言: <strong>${user.messageCount}</strong></span>
+                <span>回复: <strong>${(user.replyRatio * 100).toFixed(0)}%</strong></span>
                 <span>字数: <strong>${user.charCount}</strong></span>
-                <span>回复率: <strong>${(user.replyRatio * 100).toFixed(0)}%</strong></span>
-                <span>夜猫子: <strong>${(user.nightRatio * 100).toFixed(0)}%</strong></span>
+                <span>夜猫: <strong>${(user.nightRatio * 100).toFixed(0)}%</strong></span>
               </div>
             </div>
           </div>
@@ -35,9 +35,7 @@ export class AnimeSkinRenderer implements SkinRenderer {
             .join('')
     }
 
-    formatGoldenQuotes(
-        quotes: GroupAnalysisResult['goldenQuotes']
-    ): string {
+    formatGoldenQuotes(quotes: GroupAnalysisResult['goldenQuotes']): string {
         if (!quotes || quotes.length === 0) {
             return '<div class="empty-state">本次未发现逆天神人发言</div>'
         }
@@ -45,10 +43,10 @@ export class AnimeSkinRenderer implements SkinRenderer {
         return quotes
             .map(
                 (quote) => `
-          <div class="dialogue-box quote-box">
-            <div class="quote-text">"${quote.content}"</div>
-            <div class="dialogue-meta">
-               — ${quote.sender} (理由: ${quote.reason})
+          <div class="dialogue-bubble">
+            <div class="dialogue-content">"${quote.content}"</div>
+            <div class="dialogue-author">
+               ${quote.sender}
             </div>
           </div>
         `
@@ -56,9 +54,7 @@ export class AnimeSkinRenderer implements SkinRenderer {
             .join('')
     }
 
-    formatUserTitles(
-        userTitles: GroupAnalysisResult['userTitles']
-    ): string {
+    formatUserTitles(userTitles: GroupAnalysisResult['userTitles']): string {
         if (!userTitles || userTitles.length === 0) {
             return '<div class="empty-state">本次无人获得特殊称号</div>'
         }
@@ -70,8 +66,11 @@ export class AnimeSkinRenderer implements SkinRenderer {
             <img src="${getAvatarUrl(title.id)}" alt="avatar" class="char-avatar">
             <div class="char-info">
               <div class="char-name">${title.name}</div>
-              <div class="title-badge">${title.mbti && title.mbti !== 'N/A' ? `${title.title} | ${title.mbti}` : title.title}</div>
-              <div class="char-stats" style="grid-template-columns: 1fr;">
+              <div class="char-tags">
+                 <span class="mini-tag">${title.title}</span>
+                 ${title.mbti && title.mbti !== 'N/A' ? `<span class="mini-tag">${title.mbti}</span>` : ''}
+              </div>
+              <div class="char-stats" style="margin-top: 4px;">
                 <span>${title.reason}</span>
               </div>
             </div>
@@ -89,10 +88,10 @@ export class AnimeSkinRenderer implements SkinRenderer {
         return topics
             .map(
                 (topic) => `
-             <div class="dialogue-box">
-               <div class="dialogue-header">${topic.topic}</div>
-               <div class="dialogue-text">${topic.detail}</div>
-               <div class="dialogue-meta">参与者: ${topic.contributors.join(', ')}</div>
+             <div class="dialogue-bubble">
+               <div class="char-name" style="font-size: 16px; margin-bottom: 4px;">${topic.topic}</div>
+               <div class="dialogue-content" style="font-size: 14px;">${topic.detail}</div>
+               <div class="dialogue-author">参与者: ${topic.contributors.join(', ')}</div>
              </div>
            `
             )
@@ -103,35 +102,27 @@ export class AnimeSkinRenderer implements SkinRenderer {
         const values = Object.values(activeHours)
         const maxCount = values.length > 0 ? Math.max(...values) : 0
         const chartBars: string[] = []
-
-        // The container `.chart-container` is 250px tall.
-        const maxBarHeight = 200
+        const maxBarHeightPercent = 100; // CSS height is percentage based effectively in flex
 
         for (let i = 0; i < 24; i++) {
             const count = activeHours[i] || 0
-            let barHeight = maxCount > 0 ? (count / maxCount) * maxBarHeight : 0
-            if (count > 0 && barHeight < 3) {
-                barHeight = 3 // 最小可见高度
+            let barHeight = maxCount > 0 ? (count / maxCount) * 100 : 0
+            if (count > 0 && barHeight < 5) {
+                barHeight = 5 // Min height visibility
             }
-
-            const percentage =
-                maxCount > 0 ? Math.round((count / maxCount) * 100) : 0
-
-            const barStyle =
-                barHeight > 0
-                    ? `style="height: ${barHeight}px !important;"`
-                    : `style="height: 0px !important;"`
+            
+            const percentage = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0
 
             chartBars.push(`
-                    <div class="chart-bar-wrapper" title="${i}:00 - ${count} 条消息 (${percentage}%)">
-                        <div class="chart-bar" ${barStyle}></div>
-                        <span class="chart-label">${String(i).padStart(2, '0')}</span>
+                    <div class="bar-group" title="${i}:00 - ${count} 条消息">
+                        <div class="bar-fill" style="height: ${barHeight}%;"></div>
+                        <span class="bar-label">${String(i).padStart(2, '0')}</span>
                     </div>
                 `)
         }
 
         return `
-                <div class="chart-container">
+                <div class="chart-box">
                     ${chartBars.join('')}
                 </div>
             `
@@ -143,7 +134,7 @@ export class AnimeSkinRenderer implements SkinRenderer {
         }
 
         return tags
-            .map((tag) => `<span class="game-tag">${tag}</span>`)
+            .map((tag) => `<span class="tag-pill">${tag}</span>`)
             .join('')
     }
 
@@ -160,8 +151,8 @@ export class AnimeSkinRenderer implements SkinRenderer {
                     .filter(Boolean)
                     .join('<br/>')
                 return `
-                    <li class="evidence-item">
-                        <div class="evidence-quote">${quoteHtml}</div>
+                    <li class="evidence-card">
+                        ${quoteHtml}
                     </li>
                 `
             })

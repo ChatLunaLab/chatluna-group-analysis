@@ -8,98 +8,102 @@
 </head>
 <body class="${theme}-theme">
 
-    <!-- Main Game Window Container -->
-    <div class="game-window">
+    <div class="anime-window">
+        <!-- Decorations -->
+        <img src="./images/decoration_tl.svg" class="deco-tl" alt="" />
+        <img src="./images/decoration_br.svg" class="deco-br" alt="" />
         
-        <!-- HUD Header -->
-        <div class="hud-header">
-            <div class="game-title">
-                <h1>群聊分析报告</h1>
-                <div class="subtitle">GROUP ANALYSIS RECORD</div>
+        <!-- Header -->
+        <div class="header-ribbon">
+            <div class="header-content">
+                <div class="title-main">群聊分析报告</div>
+                <div class="title-sub">GROUP ANALYSIS</div>
             </div>
-            <div class="hud-date-box">
-                <div class="hud-date">${analysisDate}</div>
-                <div class="hud-location">${groupName}</div>
+            <div class="header-date">
+                <div class="date-val">${analysisDate}</div>
+                <div class="group-val">${groupName}</div>
             </div>
         </div>
 
-        <!-- Content Scroll Area -->
-        <div class="scroll-content">
+        <div class="content-area">
             
-            <!-- Stats Status Grid -->
-            <div class="status-grid">
-                <div class="status-item">
-                    <div class="status-label">总消息数</div>
-                    <div class="status-value">${totalMessages}</div>
+            <!-- Status Grid -->
+            <div class="grid-4">
+                <div class="stat-bubble">
+                    <div class="stat-label">总消息</div>
+                    <div class="stat-value">${totalMessages}</div>
                 </div>
-                <div class="status-item">
-                    <div class="status-label">参与人数</div>
-                    <div class="status-value">${totalParticipants}</div>
+                <div class="stat-bubble">
+                    <div class="stat-label">参与人数</div>
+                    <div class="stat-value">${totalParticipants}</div>
                 </div>
-                <div class="status-item">
-                    <div class="status-label">总字数</div>
-                    <div class="status-value">${totalChars}</div>
+                <div class="stat-bubble">
+                    <div class="stat-label">总字数</div>
+                    <div class="stat-value">${totalChars}</div>
                 </div>
-                <div class="status-item">
-                    <div class="status-label">活跃时段</div>
-                    <div class="status-value">${mostActivePeriod}</div>
+                <div class="stat-bubble">
+                    <div class="stat-label">活跃时段</div>
+                    <div class="stat-value">${mostActivePeriod}</div>
                 </div>
             </div>
 
-            <!-- Dragon King Leaderboard -->
-            <div class="section-header">
-                <span class="section-icon">♛</span>
-                <h2>龙王榜 // LEADERBOARD</h2>
+            <!-- Leaderboard -->
+            <div class="section-title">
+                <div class="section-marker"></div>
+                <h2>龙王榜</h2>
             </div>
-            <div class="grid-2-col">
+            <div class="grid-2">
                 ${userStats}
             </div>
 
             <!-- Titles -->
-            <div class="section-header">
-                <span class="section-icon">★</span>
-                <h2>群友称号 // TITLES</h2>
+            <div class="section-title">
+                <div class="section-marker"></div>
+                <h2>群友称号</h2>
             </div>
-            <div class="grid-2-col">
+            <div class="grid-2">
                 ${userTitles}
             </div>
 
             <!-- Topics -->
-            <div class="section-header">
-                <span class="section-icon">💬</span>
-                <h2>热门话题 // TOPICS</h2>
+            <div class="section-title">
+                <div class="section-marker"></div>
+                <h2>热门话题</h2>
             </div>
-            <div>
+            <div class="dialogue-container">
                 ${topics}
             </div>
 
             <!-- Quotes -->
-            <div class="section-header">
-                <span class="section-icon">❞</span>
-                <h2>本群圣经 // QUOTES</h2>
+            <div class="section-title">
+                <div class="section-marker"></div>
+                <h2>本群圣经</h2>
             </div>
-            <div>
+            <div class="dialogue-container">
                 ${goldenQuotes}
             </div>
 
             <!-- Chart -->
-            <div class="section-header">
-                <span class="section-icon">📊</span>
-                <h2>活跃分布 // ACTIVITY</h2>
+            <div class="section-title">
+                <div class="section-marker"></div>
+                <h2>活跃分布</h2>
             </div>
             ${activeHoursChart}
 
-            <div class="game-footer">
-                Generated by ChatLuna | System Ver. 1.0
+            <div class="footer-info">
+                Generated by ChatLuna | Anime Theme Ver. 2.0
             </div>
         </div>
     </div>
 
     <script>
-        // Helper script to ensure theme is applied if variable missing
         const body = document.body;
-        if (!body.className.includes('theme')) {
+        // Simple Night Mode Logic if theme is not explicitly set by backend variable or is 'auto'
+        // Although the backend passes ${theme}, we might want to force update if it's empty/auto
+        if (!body.className.includes('theme') || body.className.includes('auto')) {
             const hour = new Date().getHours();
+            // Remove 'auto-theme' if exists
+            body.classList.remove('auto-theme');
             body.classList.add(hour >= 19 || hour < 6 ? 'dark-theme' : 'light-theme');
         }
     </script>
