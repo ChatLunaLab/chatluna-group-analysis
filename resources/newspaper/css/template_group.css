@@ -6,9 +6,9 @@
     --bg-texture-line: rgba(0, 0, 0, 0.03);
     --bg-texture-noise: rgba(0, 0, 0, 0.02);
 
-    --color-ink: #1a1a1a;
-    --color-ink-light: #4a4a4a;
-    --color-ink-faint: #8a8a8a;
+    --color-ink: #000000;
+    --color-ink-light: #222222;
+    --color-ink-faint: #555555;
 
     --color-accent: #8b0000;
     /* Dark Red for headlines/accents */
@@ -25,19 +25,19 @@
 }
 
 html {
-    font-size: 20px; /* Zoom in effect */
+    font-size: 22px; /* Zoom in effect */
 }
 
 /* Dark Theme */
-@media (prefers-color-scheme: dark) {
+    @media (prefers-color-scheme: dark) {
     :root {
         --bg-paper: #1a1a1a;
         --bg-texture-line: rgba(255, 255, 255, 0.03);
         --bg-texture-noise: rgba(255, 255, 255, 0.02);
 
-        --color-ink: #e0e0e0;
-        --color-ink-light: #b0b0b0;
-        --color-ink-faint: #707070;
+        --color-ink: #ffffff;
+        --color-ink-light: #dddddd;
+        --color-ink-faint: #aaaaaa;
 
         --color-accent: #ff6b6b;
         --color-accent-secondary: #64b5f6;
@@ -55,9 +55,9 @@ body.dark-theme {
     --bg-texture-line: rgba(255, 255, 255, 0.03);
     --bg-texture-noise: rgba(255, 255, 255, 0.02);
 
-    --color-ink: #e0e0e0;
-    --color-ink-light: #b0b0b0;
-    --color-ink-faint: #707070;
+    --color-ink: #ffffff;
+    --color-ink-light: #dddddd;
+    --color-ink-faint: #aaaaaa;
 
     --color-accent: #ff6b6b;
     --color-accent-secondary: #64b5f6;
@@ -83,6 +83,7 @@ body {
     justify-content: center;
     padding: 20px;
     min-height: 100vh;
+    font-weight: 700;
 }
 
 .paper-container {

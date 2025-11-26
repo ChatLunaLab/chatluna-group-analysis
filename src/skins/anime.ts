@@ -2,13 +2,13 @@ import { getAvatarUrl, SkinRenderer } from './types'
 import { GroupAnalysisResult, UserStats } from '../types'
 
 /**
- * Anime skin renderer (Updated 2.0)
- * Supports new Glassmorphism/Pop layout and Night Mode
+ * Anime skin renderer (Updated to Nahida/Sumeru Style 3.0)
+ * Cute, 2D-first, Sticker/Card aesthetics.
  */
 export class AnimeSkinRenderer implements SkinRenderer {
     readonly id = 'anime'
     readonly name = '二次元风格'
-    readonly containerSelector = '.anime-window'
+    readonly containerSelector = '.nahida-container'
 
     formatUserStats(userStats: UserStats[]): string {
         if (!userStats || userStats.length === 0) {
@@ -18,11 +18,11 @@ export class AnimeSkinRenderer implements SkinRenderer {
         return userStats
             .map(
                 (user) => `
-          <div class="char-card">
+          <div class="char-box">
             <img src="${getAvatarUrl(user.userId)}" alt="avatar" class="char-avatar">
-            <div class="char-info">
+            <div class="char-content">
               <div class="char-name">${user.nickname}</div>
-              <div class="char-stats">
+              <div class="char-detail">
                 <span>发言: <strong>${user.messageCount}</strong></span>
                 <span>回复: <strong>${(user.replyRatio * 100).toFixed(0)}%</strong></span>
                 <span>字数: <strong>${user.charCount}</strong></span>
@@ -43,10 +43,10 @@ export class AnimeSkinRenderer implements SkinRenderer {
         return quotes
             .map(
                 (quote) => `
-          <div class="dialogue-bubble">
-            <div class="dialogue-content">"${quote.content}"</div>
-            <div class="dialogue-author">
-               ${quote.sender}
+          <div class="bubble">
+            <div class="bubble-text">"${quote.content}"</div>
+            <div class="bubble-meta">
+               — ${quote.sender}
             </div>
           </div>
         `
@@ -62,16 +62,16 @@ export class AnimeSkinRenderer implements SkinRenderer {
         return userTitles
             .map(
                 (title) => `
-          <div class="char-card">
+          <div class="char-box">
             <img src="${getAvatarUrl(title.id)}" alt="avatar" class="char-avatar">
-            <div class="char-info">
+            <div class="char-content">
               <div class="char-name">${title.name}</div>
-              <div class="char-tags">
-                 <span class="mini-tag">${title.title}</span>
-                 ${title.mbti && title.mbti !== 'N/A' ? `<span class="mini-tag">${title.mbti}</span>` : ''}
+              <div style="margin-bottom: 6px;">
+                 <span class="char-badge">${title.title}</span>
+                 ${title.mbti && title.mbti !== 'N/A' ? `<span class="char-badge" style="background:#E1BEE7;">${title.mbti}</span>` : ''}
               </div>
-              <div class="char-stats" style="margin-top: 4px;">
-                <span>${title.reason}</span>
+              <div class="char-detail" style="font-style:italic;">
+                ${title.reason}
               </div>
             </div>
           </div>
@@ -88,10 +88,10 @@ export class AnimeSkinRenderer implements SkinRenderer {
         return topics
             .map(
                 (topic) => `
-             <div class="dialogue-bubble">
-               <div class="char-name" style="font-size: 16px; margin-bottom: 4px;">${topic.topic}</div>
-               <div class="dialogue-content" style="font-size: 14px;">${topic.detail}</div>
-               <div class="dialogue-author">参与者: ${topic.contributors.join(', ')}</div>
+             <div class="bubble">
+               <div style="font-weight:bold; color:var(--color-primary); margin-bottom:4px; font-size:18px;"># ${topic.topic}</div>
+               <div class="bubble-text" style="font-size: 14px;">${topic.detail}</div>
+               <div class="bubble-meta">参与者: ${topic.contributors.join(', ')}</div>
              </div>
            `
             )
@@ -102,27 +102,24 @@ export class AnimeSkinRenderer implements SkinRenderer {
         const values = Object.values(activeHours)
         const maxCount = values.length > 0 ? Math.max(...values) : 0
         const chartBars: string[] = []
-        const maxBarHeightPercent = 100; // CSS height is percentage based effectively in flex
 
         for (let i = 0; i < 24; i++) {
             const count = activeHours[i] || 0
             let barHeight = maxCount > 0 ? (count / maxCount) * 100 : 0
-            if (count > 0 && barHeight < 5) {
-                barHeight = 5 // Min height visibility
+            if (count > 0 && barHeight < 10) {
+                barHeight = 10 // Min height for visibility
             }
             
-            const percentage = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0
-
             chartBars.push(`
-                    <div class="bar-group" title="${i}:00 - ${count} 条消息">
-                        <div class="bar-fill" style="height: ${barHeight}%;"></div>
-                        <span class="bar-label">${String(i).padStart(2, '0')}</span>
+                    <div class="chart-bar-group" title="${i}:00 - ${count} 条消息">
+                        <div class="chart-bar" style="height: ${barHeight}%;"></div>
+                        <span class="chart-label">${String(i).padStart(2, '0')}</span>
                     </div>
                 `)
         }
 
         return `
-                <div class="chart-box">
+                <div class="chart-container">
                     ${chartBars.join('')}
                 </div>
             `
@@ -134,7 +131,7 @@ export class AnimeSkinRenderer implements SkinRenderer {
         }
 
         return tags
-            .map((tag) => `<span class="tag-pill">${tag}</span>`)
+            .map((tag) => `<span class="tag">${tag}</span>`)
             .join('')
     }
 
@@ -151,12 +148,12 @@ export class AnimeSkinRenderer implements SkinRenderer {
                     .filter(Boolean)
                     .join('<br/>')
                 return `
-                    <li class="evidence-card">
+                    <div class="evidence-item">
                         ${quoteHtml}
-                    </li>
+                    </div>
                 `
             })
             .join('')
-        return `<ul class="evidence-list">${listItems}</ul>`
+        return `<div>${listItems}</div>`
     }
 }

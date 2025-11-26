@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>群聊分析报告</title>
+        <link rel="stylesheet" href="./css/template_group.css" />
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>群聊分析报告</h1>
+                <div class="sub-title">${groupName} | ${analysisDate}</div>
+            </div>
+
+            <div class="summary">
+                <div class="summary-item">
+                    <div class="label">总消息数</div>
+                    <div class="value">${totalMessages}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">参与人数</div>
+                    <div class="value">${totalParticipants}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">总字数</div>
+                    <div class="value">${totalChars}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">最活跃时段</div>
+                    <div class="value">${mostActivePeriod}</div>
+                </div>
+            </div>
+
+            <div class="section-title">龙王榜</div>
+            <div class="card-grid two-columns">${userStats}</div>
+
+            <div class="section-title">群友称号</div>
+            <div class="card-grid two-columns">${userTitles}</div>
+
+            <div class="section-title">热门话题</div>
+            <div class="card-grid">${topics}</div>
+
+            <div class="section-title">本群圣经</div>
+            <div class="card-grid">${goldenQuotes}</div>
+
+            <div class="section-title">24小时活跃分布</div>
+            ${activeHoursChart}
+
+            <footer>由 Koishi & ChatLuna 强力驱动</footer>
+        </div>
+
+        <script>
+            // Simple theme handler
+            const themeSetting = '${theme}'
+            const body = document.body
+
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    body.classList.add('dark-theme')
+                    body.classList.remove('light-theme')
+                } else {
+                    body.classList.add('light-theme')
+                    body.classList.remove('dark-theme')
+                }
+            }
+
+            if (themeSetting === 'auto') {
+                const hour = new Date().getHours()
+                const isDark = hour >= 19 || hour < 6
+                applyTheme(isDark ? 'dark' : 'light')
+            } else {
+                applyTheme(themeSetting)
+            }
+        </script>
+    </body>
+</html>

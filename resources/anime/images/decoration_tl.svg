@@ -1,9 +1,24 @@
-<svg width="150" height="150" viewBox="0 0 150 150" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Cute Cat Paw / Cloud shape for Top Left -->
-  <path d="M20 20 C 20 20, 50 0, 80 20 C 110 40, 130 30, 140 60 C 150 90, 120 110, 100 100 C 80 90, 60 110, 40 100 C 20 90, 0 70, 20 20 Z" fill="#FF8FA3" fill-opacity="0.8"/>
-  <circle cx="50" cy="50" r="10" fill="white"/>
-  <circle cx="80" cy="40" r="8" fill="white"/>
-  <circle cx="100" cy="70" r="6" fill="white"/>
-  <!-- Sparkles -->
-  <path d="M110 10 L115 25 L130 30 L115 35 L110 50 L105 35 L90 30 L105 25 Z" fill="#FFD740"/>
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Stylized Vines/Leaves (Nahida Style) -->
+  <path d="M20 0 V60 C 20 90, 50 100, 60 130" stroke="#8BC34A" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M40 0 V40 C 40 70, 80 80, 90 110" stroke="#AED581" stroke-width="3" fill="none" stroke-linecap="round"/>
+  
+  <!-- Leaves -->
+  <g transform="translate(60, 130) rotate(45)">
+    <path d="M0 0 Q 15 -15 30 0 Q 15 15 0 0" fill="#66BB6A" />
+  </g>
+  <g transform="translate(90, 110) rotate(-15)">
+     <path d="M0 0 Q 10 -10 20 0 Q 10 10 0 0" fill="#81C784" />
+  </g>
+  <g transform="translate(20, 60) rotate(-30)">
+     <path d="M0 0 Q 12 -12 24 0 Q 12 12 0 0" fill="#8BC34A" />
+  </g>
+  
+  <!-- Digital/Akasha Particles -->
+  <rect x="120" y="30" width="8" height="8" rx="2" fill="#B2DFDB" opacity="0.8">
+    <animate attributeName="y" values="30;35;30" dur="3s" repeatCount="indefinite" />
+  </rect>
+  <rect x="140" y="50" width="6" height="6" rx="1" fill="#80CBC4" opacity="0.6">
+     <animate attributeName="y" values="50;45;50" dur="2.5s" repeatCount="indefinite" />
+  </rect>
 </svg>
