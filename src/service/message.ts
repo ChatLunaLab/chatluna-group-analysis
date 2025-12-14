@@ -8,7 +8,12 @@ import {
     StoredMessage
 } from '../types'
 import type { OneBotBot } from 'koishi-plugin-adapter-onebot'
-import { getAvatarUrl, inferPlatformInfo, isNapCatBot } from '../utils'
+import {
+    getAvatarUrl,
+    inferPlatformInfo,
+    isNapCatBot,
+    shouldListenToMessage as isSessionInListenerGroup
+} from '../utils'
 import { CQCode } from '../onebot/cqcode'
 
 export class MessageService extends Service {
@@ -70,15 +75,14 @@ export class MessageService extends Service {
 
     private shouldListenToMessage(session: Session): boolean {
         // TODO: private message
-        if (!session.guildId && !session.channelId) return false
-
-        return this.config.listenerGroups.some(
-            (listener) =>
-                listener.enabled &&
-                listener.platform === session.platform &&
-                listener.selfId === session.selfId &&
-                listener.channelId === session.channelId &&
-                (!listener.guildId || listener.guildId === session.guildId)
+        return isSessionInListenerGroup(
+            {
+                guildId: session.guildId || undefined,
+                channelId: session.channelId || undefined,
+                platform: session.platform,
+                selfId: session.selfId
+            },
+            this.config.listenerGroups
         )
     }
 

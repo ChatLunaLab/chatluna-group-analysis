@@ -4,12 +4,13 @@ import {
     BasicStatsResult,
     GroupAnalysisResult,
     StoredMessage,
-    SummaryTopic,
     UserPersonaProfile,
     UserStats
 } from './types'
 import { Config } from './config'
 import type { OneBotBot } from 'koishi-plugin-adapter-onebot'
+
+import { skinRegistry } from './skins'
 
 export function calculateBasicStats(
     messages: StoredMessage[]
@@ -150,8 +151,6 @@ export function generateTextReport(result: GroupAnalysisResult): string {
     return report
 }
 
-import { skinRegistry } from './skins'
-
 export function getAvatarUrl(userId: number | string): string {
     return `http://q1.qlogo.cn/g?b=qq&nk=${userId}&s=640`
 }
@@ -221,13 +220,24 @@ export function shouldListenToMessage(
     if (!session.guildId && !session.channelId) return false
 
     return listenerGroups.some((listener) => {
-        return (
-            listener.enabled &&
-            listener.platform === session.platform &&
-            listener.selfId === session.selfId &&
-            listener.channelId === session.channelId &&
-            (!listener.guildId || listener.guildId === session.guildId)
-        )
+        if (
+            !listener.enabled ||
+            listener.platform !== session.platform ||
+            listener.selfId !== session.selfId
+        ) {
+            return false
+        }
+
+        const channelMatches =
+            !!listener.channelId &&
+            !!session.channelId &&
+            listener.channelId === session.channelId
+        const guildMatches =
+            !!listener.guildId &&
+            !!session.guildId &&
+            listener.guildId === session.guildId
+
+        return channelMatches || guildMatches
     })
 }
 

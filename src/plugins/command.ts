@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 import { Context, Session } from 'koishi'
 import { Config } from '../config'
+import { shouldListenToMessage } from '../utils'
 
 export const inject = {
     chatluna_group_analysis: {
@@ -11,13 +12,14 @@ export const inject = {
 export function apply(ctx: Context, config: Config) {
     const checkGroup = (session: Session) => {
         if (!config.listenerGroups) return false
-        return config.listenerGroups.some(
-            (settings) =>
-                (settings.channelId === session.channelId &&
-                    session.channelId != null) ||
-                (settings.guildId !== null &&
-                    settings.guildId === session.guildId &&
-                    settings.enabled)
+        return shouldListenToMessage(
+            {
+                guildId: session.guildId || undefined,
+                channelId: session.channelId || undefined,
+                platform: session.platform,
+                selfId: session.selfId
+            },
+            config.listenerGroups
         )
     }
 
@@ -43,7 +45,10 @@ export function apply(ctx: Context, config: Config) {
             try {
                 await ctx.chatluna_group_analysis.executeGroupAnalysis(
                     session.selfId,
-                    session.guildId,
+                    {
+                        guildId: session.guildId || undefined,
+                        channelId: session.channelId || undefined
+                    },
                     analysisDays
                 )
             } catch (err) {

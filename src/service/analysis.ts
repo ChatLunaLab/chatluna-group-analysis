@@ -24,6 +24,11 @@ import {
 import type { GuildMember } from '@satorijs/protocol'
 import type { OneBotBot } from 'koishi-plugin-adapter-onebot'
 
+type AnalysisTarget = {
+    guildId?: string
+    channelId?: string
+}
+
 export class AnalysisService extends Service {
     static readonly inject = [
         'chatluna_group_analysis_llm',
@@ -466,11 +471,17 @@ export class AnalysisService extends Service {
 
     private async _getGroupHistoryFromMessageService(
         selfId: string,
-        guildId: string,
+        target: AnalysisTarget,
         days: number
     ): Promise<StoredMessage[]> {
+        const targetId = target.guildId || target.channelId
+        if (!targetId) {
+            this.ctx.logger.warn('执行群分析时缺少有效的群组或频道标识。')
+            return []
+        }
+
         this.ctx.logger.info(
-            `开始从消息服务获取群组 ${guildId} 近 ${days} 天的消息记录...`
+            `开始从消息服务获取群组 ${targetId} 近 ${days} 天的消息记录...`
         )
 
         const startTime = getStartTimeByDays(days)
@@ -480,7 +491,8 @@ export class AnalysisService extends Service {
         const messages =
             await this.ctx.chatluna_group_analysis_message.getHistoricalMessages(
                 {
-                    guildId,
+                    guildId: target.guildId,
+                    channelId: target.channelId,
                     startTime,
                     selfId,
                     endTime,
@@ -495,43 +507,49 @@ export class AnalysisService extends Service {
 
     public async executeGroupAnalysis(
         selfId: string,
-        guildId: string,
+        target: AnalysisTarget,
         days: number,
         outputFormat?: 'image' | 'pdf' | 'text'
     ) {
         const bot = this._getBot(selfId)
+        const targetChannel = target.channelId ?? target.guildId
+        const targetGuildContext =
+            target.channelId && target.guildId ? target.guildId : undefined
 
-        await bot?.sendMessage(
-            guildId,
-            `开始分析群聊近 ${days} 天的活动，请稍候...`
-        )
+        if (!targetChannel) {
+            this.ctx.logger.warn('执行群分析需要提供 channelId 或 guildId。')
+            return
+        }
+
+        const sendStatus = async (content: string | h) =>
+            bot?.sendMessage(targetChannel, content, targetGuildContext)
+
+        await sendStatus(`开始分析群聊近 ${days} 天的活动，请稍候...`)
 
         let message: h
 
         try {
             const messages = await this._getGroupHistoryFromMessageService(
                 selfId,
-                guildId,
+                target,
                 days
             )
 
             if (messages.length < this.config.minMessages) {
-                await bot?.sendMessage(
-                    guildId,
+                await sendStatus(
                     `消息数量（${messages.length}/${this.config.minMessages}）不足于进行进行有效分析。`
                 )
                 return
             }
 
-            await bot?.sendMessage(
-                guildId,
+            await sendStatus(
                 `已获取 ${messages.length} 条消息，正在进行智能分析...`
             )
 
             const analysisResult = await this.analyzeGroupMessages(
                 messages,
                 selfId,
-                guildId
+                target
             )
 
             const format = outputFormat || this.config.outputFormat || 'image'
@@ -546,7 +564,7 @@ export class AnalysisService extends Service {
                             )
                         message =
                             typeof image === 'string'
-                                ? h.text(message)
+                                ? h.text(image)
                                 : h.image(image, 'image/png')
                     }
                     break
@@ -566,7 +584,7 @@ export class AnalysisService extends Service {
             }
         } catch (error) {
             this.ctx.logger.error(
-                `为群组 ${guildId} 执行分析任务时发生错误:`,
+                `为群组 ${target.guildId || target.channelId} 执行分析任务时发生错误:`,
                 error
             )
             const errorMessage =
@@ -577,20 +595,25 @@ export class AnalysisService extends Service {
             )
         }
 
-        await bot.sendMessage(guildId, message)
+        await bot?.sendMessage(targetChannel, message)
     }
 
     public async executeAutoAnalysisForEnabledGroups() {
-        const enabledGroups = this.config.listenerGroups
+        const enabledGroups = this.config.listenerGroups.filter(
+            (group) => group.enabled
+        )
         for (const group of enabledGroups) {
             try {
                 await this.executeGroupAnalysis(
                     group.selfId,
-                    group.guildId,
+                    { guildId: group.guildId, channelId: group.channelId },
                     this.config.cronAnalysisDays
                 )
             } catch (err) {
-                this.ctx.logger.error(`群 ${group.guildId} 自动分析失败:`, err)
+                this.ctx.logger.error(
+                    `群 ${group.guildId || group.channelId} 自动分析失败:`,
+                    err
+                )
             }
         }
     }
@@ -751,7 +774,7 @@ export class AnalysisService extends Service {
     public async analyzeGroupMessages(
         messages: StoredMessage[],
         selfId: string,
-        guildId: string
+        target: AnalysisTarget
     ): Promise<GroupAnalysisResult> {
         this.ctx.logger.info(`开始分析 ${messages.length} 条消息...`)
 
@@ -807,12 +830,24 @@ export class AnalysisService extends Service {
             generateActiveHoursChart(overallActiveHours)
 
         const bot = this._getBot(selfId)
-        let groupName = guildId
+        const fallbackName = target.guildId || target.channelId || 'unknown'
+        let groupName = fallbackName
         if (bot) {
             try {
-                groupName = (await bot.getGuild(guildId)).name || guildId
+                if (target.guildId) {
+                    groupName =
+                        (await bot.getGuild(target.guildId)).name || groupName
+                } else if (target.channelId && bot.getChannel) {
+                    const channel = await bot.getChannel(
+                        target.channelId,
+                        target.guildId
+                    )
+                    groupName = channel?.name || groupName
+                }
             } catch (err) {
-                this.ctx.logger.warn(`获取群组 ${guildId} 名称失败: ${err}`)
+                this.ctx.logger.warn(
+                    `获取群组 ${fallbackName} 名称失败: ${err}`
+                )
             }
         }
 
