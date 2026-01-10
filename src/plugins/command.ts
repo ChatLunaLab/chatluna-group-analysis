@@ -87,7 +87,7 @@ export function apply(ctx: Context, config: Config) {
                 })
             }
 
-            ctx.scope.parent.scope.update(config, true)
+            ctx.scope.parent.scope.parent.scope.update(config, true)
 
             const guildId = session.event.guild.id
 
@@ -121,7 +121,7 @@ export function apply(ctx: Context, config: Config) {
                 config.listenerGroups.splice(originalGroupSetting, 1)
             }
 
-            ctx.scope.parent.scope.update(config, true)
+            ctx.scope.parent.scope.parent.scope.update(config, true)
 
             const guildId = session.event.guild.id
 
@@ -170,7 +170,7 @@ export function apply(ctx: Context, config: Config) {
                         settings.guildId === session.guildId)
             )
 
-            ctx.scope.parent.scope.update(config, true)
+            ctx.scope.parent.scope.parent.scope.update(config, true)
 
             const guildId = session.event.guild.id
 
@@ -212,7 +212,6 @@ export function apply(ctx: Context, config: Config) {
                 return '无法获取目标用户信息。'
             }
 
-            // Check if user is in personaUserFilter
             if (config.personaUserFilter.includes(userId)) {
                 return '该用户已被设置为禁止分析用户画像。'
             }

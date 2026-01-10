@@ -44,22 +44,22 @@
     },
     "homepage": "https://github.com/ChatLunaLab/chatluna-group-analysis#readme",
     "dependencies": {
-        "@langchain/core": "0.3.62",
+        "@langchain/core": "^0.3.80",
         "chrono-node": "^2.9.0",
         "js-yaml": "^4.1.0",
         "zod": "3.25.76"
     },
     "resolutions": {
-        "@langchain/core": "0.3.62",
+        "@langchain/core": "^0.3.80",
         "js-tiktoken": "npm:@dingyi222666/js-tiktoken@^1.0.21"
     },
     "overrides": {
-        "@langchain/core": "0.3.62",
+        "@langchain/core": "^0.3.80",
         "js-tiktoken": "npm:@dingyi222666/js-tiktoken@^1.0.21"
     },
     "pnpm": {
         "overrides": {
-            "@langchain/core": "0.3.62",
+            "@langchain/core": "^0.3.80",
             "js-tiktoken": "npm:@dingyi222666/js-tiktoken@^1.0.21"
         }
     },
