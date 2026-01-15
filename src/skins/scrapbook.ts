@@ -153,6 +153,28 @@ export class ScrapbookSkinRenderer implements SkinRenderer {
         `
     }
 
+    formatTags(tags: string[]): string {
+        if (!tags || tags.length === 0) return ''
+        const colors = ['c1', 'c2', 'c3', 'c4']
+        return tags.map((tag, i) => {
+            const colorClass = colors[i % colors.length]
+            return `<div class="washi-tape-tag ${colorClass}">${tag}</div>`
+        }).join('')
+    }
+
+    formatEvidence(evidence: string[]): string {
+        if (!evidence || evidence.length === 0) return '<div class="empty-state">暂无证据</div>'
+        return evidence.map((item, index) => {
+            // Random rotation between -3 and 3 degrees
+            const rot = (Math.random() * 6 - 3).toFixed(1) + 'deg'
+            return `
+            <div class="evidence-card-pin" style="--rot: ${rot};">
+                ${item}
+            </div>
+            `
+        }).join('')
+    }
+
     generateActiveHoursChart(activeHours: Record<number, number>): string {
         const items = []
         let maxCount = 0
