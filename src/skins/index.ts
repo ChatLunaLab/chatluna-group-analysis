@@ -3,6 +3,7 @@ import { Md3SkinRenderer } from './md3'
 import { AnimeSkinRenderer } from './anime'
 import { NewspaperSkinRenderer } from './newspaper'
 import { ArtSkinRenderer } from './art'
+import { ScrapbookSkinRenderer } from './scrapbook'
 
 /**
  * Skin registry
@@ -17,6 +18,7 @@ class SkinRegistry {
         this.register(new AnimeSkinRenderer())
         this.register(new NewspaperSkinRenderer())
         this.register(new ArtSkinRenderer())
+        this.register(new ScrapbookSkinRenderer())
     }
 
     /**
@@ -80,3 +82,4 @@ export { Md3SkinRenderer } from './md3'
 export { AnimeSkinRenderer } from './anime'
 export { NewspaperSkinRenderer } from './newspaper'
 export { ArtSkinRenderer } from './art'
+export { ScrapbookSkinRenderer } from './scrapbook'

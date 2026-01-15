@@ -216,6 +216,7 @@ export class RendererService extends Service {
             totalParticipants: data.totalParticipants.toString(),
             totalChars: data.totalChars.toString(),
             mostActivePeriod: data.mostActivePeriod,
+            emojiCount: (data.emojiCount || 0).toString(),
             userStats: formatUserStats(data.userStats, skin),
             topics: formatTopics(data.topics || [], skin),
             userTitles: formatUserTitles(data.userTitles || [], skin),
