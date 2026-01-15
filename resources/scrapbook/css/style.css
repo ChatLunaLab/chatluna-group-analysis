@@ -804,3 +804,291 @@ body {
         max-width: 100%;
     }
 }
+
+/* ==================== 8. 用户画像特定样式 (User Persona) ==================== */
+
+/* Header Area */
+.persona-header {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 30px;
+    align-items: center;
+}
+
+.polaroid-wrapper {
+    position: relative;
+    transform: rotate(-3deg);
+    flex-shrink: 0;
+}
+
+.polaroid {
+    background: #fff;
+    padding: 15px 15px 40px 15px;
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.15);
+    border: 1px solid #ddd;
+}
+
+.polaroid-inner {
+    width: 150px;
+    height: 150px;
+    overflow: hidden;
+    background: #eee;
+    border: 1px solid #bbb;
+}
+
+.polaroid-inner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.tape-corner {
+    position: absolute;
+    top: -15px;
+    left: 35%;
+    width: 50px;
+    height: 25px;
+    background: rgba(255, 235, 59, 0.6);
+    transform: rotate(-5deg);
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    /* mask tape edges */
+    mask-image: linear-gradient(135deg, transparent 2px, black 0) top left, linear-gradient(-135deg, transparent 2px, black 0) top right, linear-gradient(45deg, transparent 2px, black 0) bottom left, linear-gradient(-45deg, transparent 2px, black 0) bottom right;
+    mask-size: 51% 51%;
+    mask-repeat: no-repeat;
+}
+
+.header-info {
+    flex: 1;
+}
+
+.persona-username {
+    font-family: var(--font-title);
+    font-size: 2.8rem;
+    color: var(--ink-primary);
+    margin-bottom: 5px;
+    line-height: 1.2;
+}
+
+.analysis-date {
+    font-family: var(--font-hand);
+    font-size: 1.1rem;
+    color: #999;
+    margin-bottom: 20px;
+}
+
+.summary-note-wrapper {
+    position: relative;
+    padding-left: 10px;
+}
+
+.sticky-note {
+    background: var(--color-yellow);
+    padding: 20px 25px;
+    box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.1);
+    transform: rotate(1deg);
+    font-family: var(--font-hand);
+    font-size: 1.2rem;
+    color: var(--ink-primary);
+    position: relative;
+    max-width: 90%;
+}
+
+.sticky-note::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, transparent 50%, rgba(0, 0, 0, 0.05) 50%);
+}
+
+.pin {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 16px;
+    background: var(--accent-orange);
+    border-radius: 50%;
+    box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.2);
+    z-index: 2;
+}
+
+.pin::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 4px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+}
+
+.divider-dashed {
+    border-top: 3px dashed var(--ink-secondary);
+    opacity: 0.3;
+    margin: 40px 0;
+}
+
+/* Traits & Interests */
+.tags-section {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.tag-group {
+    flex: 1;
+}
+
+.section-label {
+    font-family: var(--font-title);
+    font-size: 1.4rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink-primary);
+}
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.washi-tape-tag {
+    background: #fff;
+    padding: 8px 16px;
+    font-family: var(--font-hand);
+    font-size: 1.1rem;
+    position: relative;
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+    /* Pattern */
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0, 0, 0, 0.03) 5px, rgba(0, 0, 0, 0.03) 10px);
+}
+
+/* Tape ends effect using clip-path for jagged edges */
+.washi-tape-tag {
+    clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+}
+
+/* Color variations */
+.washi-tape-tag.c1 {
+    background-color: var(--color-blue);
+}
+
+.washi-tape-tag.c2 {
+    background-color: var(--color-pink);
+}
+
+.washi-tape-tag.c3 {
+    background-color: var(--color-green);
+}
+
+.washi-tape-tag.c4 {
+    background-color: var(--color-purple);
+}
+
+/* Communication Style */
+.notebook-paper {
+    background: #fff;
+    border: 1px solid #ddd;
+    /* Background lines geometry */
+    background-image: linear-gradient(transparent 35px, #b3e5fc 35px);
+    background-size: 100% 36px;
+    background-attachment: local;
+
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.05);
+    margin-bottom: 40px;
+    position: relative;
+
+    /* Reset container properties to avoid phantom space */
+    padding: 0;
+    white-space: normal;
+}
+
+.notebook-paper p {
+    margin: 0;
+    /* Geometry Sync */
+    line-height: 36px;
+    font-family: var(--font-hand);
+    font-size: 1.2rem;
+    color: #444;
+
+    /* Padding to align first baseline and provide side spacing */
+    /* 8px top aligns text baseline to the 35px underline */
+    padding: 8px 30px 10px 30px;
+
+    /* Preserve exact text formatting including newlines */
+    white-space: pre-wrap;
+}
+
+
+
+/* Evidence Board */
+.evidence-section {
+    background: #f4ecdf;
+    /* Cork color */
+    padding: 30px;
+    border: 8px solid #a1887f;
+    border-radius: 4px;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.corkboard-grid {
+    column-count: 2;
+    column-gap: 20px;
+}
+
+.evidence-card-pin {
+    break-inside: avoid;
+    background: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.2);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    position: relative;
+    transform: rotate(var(--rot));
+}
+
+.evidence-card-pin::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 12px;
+    background: #f44336;
+    /* Red pin */
+    border-radius: 50%;
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    z-index: 5;
+}
+
+@media (max-width: 600px) {
+    .persona-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .polaroid-wrapper {
+        transform: rotate(0);
+    }
+
+    .tags-section {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .corkboard-grid {
+        column-count: 1;
+    }
+}
