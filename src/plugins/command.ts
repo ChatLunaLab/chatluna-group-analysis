@@ -33,7 +33,8 @@ export function apply(ctx: Context, config: Config) {
                 '例如：/群分析 7'
         )
         .alias('group-analysis')
-        .action(async ({ session }, days) => {
+        .option('force', '-f 是否强制刷新群分析')
+        .action(async ({ session, options }, days) => {
             if (session.isDirect) return '请在群聊中使用此命令。'
 
             if (!checkGroup(session))
@@ -50,7 +51,9 @@ export function apply(ctx: Context, config: Config) {
                         guildId: session.guildId || undefined,
                         channelId: session.channelId || undefined
                     },
-                    analysisDays
+                    analysisDays,
+                    undefined,
+                    options.force ?? false
                 )
             } catch (err) {
                 ctx.logger.error('执行分析时发生未捕获的错误:', err)

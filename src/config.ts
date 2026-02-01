@@ -38,6 +38,7 @@ export interface Config {
     maxGoldenQuotes: number
     maxUsersInReport: number
     userTitleAnalysis: boolean
+    groupAnalysisCacheMinutes: number
     cronSchedule: string
     cronAnalysisDays: number
     personaAnalysisMessageInterval: number
@@ -99,6 +100,29 @@ export const Config: Schema<Config> = Schema.intersect([
         userTitleAnalysis: Schema.boolean()
             .description('是否启用用户称号分析（需要消耗更多 Token）。')
             .default(true),
+        groupAnalysisCacheMinutes: Schema.number()
+            .description('群分析缓存结果的保留分钟数。超过此时长后会重新分析。')
+            .min(0)
+            .default(5),
+        wordsFilter: Schema.array(String)
+            .role('table')
+            .description('过滤词列表。消息内含有此词语时将不会记入统计消息。')
+            .default([]),
+        userFilter: Schema.array(String)
+            .role('table')
+            .description('用户过滤列表。在群分析中忽略这些用户 ID 的消息。')
+            .default([]),
+        maxTopics: Schema.number()
+            .description('最多生成的话题数量。')
+            .default(5),
+        maxUserTitles: Schema.number()
+            .description('最多生成的用户称号数量。')
+            .default(6),
+        maxGoldenQuotes: Schema.number()
+            .description('最多生成的金句数量。')
+            .default(3)
+    }).description('群分析设置'),
+    Schema.object({
         outputFormat: Schema.union([
             Schema.const('image').description('图片'),
             Schema.const('pdf').description('PDF'),
@@ -123,30 +147,7 @@ export const Config: Schema<Config> = Schema.intersect([
             Schema.const('scrapbook').description('手账风格')
         ])
             .description('渲染界面皮肤。')
-            .default('md3'),
-        wordsFilter: Schema.array(String)
-            .role('table')
-            .description('过滤词列表。消息内含有此词语时将不会记入统计消息。')
-            .default([]),
-        userFilter: Schema.array(String)
-            .role('table')
-            .description('用户过滤列表。在群分析中忽略这些用户 ID 的消息。')
-            .default([]),
-        personaUserFilter: Schema.array(String)
-            .role('table')
-            .description(
-                '用户画像过滤列表。这些用户 ID 将无法分析用户画像（包括自动分析和手动命令调用）。'
-            )
-            .default([]),
-        maxTopics: Schema.number()
-            .description('最多生成的话题数量。')
-            .default(5),
-        maxUserTitles: Schema.number()
-            .description('最多生成的用户称号数量。')
-            .default(6),
-        maxGoldenQuotes: Schema.number()
-            .description('最多生成的金句数量。')
-            .default(3)
+            .default('md3')
     }).description('分析渲染设置'),
     Schema.object({
         model: Schema.dynamic('model')
@@ -159,6 +160,12 @@ export const Config: Schema<Config> = Schema.intersect([
             .default(1.5)
     }).description('LLM 设置'),
     Schema.object({
+        personaUserFilter: Schema.array(String)
+            .role('table')
+            .description(
+                '用户画像过滤列表。这些用户 ID 将无法分析用户画像（包括自动分析和手动命令调用）。'
+            )
+            .default([]),
         personaAnalysisMessageInterval: Schema.number()
             .description(
                 '跨群用户画像分析的触发阈值，新消息累计达到该条数时尝试更新画像。设置为 0 则关闭自动画像分析。'

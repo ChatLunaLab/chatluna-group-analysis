@@ -13,12 +13,17 @@ import {
 import { Config } from '..'
 import {
     calculateBasicStats,
+    buildGroupAnalysisCacheKey,
+    buildPersonaRecordId,
+    formatMessagesForPersona,
+    formatPersonaForPrompt,
     generateActiveHoursChart,
     generateTextReport,
     getAvatarUrl,
     getStartTimeByDays,
+    isCacheExpiredByDays,
+    isCacheExpiredByMinutes,
     mergePersona,
-    normalizePersonaText,
     shouldListenToMessage
 } from '../utils'
 import type { GuildMember } from '@satorijs/protocol'
@@ -27,6 +32,11 @@ import type { OneBotBot } from 'koishi-plugin-adapter-onebot'
 type AnalysisTarget = {
     guildId?: string
     channelId?: string
+}
+
+type GroupAnalysisCacheEntry = {
+    result: GroupAnalysisResult
+    analyzedAt: Date
 }
 
 export class AnalysisService extends Service {
@@ -38,6 +48,7 @@ export class AnalysisService extends Service {
 
     private personaCache = new Map<string, PersonaCache>()
     private personaProcessing = new Set<string>()
+    private groupAnalysisCache = new Map<string, GroupAnalysisCacheEntry>()
 
     constructor(
         ctx: Context,
@@ -104,7 +115,7 @@ export class AnalysisService extends Service {
             return
         }
 
-        const recordId = this.getPersonaRecordId(
+        const recordId = buildPersonaRecordId(
             session.platform,
             session.selfId,
             session.userId
@@ -212,23 +223,6 @@ export class AnalysisService extends Service {
         return cache
     }
 
-    private getPersonaRecordId(
-        platform: string,
-        selfId: string,
-        userId: string | number
-    ) {
-        return `${platform}:${selfId}:${userId}`
-    }
-
-    private isPersonaCacheExpired(lastAnalysisAt?: Date) {
-        const ttlDays = this.config.personaCacheLifetimeDays
-        if (ttlDays <= 0) return true
-        if (!lastAnalysisAt) return true
-
-        const ttlMs = ttlDays * 24 * 60 * 60 * 1000
-        return Date.now() - lastAnalysisAt.getTime() > ttlMs
-    }
-
     private async runPersonaAnalysis(
         cache: PersonaCache,
         sourceGroup?: {
@@ -256,13 +250,13 @@ export class AnalysisService extends Service {
             return
         }
 
-        const promptMessages = this.formatMessagesForPersona(historyMessages)
+        const promptMessages = formatMessagesForPersona(historyMessages)
 
         this.ctx.logger.info(
             `开始分析用户 ${record.userId} 的画像 (${record.username})，收集到 ${historyMessages.length} 条消息。`
         )
 
-        const previousText = this.formatPersonaForPrompt(cache.parsedPersona)
+        const previousText = formatPersonaForPrompt(cache.parsedPersona)
 
         const persona =
             await this.ctx.chatluna_group_analysis_llm.analyzeUserPersona(
@@ -310,9 +304,7 @@ export class AnalysisService extends Service {
                       guildId: sourceGroup?.guildId
                   }
               ].filter(
-                  (
-                      group
-                  )=>
+                  (group) =>
                       !!group.platform &&
                       !!group.selfId &&
                       (!!group.channelId || !!group.guildId)
@@ -400,54 +392,6 @@ export class AnalysisService extends Service {
         results.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
 
         return results
-    }
-
-    private formatMessagesForPersona(messages: StoredMessage[]): string {
-        return messages
-            .map((message) => {
-                const time = message.timestamp
-                    .toISOString()
-                    .replace('T', ' ')
-                    .slice(0, 16)
-                const scope = message.guildId
-                    ? `群:${message.guildId}`
-                    : `频道:${message.channelId}`
-                const normalized = normalizePersonaText(
-                    h
-                        .select(message.elements, 'text')
-                        .map((text) => text.attrs.content)
-                        .join('')
-                )
-                const referenceId = message.messageId || message.id
-                const referenceLabel = referenceId
-                    ? `msgid:${referenceId}`
-                    : `msgid:${message.id}`
-                return `[${time}] ${scope} ${message.username} <${referenceLabel}>: ${normalized}`
-            })
-            .join('\n')
-    }
-
-    private formatPersonaForPrompt(
-        persona?: UserPersonaProfile | null
-    ): string {
-        if (!persona) return '（无历史画像）'
-
-        const lines: string[] = []
-        lines.push(`summary: ${persona.summary || '无'}`)
-        lines.push(`keyTraits: ${(persona.keyTraits || []).join('; ') || '无'}`)
-        lines.push(`interests: ${(persona.interests || []).join('; ') || '无'}`)
-        lines.push(
-            `communicationStyle: ${persona.communicationStyle || '未知'}`
-        )
-        if (!persona.evidence || !persona.evidence.length) {
-            lines.push('evidence: 无')
-        } else {
-            lines.push('evidence:')
-            persona.evidence.forEach((item) => {
-                lines.push(`    quote: ${item || '（空）'}`)
-            })
-        }
-        return lines.join('\n')
     }
 
     private attachEvidenceMessageIds(
@@ -557,7 +501,8 @@ export class AnalysisService extends Service {
         selfId: string,
         target: AnalysisTarget,
         days: number,
-        outputFormat?: 'image' | 'pdf' | 'text'
+        outputFormat?: 'image' | 'pdf' | 'text',
+        force?: boolean
     ) {
         const bot = this._getBot(selfId)
         const targetChannel = target.channelId ?? target.guildId
@@ -572,33 +517,60 @@ export class AnalysisService extends Service {
         const sendStatus = async (content: string | h) =>
             bot?.sendMessage(targetChannel, content, targetGuildContext)
 
-        await sendStatus(`开始分析群聊近 ${days} 天的活动，请稍候...`)
-
         let message: h
 
         try {
-            const messages = await this._getGroupHistoryFromMessageService(
-                selfId,
-                target,
-                days
+            const cacheKey = buildGroupAnalysisCacheKey(selfId, target, days)
+            const cached = this.groupAnalysisCache.get(cacheKey)
+            const cacheExpired = isCacheExpiredByMinutes(
+                cached?.analyzedAt,
+                this.config.groupAnalysisCacheMinutes
             )
+            const shouldRefresh = force || cacheExpired || !cached
 
-            if (messages.length < this.config.minMessages) {
-                await sendStatus(
-                    `消息数量（${messages.length}/${this.config.minMessages}）不足于进行进行有效分析。`
+            let analysisResult: GroupAnalysisResult
+
+            if (!shouldRefresh && cached) {
+                analysisResult = cached.result
+            } else {
+                if (!force && cached && cacheExpired) {
+                    await sendStatus(
+                        `开始分析群聊近 ${days} 天的活动，请稍候...`
+                    )
+                } else {
+                    await sendStatus(
+                        `开始分析群聊近 ${days} 天的活动，请稍候...`
+                    )
+                }
+
+                const messages = await this._getGroupHistoryFromMessageService(
+                    selfId,
+                    target,
+                    days
                 )
-                return
+
+                if (messages.length < this.config.minMessages) {
+                    await sendStatus(
+                        `消息数量（${messages.length}/${this.config.minMessages}）不足于进行进行有效分析。`
+                    )
+                    return
+                }
+
+                await sendStatus(
+                    `已获取 ${messages.length} 条消息，正在进行智能分析...`
+                )
+
+                analysisResult = await this.analyzeGroupMessages(
+                    messages,
+                    selfId,
+                    target
+                )
+
+                this.groupAnalysisCache.set(cacheKey, {
+                    result: analysisResult,
+                    analyzedAt: new Date()
+                })
             }
-
-            await sendStatus(
-                `已获取 ${messages.length} 条消息，正在进行智能分析...`
-            )
-
-            const analysisResult = await this.analyzeGroupMessages(
-                messages,
-                selfId,
-                target
-            )
 
             const format = outputFormat || this.config.outputFormat || 'image'
 
@@ -671,7 +643,7 @@ export class AnalysisService extends Service {
         selfId: string,
         userId: string
     ): Promise<{ profile: UserPersonaProfile; username: string } | null> {
-        const recordId = this.getPersonaRecordId(platform, selfId, userId)
+        const recordId = buildPersonaRecordId(platform, selfId, userId)
 
         // First, check the cache
         const cached = this.personaCache.get(recordId)
@@ -717,7 +689,7 @@ export class AnalysisService extends Service {
         let message: h
 
         try {
-            const recordId = this.getPersonaRecordId(
+            const recordId = buildPersonaRecordId(
                 session.platform,
                 session.selfId,
                 userId
@@ -744,8 +716,9 @@ export class AnalysisService extends Service {
 
             let displayName = cache.record.username
 
-            const cacheExpired = this.isPersonaCacheExpired(
-                cache.record.lastAnalysisAt
+            const cacheExpired = isCacheExpiredByDays(
+                cache.record.lastAnalysisAt,
+                this.config.personaCacheLifetimeDays
             )
             const shouldRefresh = force || cacheExpired || !cache.parsedPersona
 

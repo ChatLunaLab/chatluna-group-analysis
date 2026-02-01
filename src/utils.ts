@@ -93,6 +93,14 @@ export function calculateBasicStats(
     return { userStats, totalChars, totalEmojiCount, allMessagesText }
 }
 
+export function buildPersonaRecordId(
+    platform: string,
+    selfId: string,
+    userId: string | number
+): string {
+    return `${platform}:${selfId}:${userId}`
+}
+
 function getInitialUserStats(msg: StoredMessage): UserStats {
     return {
         userId: String(msg.userId),
@@ -306,6 +314,52 @@ export function normalizePersonaText(text: string | undefined): string {
     return text ? text.replace(/\s+/g, ' ').trim() : ''
 }
 
+export function formatMessagesForPersona(messages: StoredMessage[]): string {
+    return messages
+        .map((message) => {
+            const time = message.timestamp
+                .toISOString()
+                .replace('T', ' ')
+                .slice(0, 16)
+            const scope = message.guildId
+                ? `群:${message.guildId}`
+                : `频道:${message.channelId}`
+            const normalized = normalizePersonaText(
+                h
+                    .select(message.elements, 'text')
+                    .map((text) => text.attrs.content)
+                    .join('')
+            )
+            const referenceId = message.messageId || message.id
+            const referenceLabel = referenceId
+                ? `msgid:${referenceId}`
+                : `msgid:${message.id}`
+            return `[${time}] ${scope} ${message.username} <${referenceLabel}>: ${normalized}`
+        })
+        .join('\n')
+}
+
+export function formatPersonaForPrompt(
+    persona?: UserPersonaProfile | null
+): string {
+    if (!persona) return '（无历史画像）'
+
+    const lines: string[] = []
+    lines.push(`summary: ${persona.summary || '无'}`)
+    lines.push(`keyTraits: ${(persona.keyTraits || []).join('; ') || '无'}`)
+    lines.push(`interests: ${(persona.interests || []).join('; ') || '无'}`)
+    lines.push(`communicationStyle: ${persona.communicationStyle || '未知'}`)
+    if (!persona.evidence || !persona.evidence.length) {
+        lines.push('evidence: 无')
+    } else {
+        lines.push('evidence:')
+        persona.evidence.forEach((item) => {
+            lines.push(`    quote: ${item || '（空）'}`)
+        })
+    }
+    return lines.join('\n')
+}
+
 export function mergePersona(
     previous: UserPersonaProfile | null | undefined,
     current: UserPersonaProfile
@@ -320,6 +374,42 @@ export function mergePersona(
         evidence: preferArray(current.evidence, previous.evidence),
         lastMergedFromHistory: true
     }
+}
+
+export function isCacheExpiredByDays(
+    lastAnalysisAt: Date | undefined,
+    ttlDays: number
+): boolean {
+    if (ttlDays <= 0) return true
+    if (!lastAnalysisAt) return true
+    const ttlMs = ttlDays * 24 * 60 * 60 * 1000
+    return Date.now() - lastAnalysisAt.getTime() > ttlMs
+}
+
+export function isCacheExpiredByMinutes(
+    lastAnalysisAt: Date | undefined,
+    ttlMinutes: number
+): boolean {
+    if (ttlMinutes <= 0) return true
+    if (!lastAnalysisAt) return true
+    const ttlMs = ttlMinutes * 60 * 1000
+    return Date.now() - lastAnalysisAt.getTime() > ttlMs
+}
+
+export function buildGroupAnalysisCacheKey(
+    selfId: string,
+    target: { guildId?: string; channelId?: string },
+    days: number
+): string {
+    const targetId = target.guildId
+        ? `guild:${target.guildId}`
+        : `channel:${target.channelId}`
+    return `${selfId}:${targetId}:${days}`
+}
+
+export function buildMessagePersistenceKey(message: StoredMessage): string {
+    const scope = message.guildId || message.channelId || 'global'
+    return `${message.platform}_${message.selfId}_${scope}`
 }
 
 export async function isNapCatBot(bot: OneBotBot<Context>) {

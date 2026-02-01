@@ -9,6 +9,7 @@ import {
 } from '../types'
 import type { OneBotBot } from 'koishi-plugin-adapter-onebot'
 import {
+    buildMessagePersistenceKey,
     getAvatarUrl,
     inferPlatformInfo,
     isNapCatBot,
@@ -598,11 +599,6 @@ export class MessageService extends Service {
         }
     }
 
-    private getPersistenceKey(message: StoredMessage) {
-        const scope = message.guildId || message.channelId || 'global'
-        return `${message.platform}_${message.selfId}_${scope}`
-    }
-
     private getActivityStats(key: string, timestamp: Date): ActivityStats {
         const now = timestamp.getTime()
         const stats = this.activityStats.get(key)
@@ -629,7 +625,7 @@ export class MessageService extends Service {
     }
 
     private async enqueueMessageForPersistence(message: StoredMessage) {
-        const key = this.getPersistenceKey(message)
+        const key = buildMessagePersistenceKey(message)
         const stats = this.getActivityStats(key, message.timestamp)
         stats.count += 1
 
