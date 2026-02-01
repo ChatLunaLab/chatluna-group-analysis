@@ -1,7 +1,9 @@
 import { Context, Service } from 'koishi'
 import { Config } from '../index'
 import {
+    AnalysisPromptContext,
     GoldenQuote,
+    QueryIntent,
     SummaryTopic,
     UserPersonaProfile,
     UserStats,
@@ -78,18 +80,86 @@ export class LLMService extends Service {
         })
     }
 
+    private async _callText(prompt: string, taskName: string): Promise<string> {
+        await this.loadModel()
+
+        const model = this.model.value
+        const logger = this.ctx.logger
+
+        if (!model) {
+            logger.warn(
+                `未找到 ChatLuna 模型 ${this.config.model}，请检查配置。`
+            )
+            return null
+        }
+
+        return await model.caller.call(async () => {
+            logger.info(`正在调用 ChatLuna 模型进行 ${taskName}...`)
+            const response = await model.invoke(prompt, {
+                temperature: this.config.temperature ?? 1
+            })
+
+            const rawContent = getMessageContent(response.content)
+
+            logger.info(`LLM 原始响应: ${rawContent || '[空响应]'}`)
+            return rawContent
+        })
+    }
+
+    private formatTimeRange(context?: AnalysisPromptContext): string {
+        if (!context?.timeRange) return '（未指定）'
+
+        const { start, end, description } = context.timeRange
+        const format = (date?: Date) =>
+            date ? date.toLocaleString('zh-CN', { hour12: false }) : '（未知）'
+        const rangeText = `${format(start)} ~ ${format(end)}`
+        return description ? `${description} (${rangeText})` : rangeText
+    }
+
+    private fillAnalysisPrompt(
+        template: string,
+        context?: AnalysisPromptContext
+    ): string {
+        const keywordsText =
+            context?.keywords?.length > 0
+                ? context.keywords.join('、')
+                : '（无）'
+        const topicsText =
+            context?.topics?.length > 0 ? context.topics.join('、') : '（无）'
+        const nicknamesText =
+            context?.nicknames?.length > 0
+                ? context.nicknames.join('、')
+                : '（无）'
+        const queryText = context?.query || '（无）'
+        const timeRangeText = this.formatTimeRange(context)
+
+        return template
+            .replace('{keywords}', keywordsText)
+            .replace('{topics}', topicsText)
+            .replace('{nicknames}', nicknamesText)
+            .replace('{query}', queryText)
+            .replace('{timeRange}', timeRangeText)
+    }
+
     public async summarizeTopics(
-        messagesText: string
+        messagesText: string,
+        context?: AnalysisPromptContext
     ): Promise<SummaryTopic[]> {
-        const prompt = this.config.promptTopic
-            .replace('{messages}', messagesText)
-            .replace('{maxTopics}', this.config.maxTopics.toString())
+        const prompt = this.fillAnalysisPrompt(
+            this.config.promptTopic
+                .replace('{messages}', messagesText)
+                .replace('{maxTopics}', this.config.maxTopics.toString()),
+            context
+        )
         return this._callLLM<SummaryTopic[]>(prompt, '话题分析').then(
             (data) => data ?? []
         )
     }
 
-    public async analyzeUserTitles(users: UserStats[]): Promise<UserTitle[]> {
+    public async analyzeUserTitles(
+        users: UserStats[],
+        context?: AnalysisPromptContext
+    ): Promise<UserTitle[]> {
         const userSummaries = users
             .sort((a, b) => b.messageCount - a.messageCount)
             .slice(0, this.config.maxUserTitles)
@@ -102,9 +172,9 @@ export class LLMService extends Service {
             )
             .join('\n')
 
-        const prompt = this.config.promptUserTitles.replace(
-            '{users}',
-            userSummaries
+        const prompt = this.fillAnalysisPrompt(
+            this.config.promptUserTitles.replace('{users}', userSummaries),
+            context
         )
         return this._callLLM<UserTitle[]>(prompt, '用户称号分析').then(
             (data) => data ?? []
@@ -113,11 +183,15 @@ export class LLMService extends Service {
 
     public async analyzeGoldenQuotes(
         messagesText: string,
-        maxQuotes: number
+        maxQuotes: number,
+        context?: AnalysisPromptContext
     ): Promise<GoldenQuote[]> {
-        const prompt = this.config.promptGoldenQuotes
-            .replace('{messages}', messagesText)
-            .replace('{maxGoldenQuotes}', String(maxQuotes))
+        const prompt = this.fillAnalysisPrompt(
+            this.config.promptGoldenQuotes
+                .replace('{messages}', messagesText)
+                .replace('{maxGoldenQuotes}', String(maxQuotes)),
+            context
+        )
         return this._callLLM<GoldenQuote[]>(prompt, '金句分析').then(
             (data) => data ?? []
         )
@@ -152,6 +226,63 @@ export class LLMService extends Service {
         if (!result) return null
         result.username = username
         return result
+    }
+
+    public async parseGroupQuery(promptContext: {
+        query: string
+        currentTime: string
+        timeZone: string
+        platform: string
+        groupName: string
+        guildId?: string
+        channelId?: string
+        currentUserId?: string
+        currentUserName?: string
+    }): Promise<QueryIntent | null> {
+        const prompt = this.config.promptQueryParser
+            .replace('{currentTime}', promptContext.currentTime)
+            .replace('{timeZone}', promptContext.timeZone)
+            .replace('{platform}', promptContext.platform)
+            .replace('{groupName}', promptContext.groupName || '未知群聊')
+            .replace('{guildId}', promptContext.guildId || '')
+            .replace('{channelId}', promptContext.channelId || '')
+            .replace('{currentUserId}', promptContext.currentUserId || '')
+            .replace('{currentUserName}', promptContext.currentUserName || '')
+            .replace('{query}', promptContext.query)
+
+        try {
+            const intent = await this._callLLM<QueryIntent>(
+                prompt,
+                '群分析请求解析'
+            )
+            return intent ?? null
+        } catch (error) {
+            this.ctx.logger.warn('解析群分析请求失败:', error)
+            return null
+        }
+    }
+
+    public async replyGroupQuery(promptContext: {
+        query: string
+        analysisResult: string
+        currentTime: string
+        groupName: string
+        guildId?: string
+        channelId?: string
+        currentUserId?: string
+        currentUserName?: string
+    }): Promise<string | null> {
+        const prompt = this.config.promptQueryChat
+            .replace('{currentTime}', promptContext.currentTime)
+            .replace('{groupName}', promptContext.groupName || '未知群聊')
+            .replace('{guildId}', promptContext.guildId || '')
+            .replace('{channelId}', promptContext.channelId || '')
+            .replace('{currentUserId}', promptContext.currentUserId || '')
+            .replace('{currentUserName}', promptContext.currentUserName || '')
+            .replace('{query}', promptContext.query)
+            .replace('{analysisResult}', promptContext.analysisResult || '')
+
+        return this._callText(prompt, '群分析对话回复')
     }
 }
 

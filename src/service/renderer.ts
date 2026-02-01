@@ -18,12 +18,13 @@ export class RendererService extends Service {
     static inject = ['puppeteer']
 
     templateDir: string
-    private _config: Config
 
-    constructor(ctx: Context, config: Config) {
+    constructor(
+        ctx: Context,
+        public config: Config
+    ) {
         super(ctx, 'chatluna_group_analysis_renderer', true)
 
-        this._config = config
         this.templateDir = path.resolve(
             ctx.baseDir,
             'data/chatluna/group_analysis'
@@ -35,7 +36,7 @@ export class RendererService extends Service {
     }
 
     private getSkinPath(filename: string): string {
-        const skin = this._config.skin || 'md3'
+        const skin = this.config.skin || 'md3'
         return path.resolve(this.templateDir, skin, filename)
     }
 
@@ -73,7 +74,7 @@ export class RendererService extends Service {
         const resourcesDir = dirname + '/../resources'
 
         const templateDir = this.templateDir
-        const skin = this._config.skin || 'md3'
+        const skin = this.config.skin || 'md3'
 
         // Source: resources/md3 (or other skin)
         const skinSourceDir = path.resolve(resourcesDir, skin)
@@ -192,7 +193,7 @@ export class RendererService extends Service {
 
         const templatePath = this.getSkinPath('template_group.html')
         const randomId = Math.random().toString(36).substring(2, 15)
-        const skin = this._config.skin || 'md3'
+        const skin = this.config.skin || 'md3'
         const outTemplateHtmlPath = path.resolve(
             this.templateDir,
             skin,
@@ -321,7 +322,7 @@ export class RendererService extends Service {
 
         const templatePath = this.getSkinPath('template_user.html')
         const randomId = Math.random().toString(36).substring(2, 15)
-        const skin = this._config.skin || 'md3'
+        const skin = this.config.skin || 'md3'
         const outTemplateHtmlPath = path.resolve(
             this.templateDir,
             skin,

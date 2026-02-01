@@ -29,6 +29,8 @@ export interface Config {
     promptUserTitles: string
     promptGoldenQuotes: string
     promptUserPersona: string
+    promptQueryParser: string
+    promptQueryChat: string
     outputFormat: 'image' | 'pdf' | 'text'
     maxMessages: number
     temperature: number
@@ -212,6 +214,14 @@ export const Config: Schema<Config> = Schema.intersect([
 - 对于每一条总结，尽量讲清楚前因后果，以及话题的结论，是什么，为什么，怎么做，如果用户没有讲到细节，则可以不用这么做。
 - 对于话题的描述内容，请在里面使用用户的昵称而不是用户的ID，避免输出用户ID和字符到话题描述内容中。
 
+用户查询：{query}
+用户关注关键词：{keywords}
+用户关注话题：{topics}
+用户关注昵称：{nicknames}
+目标时间范围：{timeRange}
+
+要求：生成内容时需优先围绕上述关键词、话题、昵称与时间范围；若信息不足，请在话题描述中明确指出缺口。
+
 群聊记录：
 {messages}
 
@@ -243,6 +253,14 @@ export const Config: Schema<Config> = Schema.intersect([
 - 互动达人: 经常回复别人的人
 - ... (你可以自行进行拓展添加)
 
+用户查询：{query}
+用户关注关键词：{keywords}
+用户关注话题：{topics}
+用户关注昵称：{nicknames}
+目标时间范围：{timeRange}
+
+要求：生成内容时需优先围绕上述关键词、话题、昵称与时间范围；不相关的用户不要入选。如果为空的，请忽略。
+
 用户数据：
 {users}
 
@@ -272,6 +290,14 @@ export const Config: Schema<Config> = Schema.intersect([
 此外，我将对你进行严格约束：
 - 优先筛选 **逆天指数最高** 的内容：发情、性压抑话题 > 争议话题 > 元素级 > 颠覆认知级 > 逻辑跳脱级 > 趣味调侃级，剔除单纯玩梗或网络热词堆砌的普通发言
 - 重点标记包含极端类比、反常识论证或无厘头结论的内容，并且包含一定的争议话题元素。
+
+用户查询：{query}
+用户关注关键词：{keywords}
+用户关注话题：{topics}
+用户关注昵称：{nicknames}
+目标时间范围：{timeRange}
+
+要求：生成内容时需优先围绕上述关键词、话题、昵称与时间范围；不相关的金句请过滤。如果为空的，请忽略。
 
 群聊记录：
 {messages}
@@ -316,6 +342,92 @@ export const Config: Schema<Config> = Schema.intersect([
     - "对应上面聊天记录中提供的 id，输出纯 id 的引用"（加入多条组成数组，引用到的聊天消息或者你自己挑选的逆天语句）
   lastMergedFromHistory: true/false（是否成功融合历史画像）
 \`\`\``
+            )
+    }).description('高级设置'),
+    Schema.object({
+        promptQueryParser: Schema.string()
+            .description('群分析自然语言解析提示词模板。')
+            .role('textarea')
+            .default(
+                `你是群聊分析助手，负责将用户的自然语言请求解析成结构化查询。
+
+已知信息：
+- 当前时间：{currentTime}
+- 当前时区：{timeZone}
+- 平台：{platform}
+- 群聊：{groupName} (guildId: {guildId}, channelId: {channelId})
+- 用户：{currentUserName} (userId: {currentUserId})
+- 用户请求：{query}
+
+## 请识别以下信息：
+
+1. **action**（3选1）：
+
+   **只分析** - 用户只想了解群聊的信息、事实、数据或总结，不需要你的主观意见或对话
+   示例：
+   - "最近三小时聊了什么"
+   - "今天有哪些话题"
+   - "过去一周谁最活跃"
+   - "帮我总结昨天的讨论"
+   - "xx说过什么"（查证式提问）
+
+   **分析加对话** - 用户想要基于分析结果的进一步对话或评论，通常包含：询问观点、性格分析、提出见解、引导讨论等
+   示例：
+   - "分析xx的性格"
+   - "告诉我xx这几个小时的话题是什么"
+   - "xx最近在关注什么"
+   - "你觉得这个讨论怎么样"
+   - "总结一下，xx在群里是什么角色"
+   - "分析一下群里最近的气氛"（带有观点要求）
+
+   **只对话** - 用户不需要新的分析，基于已知信息进行聊天或跟进前面的对话
+   示例：
+   - "你怎么看"（承上文，指代已有分析）
+   - "这个话题怎么深入"
+   - "你再补充一下"
+   - "有其他看法吗"
+   - "为什么这样说"
+
+2. 关键词 keywords（用户关注的关键词或实体，没有则返回空数组）
+3. 话题 topics（用户关注的主题或领域，没有则返回空数组）
+4. 昵称 nicknames（用户关注的群友昵称，没有则返回空数组）
+5. 目标时间 targetTime：如涉及时间，请输出绝对时间（YYYY-MM-DD HH:mm:ss）；否则留空字符串。可以补充 description。
+
+请严格按照 YAML 输出，放在 markdown 代码块中：
+\`\`\`yaml
+action: 只分析
+keywords:
+  - "关键词1"
+topics:
+  - "话题1"
+nicknames:
+  - "奶龙"
+targetTime:
+  description: "最近三小时"
+  startTime: "2026-02-01 12:00:00"
+  endTime: "2026-02-01 15:00:00"
+\`\`\``
+            ),
+        promptQueryChat: Schema.string()
+            .description('群分析对话回复提示词模板。')
+            .role('textarea')
+            .default(
+                `你是群聊分析对话助手，需要基于提供的分析结果回答用户的问题。
+
+已知信息：
+- 当前时间：{currentTime}
+- 群聊：{groupName} (guildId: {guildId}, channelId: {channelId})
+- 用户：{currentUserName} (userId: {currentUserId})
+- 用户请求：{query}
+
+分析结果（纯文本）：
+{analysisResult}
+
+要求：
+1. 结合分析结果回答用户问题，必要时引用关键事实或趋势。
+2. 若分析结果不足以回答，请说明限制，并给出合理的保守回答。
+3. 回复简洁、中立，不要输出 YAML 或 markdown 代码块。
+`
             )
     }).description('高级设置')
 ])

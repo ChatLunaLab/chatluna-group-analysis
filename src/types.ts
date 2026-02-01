@@ -91,6 +91,35 @@ export interface GroupAnalysisResult {
     groupName: string
 }
 
+export type QueryAction = '只分析' | '分析加对话' | '只对话'
+
+export interface QueryTargetTime {
+    description?: string
+    startTime?: string
+    endTime?: string
+}
+
+export interface QueryIntent {
+    action?: QueryAction
+    keywords?: string[]
+    topics?: string[]
+    nicknames?: string[]
+    targetTime?: QueryTargetTime
+    query?: string
+}
+
+export interface AnalysisPromptContext {
+    keywords?: string[]
+    topics?: string[]
+    nicknames?: string[]
+    query?: string
+    timeRange?: {
+        start?: Date
+        end?: Date
+        description?: string
+    }
+}
+
 export interface BasicStatsResult {
     userStats: Record<string, UserStats>
     totalChars: number

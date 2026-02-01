@@ -28,12 +28,12 @@ export function apply(ctx: Context, config: Config) {
     }
 
     const settings = ctx
-        .command('群分析 [days:number]', '分析本群的近期聊天记录')
+        .command('群分析 [query:text]', '分析本群的近期聊天记录')
         .usage(
             '本功能会分析本群的近期聊天记录，并生成一份报告。\n' +
                 '默认情况下，本功能会分析最近 1 天的聊天记录。\n' +
-                '你可以通过指定天数参数来调整分析的时长。\n' +
-                '例如：/群分析 7'
+                '也可以直接输入自然语言进行查询和对话。\n' +
+                '例如：/群分析 告诉我最近三小时都聊了什么'
         )
         .alias('group-analysis')
 
@@ -44,7 +44,7 @@ export function apply(ctx: Context, config: Config) {
         .option('channel', '-c <channelId:string> 指定频道号', {
             authority: 3
         })
-        .action(async ({ session, options }, days) => {
+        .action(async ({ session, options }, query) => {
             if (session.isDirect && !options.group && !options.channel) {
                 return '私聊中请使用 -g 或 -c 指定目标群或频道。'
             }
@@ -65,21 +65,35 @@ export function apply(ctx: Context, config: Config) {
             )
                 return '目标群未启用分析功能，请使用 群分析.启用 来启用目标群的分析功能。'
 
-            const analysisDays = days || ctx.config?.cronAnalysisDays || 1
-            if (analysisDays > 7)
-                return '出于性能考虑，最多只能分析 7 天的数据。'
+            const queryText =
+                typeof query === 'string' ? query.trim() : undefined
 
             try {
-                await ctx.chatluna_group_analysis.executeGroupAnalysis(
-                    session.selfId,
-                    {
-                        guildId: targetGuildId || undefined,
-                        channelId: targetChannelId || undefined
-                    },
-                    analysisDays,
-                    undefined,
-                    options.force ?? false
-                )
+                if (queryText) {
+                    await ctx.chatluna_group_analysis.executeGroupQuery(
+                        session,
+                        {
+                            guildId: targetGuildId || undefined,
+                            channelId: targetChannelId || undefined
+                        },
+                        queryText
+                    )
+                } else {
+                    const analysisDays = ctx.config?.cronAnalysisDays || 1
+                    if (analysisDays > 7)
+                        return '出于性能考虑，最多只能分析 7 天的数据。'
+
+                    await ctx.chatluna_group_analysis.executeGroupAnalysis(
+                        session.selfId,
+                        {
+                            guildId: targetGuildId || undefined,
+                            channelId: targetChannelId || undefined
+                        },
+                        analysisDays,
+                        undefined,
+                        options.force ?? false
+                    )
+                }
             } catch (err) {
                 ctx.logger.error('执行分析时发生未捕获的错误:', err)
                 return '群分析执行失败，请检查日志。'

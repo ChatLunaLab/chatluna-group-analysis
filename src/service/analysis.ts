@@ -1,10 +1,13 @@
 import { Context, h, Service, Session } from 'koishi'
 import { dump as yamlDump, load as yamlLoad } from 'js-yaml'
 import {
+    AnalysisPromptContext,
     GoldenQuote,
     GroupAnalysisResult,
     PersonaCache,
     PersonaRecord,
+    QueryAction,
+    QueryIntent,
     StoredMessage,
     SummaryTopic,
     UserPersonaProfile,
@@ -12,9 +15,9 @@ import {
 } from '../types'
 import { Config } from '..'
 import {
-    calculateBasicStats,
     buildGroupAnalysisCacheKey,
     buildPersonaRecordId,
+    calculateBasicStats,
     formatMessagesForPersona,
     formatPersonaForPrompt,
     generateActiveHoursChart,
@@ -497,6 +500,109 @@ export class AnalysisService extends Service {
         return messages
     }
 
+    private async _getGroupHistoryFromMessageServiceByTimeRange(
+        selfId: string,
+        target: AnalysisTarget,
+        startTime: Date,
+        endTime: Date
+    ): Promise<StoredMessage[]> {
+        const targetId = target.guildId || target.channelId
+        if (!targetId) {
+            this.ctx.logger.warn('执行群分析时缺少有效的群组或频道标识。')
+            return []
+        }
+
+        this.ctx.logger.info(
+            `开始从消息服务获取群组 ${targetId} ${startTime.toLocaleString()} - ${endTime.toLocaleString()} 的消息记录...`
+        )
+
+        const messages =
+            await this.ctx.chatluna_group_analysis_message.getHistoricalMessages(
+                {
+                    guildId: target.guildId,
+                    channelId: target.channelId,
+                    startTime,
+                    selfId,
+                    endTime,
+                    limit: this.config.maxMessages,
+                    purpose: 'group-analysis'
+                }
+            )
+
+        this.ctx.logger.info(`从消息服务获取到 ${messages.length} 条消息。`)
+        return messages
+    }
+
+    private async resolveGroupName(
+        selfId: string,
+        target: AnalysisTarget
+    ): Promise<string> {
+        const bot = this._getBot(selfId)
+        const fallbackName = target.guildId || target.channelId || 'unknown'
+        let groupName = fallbackName
+        if (bot) {
+            try {
+                if (target.guildId) {
+                    groupName =
+                        (await bot.getGuild(target.guildId)).name || groupName
+                } else if (target.channelId && bot.getChannel) {
+                    const channel = await bot.getChannel(
+                        target.channelId,
+                        target.guildId
+                    )
+                    groupName = channel?.name || groupName
+                }
+            } catch (err) {
+                this.ctx.logger.warn(
+                    `获取群组 ${fallbackName} 名称失败: ${err}`
+                )
+            }
+        }
+        return groupName
+    }
+
+    private normalizeQueryAction(action?: string): QueryAction {
+        const normalized = action?.trim()
+        if (normalized === '分析加对话' || normalized === '只对话') {
+            return normalized
+        }
+        return '只分析'
+    }
+
+    private resolveQueryTimeRange(
+        intent: QueryIntent | null,
+        fallbackDays: number
+    ): { start: Date; end: Date; description?: string } {
+        const now = new Date()
+        let start: Date | undefined
+        let end: Date | undefined
+
+        if (intent?.targetTime?.startTime) {
+            const parsed = new Date(intent.targetTime.startTime)
+            if (!isNaN(parsed.getTime())) start = parsed
+        }
+
+        if (intent?.targetTime?.endTime) {
+            const parsed = new Date(intent.targetTime.endTime)
+            if (!isNaN(parsed.getTime())) end = parsed
+        }
+
+        if (!end) end = now
+        if (!start) start = getStartTimeByDays(fallbackDays)
+
+        if (start > end) {
+            const temp = start
+            start = end
+            end = temp
+        }
+
+        return {
+            start,
+            end,
+            description: intent?.targetTime?.description
+        }
+    }
+
     public async executeGroupAnalysis(
         selfId: string,
         target: AnalysisTarget,
@@ -616,6 +722,172 @@ export class AnalysisService extends Service {
         }
 
         await bot?.sendMessage(targetChannel, message)
+    }
+
+    public async executeGroupQuery(
+        session: Session,
+        target: AnalysisTarget,
+        query: string,
+        outputFormat?: 'image' | 'pdf' | 'text'
+    ) {
+        const bot = this._getBot(session.selfId)
+        const targetChannel = target.channelId ?? target.guildId
+        const targetGuildContext =
+            target.channelId && target.guildId ? target.guildId : undefined
+
+        if (!targetChannel) {
+            this.ctx.logger.warn('执行群分析需要提供 channelId 或 guildId。')
+            return
+        }
+
+        const sendStatus = async (content: string | h) =>
+            bot?.sendMessage(targetChannel, content, targetGuildContext)
+
+        const currentTime = new Date()
+        const timeZone =
+            Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+        const groupName = await this.resolveGroupName(session.selfId, target)
+
+        await sendStatus('正在解析你的请求，请稍候...')
+
+        const intent =
+            await this.ctx.chatluna_group_analysis_llm.parseGroupQuery({
+                query,
+                currentTime: currentTime.toLocaleString('zh-CN', {
+                    hour12: false
+                }),
+                timeZone,
+                platform: session.platform,
+                groupName,
+                guildId: target.guildId,
+                channelId: target.channelId,
+                currentUserId: session.userId,
+                currentUserName: session.username || session.userId
+            })
+
+        if (!intent) {
+            await sendStatus('未能解析你的请求，请换个说法再试。')
+            return
+        }
+
+        const action = this.normalizeQueryAction(intent.action)
+        const timeRange = this.resolveQueryTimeRange(
+            intent,
+            this.config.cronAnalysisDays || 1
+        )
+
+        await sendStatus(
+            `正在获取 ${timeRange.start.toLocaleString()} - ${timeRange.end.toLocaleString()} 的消息记录...`
+        )
+
+        const messages =
+            await this._getGroupHistoryFromMessageServiceByTimeRange(
+                session.selfId,
+                target,
+                timeRange.start,
+                timeRange.end
+            )
+
+        if (messages.length < this.config.minMessages) {
+            await sendStatus(
+                `消息数量（${messages.length}/${this.config.minMessages}）不足于进行有效分析。`
+            )
+            return
+        }
+
+        await sendStatus(
+            `已获取 ${messages.length} 条消息，正在进行智能分析...`
+        )
+
+        const keywords = Array.isArray(intent.keywords)
+            ? intent.keywords.filter(Boolean)
+            : intent.keywords
+              ? [String(intent.keywords)]
+              : []
+        const topics = Array.isArray(intent.topics)
+            ? intent.topics.filter(Boolean)
+            : intent.topics
+              ? [String(intent.topics)]
+              : []
+        const nicknames = Array.isArray(intent.nicknames)
+            ? intent.nicknames.filter(Boolean)
+            : intent.nicknames
+              ? [String(intent.nicknames)]
+              : []
+
+        const analysisContext: AnalysisPromptContext = {
+            keywords,
+            topics,
+            nicknames,
+            query,
+            timeRange
+        }
+
+        const analysisResult = await this.analyzeGroupMessages(
+            messages,
+            session.selfId,
+            target,
+            analysisContext
+        )
+
+        const textReport = generateTextReport(analysisResult)
+        const format = outputFormat || this.config.outputFormat || 'image'
+
+        if (action !== '只对话') {
+            let reportMessage: h
+            switch (format) {
+                case 'image':
+                    {
+                        const image =
+                            await this.ctx.chatluna_group_analysis_renderer.renderGroupAnalysis(
+                                analysisResult,
+                                this.config
+                            )
+                        reportMessage =
+                            typeof image === 'string'
+                                ? h.text(image)
+                                : h.image(image, 'image/png')
+                    }
+                    break
+                case 'pdf': {
+                    const pdfBuffer =
+                        await this.ctx.chatluna_group_analysis_renderer.renderGroupAnalysisToPdf(
+                            analysisResult
+                        )
+                    reportMessage = pdfBuffer
+                        ? h.file(pdfBuffer, 'application/pdf')
+                        : h.text('PDF 渲染失败，请检查日志。')
+                    break
+                }
+                default: {
+                    reportMessage = h.text(textReport)
+                }
+            }
+
+            await sendStatus(reportMessage)
+        }
+
+        if (action !== '只分析') {
+            const reply =
+                await this.ctx.chatluna_group_analysis_llm.replyGroupQuery({
+                    query,
+                    analysisResult: textReport,
+                    currentTime: currentTime.toLocaleString('zh-CN', {
+                        hour12: false
+                    }),
+                    groupName,
+                    guildId: target.guildId,
+                    channelId: target.channelId,
+                    currentUserId: session.userId,
+                    currentUserName: session.username || session.userId
+                })
+
+            if (reply?.length) {
+                await sendStatus(reply)
+            } else {
+                await sendStatus('对话生成失败，请稍后再试。')
+            }
+        }
     }
 
     public async executeAutoAnalysisForEnabledGroups() {
@@ -802,7 +1074,8 @@ export class AnalysisService extends Service {
     public async analyzeGroupMessages(
         messages: StoredMessage[],
         selfId: string,
-        target: AnalysisTarget
+        target: AnalysisTarget,
+        context?: AnalysisPromptContext
     ): Promise<GroupAnalysisResult> {
         this.ctx.logger.info(`开始分析 ${messages.length} 条消息...`)
 
@@ -815,13 +1088,20 @@ export class AnalysisService extends Service {
         const users = Object.values(userStats)
 
         const [topics, userTitles, goldenQuotes] = await Promise.all([
-            this.ctx.chatluna_group_analysis_llm.summarizeTopics(messagesText),
+            this.ctx.chatluna_group_analysis_llm.summarizeTopics(
+                messagesText,
+                context
+            ),
             this.config.userTitleAnalysis
-                ? this.ctx.chatluna_group_analysis_llm.analyzeUserTitles(users)
+                ? this.ctx.chatluna_group_analysis_llm.analyzeUserTitles(
+                      users,
+                      context
+                  )
                 : Promise.resolve([]),
             this.ctx.chatluna_group_analysis_llm.analyzeGoldenQuotes(
                 messagesText,
-                this.config.maxGoldenQuotes
+                this.config.maxGoldenQuotes,
+                context
             )
         ]).catch((error) => {
             this.ctx.logger.error('LLM analysis failed:', error)
@@ -857,27 +1137,7 @@ export class AnalysisService extends Service {
         const activeHoursChartHtml =
             generateActiveHoursChart(overallActiveHours)
 
-        const bot = this._getBot(selfId)
-        const fallbackName = target.guildId || target.channelId || 'unknown'
-        let groupName = fallbackName
-        if (bot) {
-            try {
-                if (target.guildId) {
-                    groupName =
-                        (await bot.getGuild(target.guildId)).name || groupName
-                } else if (target.channelId && bot.getChannel) {
-                    const channel = await bot.getChannel(
-                        target.channelId,
-                        target.guildId
-                    )
-                    groupName = channel?.name || groupName
-                }
-            } catch (err) {
-                this.ctx.logger.warn(
-                    `获取群组 ${fallbackName} 名称失败: ${err}`
-                )
-            }
-        }
+        const groupName = await this.resolveGroupName(selfId, target)
 
         const result: GroupAnalysisResult = {
             totalMessages: messages.length,
