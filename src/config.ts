@@ -113,7 +113,7 @@ export const Config: Schema<Config> = Schema.intersect([
             Schema.const('md3').description('Material Design 3'),
             Schema.const('anime').description('二次元风格'),
             Schema.const('newspaper').description('报纸风格'),
-            Schema.const('artist').description('艺术风格'),
+            Schema.const('art').description('艺术风格'),
             Schema.const('scrapbook').description('手账风格')
         ])
             .description('渲染界面皮肤。')
