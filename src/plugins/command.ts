@@ -11,6 +11,7 @@ export const inject = {
 
 export function apply(ctx: Context, config: Config) {
     const checkGroup = (session: Session) => {
+        if (config.enableAllGroupsByDefault) return true
         if (!config.listenerGroups) return false
         return shouldListenToMessage(
             {

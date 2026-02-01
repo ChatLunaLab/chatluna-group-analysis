@@ -81,7 +81,13 @@ export class AnalysisService extends Service {
 
         this.ctx.chatluna_group_analysis_message.onUserMessage(
             async (session) => {
-                if (!shouldListenToMessage(session, this.config.listenerGroups))
+                if (
+                    !shouldListenToMessage(
+                        session,
+                        this.config.listenerGroups,
+                        this.config.enableAllGroupsByDefault
+                    )
+                )
                     return
 
                 await this.handleIncomingMessageForPersona(session)
@@ -121,8 +127,15 @@ export class AnalysisService extends Service {
         ) {
             this.personaProcessing.add(recordId)
 
+            const sourceGroup = {
+                guildId: session.guildId || undefined,
+                channelId: session.channelId || undefined,
+                platform: session.platform,
+                selfId: session.selfId
+            }
+
             // eslint-disable-next-line no-void
-            void this.runPersonaAnalysis(cache)
+            void this.runPersonaAnalysis(cache, sourceGroup)
                 .catch((error) =>
                     this.ctx.logger.error(
                         `执行用户画像分析失败 (${recordId}):`,
@@ -216,7 +229,15 @@ export class AnalysisService extends Service {
         return Date.now() - lastAnalysisAt.getTime() > ttlMs
     }
 
-    private async runPersonaAnalysis(cache: PersonaCache) {
+    private async runPersonaAnalysis(
+        cache: PersonaCache,
+        sourceGroup?: {
+            guildId?: string
+            channelId?: string
+            platform: string
+            selfId: string
+        }
+    ) {
         const { record } = cache
         const lookbackStart = getStartTimeByDays(
             this.config.personaLookbackDays
@@ -224,7 +245,8 @@ export class AnalysisService extends Service {
 
         const historyMessages = await this.collectUserMessagesForPersona(
             record,
-            lookbackStart
+            lookbackStart,
+            sourceGroup
         )
 
         if (historyMessages.length < this.config.personaMinMessages) {
@@ -269,19 +291,45 @@ export class AnalysisService extends Service {
 
     private async collectUserMessagesForPersona(
         record: PersonaRecord,
-        startTime: Date
+        startTime: Date,
+        sourceGroup?: {
+            guildId?: string
+            channelId?: string
+            platform: string
+            selfId: string
+        }
     ): Promise<StoredMessage[]> {
         const results: StoredMessage[] = []
-        const relevantGroups = this.config.listenerGroups.filter(
-            (group) =>
-                group.enabled &&
-                group.platform === record.platform &&
-                group.selfId === record.selfId
-        )
+        const relevantGroups = this.config.enableAllGroupsByDefault
+            ? [
+                  {
+                      enabled: true,
+                      platform: sourceGroup?.platform,
+                      selfId: sourceGroup?.selfId,
+                      channelId: sourceGroup?.channelId,
+                      guildId: sourceGroup?.guildId
+                  }
+              ].filter(
+                  (
+                      group
+                  )=>
+                      !!group.platform &&
+                      !!group.selfId &&
+                      (!!group.channelId || !!group.guildId)
+              )
+            : this.config.listenerGroups.filter(
+                  (group) =>
+                      group.enabled &&
+                      group.platform === record.platform &&
+                      group.selfId === record.selfId
+              )
 
         if (!relevantGroups.length) {
+            const reason = this.config.enableAllGroupsByDefault
+                ? '未提供可用的当前群组信息'
+                : '未在配置中找到监听群组'
             this.ctx.logger.warn(
-                `未在配置中找到用于用户 ${record.userId} 的监听群组，跳过画像分析。`
+                `用户 ${record.userId} 画像分析缺少群组上下文（${reason}），跳过画像分析。`
             )
             return []
         }
@@ -711,7 +759,14 @@ export class AnalysisService extends Service {
                     }
                 }
 
-                await this.runPersonaAnalysis(cache)
+                const sourceGroup = {
+                    guildId: session.guildId || undefined,
+                    channelId: session.channelId || undefined,
+                    platform: session.platform,
+                    selfId: session.selfId
+                }
+
+                await this.runPersonaAnalysis(cache, sourceGroup)
 
                 if (!cache.parsedPersona) {
                     message = h.text(

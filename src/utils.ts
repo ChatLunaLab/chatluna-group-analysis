@@ -215,9 +215,11 @@ export function shouldListenToMessage(
         selfId: string
         channelId: string
         guildId?: string
-    }[]
+    }[],
+    enableAllGroupsByDefault = false
 ): boolean {
     if (!session.guildId && !session.channelId) return false
+    if (enableAllGroupsByDefault) return true
 
     return listenerGroups.some((listener) => {
         if (

@@ -82,7 +82,8 @@ export class MessageService extends Service {
                 platform: session.platform,
                 selfId: session.selfId
             },
-            this.config.listenerGroups
+            this.config.listenerGroups,
+            this.config.enableAllGroupsByDefault
         )
     }
 
@@ -326,10 +327,12 @@ export class MessageService extends Service {
     public async getHistoricalMessages(
         filter: MessageFilter
     ): Promise<StoredMessage[]> {
-        const { platform, selfId } = inferPlatformInfo(
-            filter,
-            this.config.listenerGroups
-        )
+        const botFromSelfId = filter.selfId
+            ? this.ctx.bots.find((b) => b.selfId === filter.selfId)
+            : undefined
+        const inferred = inferPlatformInfo(filter, this.config.listenerGroups)
+        const platform = inferred.platform || botFromSelfId?.platform
+        const selfId = inferred.selfId || filter.selfId
         const bot = this.ctx.bots.find(
             (b) => b.platform === platform && b.selfId === selfId
         )

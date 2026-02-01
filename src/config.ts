@@ -17,6 +17,7 @@ const GroupListener: Schema<GroupListener> = Schema.object({
 })
 
 export interface Config {
+    enableAllGroupsByDefault: boolean
     listenerGroups: GroupListener[]
     wordsFilter: string[]
     userFilter: string[]
@@ -53,6 +54,11 @@ export interface Config {
 
 export const Config: Schema<Config> = Schema.intersect([
     Schema.object({
+        enableAllGroupsByDefault: Schema.boolean()
+            .default(false)
+            .description(
+                '为所有群默认启用群分析。开启后与 listenerGroups 不兼容（将忽略其配置）；即使开启并启用数据库记录，数据库也只会记录实际触发的群消息。'
+            ),
         listenerGroups: Schema.array(GroupListener)
             .role('table')
             .description('数据库监听规则列表。')
