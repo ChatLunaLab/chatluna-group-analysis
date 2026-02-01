@@ -10,13 +10,16 @@ export const inject = {
 }
 
 export function apply(ctx: Context, config: Config) {
-    const checkGroup = (session: Session) => {
+    const checkGroup = (
+        session: Session,
+        target?: { guildId?: string | null; channelId?: string | null }
+    ) => {
         if (config.enableAllGroupsByDefault) return true
         if (!config.listenerGroups) return false
         return shouldListenToMessage(
             {
-                guildId: session.guildId || undefined,
-                channelId: session.channelId || undefined,
+                guildId: target?.guildId ?? session.guildId ?? undefined,
+                channelId: target?.channelId ?? session.channelId ?? undefined,
                 platform: session.platform,
                 selfId: session.selfId
             },
@@ -33,12 +36,34 @@ export function apply(ctx: Context, config: Config) {
                 '例如：/群分析 7'
         )
         .alias('group-analysis')
-        .option('force', '-f 是否强制刷新群分析')
-        .action(async ({ session, options }, days) => {
-            if (session.isDirect) return '请在群聊中使用此命令。'
 
-            if (!checkGroup(session))
-                return '本群未启用分析功能，请使用 群分析.启用 来启用本群的分析功能。'
+        .option('force', '-f 是否强制刷新群分析')
+        .option('group', '-g <guildId:string> 指定群号', {
+            authority: 3
+        })
+        .option('channel', '-c <channelId:string> 指定频道号', {
+            authority: 3
+        })
+        .action(async ({ session, options }, days) => {
+            if (session.isDirect && !options.group && !options.channel) {
+                return '私聊中请使用 -g 或 -c 指定目标群或频道。'
+            }
+
+            const targetGuildId = options.group ?? session.guildId ?? undefined
+            const targetChannelId =
+                options.channel ?? session.channelId ?? undefined
+
+            if (!targetGuildId && !targetChannelId) {
+                return '请使用 -g 或 -c 指定目标群或频道。'
+            }
+
+            if (
+                !checkGroup(session, {
+                    guildId: targetGuildId,
+                    channelId: targetChannelId
+                })
+            )
+                return '目标群未启用分析功能，请使用 群分析.启用 来启用目标群的分析功能。'
 
             const analysisDays = days || ctx.config?.cronAnalysisDays || 1
             if (analysisDays > 7)
@@ -48,8 +73,8 @@ export function apply(ctx: Context, config: Config) {
                 await ctx.chatluna_group_analysis.executeGroupAnalysis(
                     session.selfId,
                     {
-                        guildId: session.guildId || undefined,
-                        channelId: session.channelId || undefined
+                        guildId: targetGuildId || undefined,
+                        channelId: targetChannelId || undefined
                     },
                     analysisDays,
                     undefined,
