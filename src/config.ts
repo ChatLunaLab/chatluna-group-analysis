@@ -23,6 +23,7 @@ export interface Config {
     userFilter: string[]
     personaUserFilter: string[]
     model: string
+    smallModel?: string
     alwaysPersistMessages: boolean
     retentionDays: number
     promptTopic: string
@@ -155,6 +156,9 @@ export const Config: Schema<Config> = Schema.intersect([
         model: Schema.dynamic('model')
             .description('使用的 LLM 模型。')
             .required(),
+        smallModel: Schema.dynamic('model').description(
+            '用于请求解析的小模型（未设置则使用默认模型）。'
+        ),
         temperature: Schema.number()
             .description('生成的温度。')
             .min(0)

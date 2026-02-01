@@ -17,7 +17,7 @@ import { load } from 'js-yaml'
 export class LLMService extends Service {
     static readonly inject = ['chatluna']
 
-    private model: ComputedRef<ChatLunaChatModel>
+    private models = new Map<string, ComputedRef<ChatLunaChatModel>>()
 
     constructor(
         ctx: Context,
@@ -26,21 +26,29 @@ export class LLMService extends Service {
         super(ctx, 'chatluna_group_analysis_llm', true)
     }
 
-    private async loadModel() {
-        if (this.model) return
+    private async loadModel(modelName: string) {
+        const existing = this.models.get(modelName)
+        if (existing) return existing
 
-        this.model = await this.ctx.chatluna.createChatModel(this.config.model)
+        const modelRef = await this.ctx.chatluna.createChatModel(modelName)
+        this.models.set(modelName, modelRef)
+        return modelRef
     }
 
-    private async _callLLM<T>(prompt: string, taskName: string): Promise<T> {
-        await this.loadModel()
+    private async _callLLM<T>(
+        prompt: string,
+        taskName: string,
+        modelName?: string
+    ): Promise<T> {
+        const selectedModelName = modelName || this.config.model
+        const modelRef = await this.loadModel(selectedModelName)
 
-        const model = this.model.value
+        const model = modelRef.value
         const logger = this.ctx.logger
 
         if (!model) {
             logger.warn(
-                `未找到 ChatLuna 模型 ${this.config.model}，请检查配置。`
+                `未找到 ChatLuna 模型 ${selectedModelName}，请检查配置。`
             )
 
             return null
@@ -80,15 +88,20 @@ export class LLMService extends Service {
         })
     }
 
-    private async _callText(prompt: string, taskName: string): Promise<string> {
-        await this.loadModel()
+    private async _callText(
+        prompt: string,
+        taskName: string,
+        modelName?: string
+    ): Promise<string> {
+        const selectedModelName = modelName || this.config.model
+        const modelRef = await this.loadModel(selectedModelName)
 
-        const model = this.model.value
+        const model = modelRef.value
         const logger = this.ctx.logger
 
         if (!model) {
             logger.warn(
-                `未找到 ChatLuna 模型 ${this.config.model}，请检查配置。`
+                `未找到 ChatLuna 模型 ${selectedModelName}，请检查配置。`
             )
             return null
         }
@@ -253,7 +266,8 @@ export class LLMService extends Service {
         try {
             const intent = await this._callLLM<QueryIntent>(
                 prompt,
-                '群分析请求解析'
+                '群分析请求解析',
+                this.config.smallModel || this.config.model
             )
             return intent ?? null
         } catch (error) {

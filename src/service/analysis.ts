@@ -639,15 +639,7 @@ export class AnalysisService extends Service {
             if (!shouldRefresh && cached) {
                 analysisResult = cached.result
             } else {
-                if (!force && cached && cacheExpired) {
-                    await sendStatus(
-                        `开始分析群聊近 ${days} 天的活动，请稍候...`
-                    )
-                } else {
-                    await sendStatus(
-                        `开始分析群聊近 ${days} 天的活动，请稍候...`
-                    )
-                }
+                await sendStatus(`开始分析群聊近 ${days} 天的活动，请稍候...`)
 
                 const messages = await this._getGroupHistoryFromMessageService(
                     selfId,
@@ -662,8 +654,8 @@ export class AnalysisService extends Service {
                     return
                 }
 
-                await sendStatus(
-                    `已获取 ${messages.length} 条消息，正在进行智能分析...`
+                this.ctx.logger.info(
+                    `群分析已获取 ${messages.length} 条消息，开始智能分析。`
                 )
 
                 analysisResult = await this.analyzeGroupMessages(
@@ -748,7 +740,7 @@ export class AnalysisService extends Service {
             Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
         const groupName = await this.resolveGroupName(session.selfId, target)
 
-        await sendStatus('正在解析你的请求，请稍候...')
+        this.ctx.logger.info(`收到群分析请求，开始解析用户请求: ${query}`)
 
         const intent =
             await this.ctx.chatluna_group_analysis_llm.parseGroupQuery({
@@ -776,8 +768,8 @@ export class AnalysisService extends Service {
             this.config.cronAnalysisDays || 1
         )
 
-        await sendStatus(
-            `正在获取 ${timeRange.start.toLocaleString()} - ${timeRange.end.toLocaleString()} 的消息记录...`
+        this.ctx.logger.info(
+            `准备获取消息记录: ${timeRange.start.toLocaleString()} - ${timeRange.end.toLocaleString()}`
         )
 
         const messages =
@@ -795,8 +787,8 @@ export class AnalysisService extends Service {
             return
         }
 
-        await sendStatus(
-            `已获取 ${messages.length} 条消息，正在进行智能分析...`
+        this.ctx.logger.info(
+            `群分析已获取 ${messages.length} 条消息，开始智能分析。`
         )
 
         const keywords = Array.isArray(intent.keywords)
