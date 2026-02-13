@@ -231,10 +231,10 @@ export const Config: Schema<Config> = Schema.intersect([
 
 请严格按照以下 YAML 格式返回，放在 markdown 代码块中：
 \`\`\`yaml
-- topic: 话题名称
+- topic: "话题名称"
   contributors:
-    - 用户1 (用户ID)
-    - 用户2 (用户ID)
+    - "用户1 (用户ID)"
+    - "用户2 (用户ID)"
   detail: |-
     话题描述内容（支持多行文本，
     保留换行符，适合多段落描述，不要在里面添加任何markdown语法，请使用纯文本）
@@ -270,10 +270,10 @@ export const Config: Schema<Config> = Schema.intersect([
 
 请严格按照以下 YAML 格式返回，放在 markdown 代码块中：
 \`\`\`yaml
-- name: 用户名
+- name: "用户名"
   id: 123456789
-  title: 称号
-  mbti: MBTI类型
+  title: "称号"
+  mbti: "MBTI类型"
   reason: |-
     获得此称号的原因（支持多行文本，不要在里面添加任何markdown语法，请使用纯文本）
 \`\`\``
@@ -308,8 +308,9 @@ export const Config: Schema<Config> = Schema.intersect([
 
 请严格按照以下 YAML 格式返回，放在 markdown 代码块中：
 \`\`\`yaml
-- content: 金句原文
-  sender: 发言人昵称（注意不是 ID）
+- content: |-
+    金句原文
+  sender: "发言人昵称（注意不是 ID）"
   reason: |-
     选择这句话的理由（需明确说明逆天特质，不要在里面添加任何markdown语法，请使用纯文本）
 \`\`\``
