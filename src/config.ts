@@ -154,8 +154,7 @@ export const Config: Schema<Config> = Schema.intersect([
     }).description('分析渲染设置'),
     Schema.object({
         model: Schema.dynamic('model')
-            .description('使用的 LLM 模型。')
-            .required(),
+            .description('使用的 LLM 模型。'),
         smallModel: Schema.dynamic('model').description(
             '用于请求解析的小模型（未设置则使用默认模型）。'
         ),
