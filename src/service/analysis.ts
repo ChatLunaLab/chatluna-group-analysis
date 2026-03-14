@@ -886,23 +886,35 @@ export class AnalysisService extends Service {
         const enabledGroups = this.config.listenerGroups.filter(
             (group) => group.enabled
         )
+        const maxConcurrentAnalyses = 3
 
-        await Promise.allSettled(
-            enabledGroups.map(async (group) => {
-                try {
-                    await this.executeGroupAnalysis(
-                        group.selfId,
-                        { guildId: group.guildId, channelId: group.channelId },
-                        this.config.cronAnalysisDays
-                    )
-                } catch (err) {
-                    this.ctx.logger.error(
-                        `群 ${group.guildId || group.channelId} 自动分析失败:`,
-                        err
-                    )
-                }
-            })
-        )
+        for (
+            let index = 0;
+            index < enabledGroups.length;
+            index += maxConcurrentAnalyses
+        ) {
+            const currentBatch = enabledGroups.slice(
+                index,
+                index + maxConcurrentAnalyses
+            )
+
+            await Promise.allSettled(
+                currentBatch.map(async (group) => {
+                    try {
+                        await this.executeGroupAnalysis(
+                            group.selfId,
+                            { guildId: group.guildId, channelId: group.channelId },
+                            this.config.cronAnalysisDays
+                        )
+                    } catch (err) {
+                        this.ctx.logger.error(
+                            `群 ${group.guildId || group.channelId} 自动分析失败:`,
+                            err
+                        )
+                    }
+                })
+            )
+        }
     }
 
     public async getUserPersona(
