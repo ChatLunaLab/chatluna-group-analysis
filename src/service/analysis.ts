@@ -886,20 +886,23 @@ export class AnalysisService extends Service {
         const enabledGroups = this.config.listenerGroups.filter(
             (group) => group.enabled
         )
-        for (const group of enabledGroups) {
-            try {
-                await this.executeGroupAnalysis(
-                    group.selfId,
-                    { guildId: group.guildId, channelId: group.channelId },
-                    this.config.cronAnalysisDays
-                )
-            } catch (err) {
-                this.ctx.logger.error(
-                    `群 ${group.guildId || group.channelId} 自动分析失败:`,
-                    err
-                )
-            }
-        }
+
+        await Promise.allSettled(
+            enabledGroups.map(async (group) => {
+                try {
+                    await this.executeGroupAnalysis(
+                        group.selfId,
+                        { guildId: group.guildId, channelId: group.channelId },
+                        this.config.cronAnalysisDays
+                    )
+                } catch (err) {
+                    this.ctx.logger.error(
+                        `群 ${group.guildId || group.channelId} 自动分析失败:`,
+                        err
+                    )
+                }
+            })
+        )
     }
 
     public async getUserPersona(
