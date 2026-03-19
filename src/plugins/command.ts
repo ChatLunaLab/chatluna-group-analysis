@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import { Context, Session } from 'koishi'
+import { Context, Session, User } from 'koishi'
 import { Config } from '../config'
 import { shouldListenToMessage } from '../utils'
 
@@ -243,7 +243,7 @@ export function apply(ctx: Context, config: Config) {
 
             if (
                 userId !== session.userId &&
-                !(await ctx.permissions.check('authority:3', session))
+                ((session as Session<User.Field>).user?.authority ?? 0) < 3
             ) {
                 await session.send(
                     '你没有权限查看其他用户的画像。当前需要的权限为 3 级。将转为查看自己的画像。'
