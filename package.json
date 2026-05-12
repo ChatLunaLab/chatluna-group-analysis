@@ -1,7 +1,7 @@
 {
     "name": "koishi-plugin-chatluna-group-analysis",
     "description": "一个分析QQ群聊历史并生成精美报告的Koishi插件",
-    "version": "1.3.5",
+    "version": "1.3.6",
     "type": "module",
     "main": "lib/index.cjs",
     "module": "lib/index.mjs",
@@ -79,7 +79,7 @@
         "eslint-plugin-promise": "^7.2.1",
         "koishi": "^4.18.9",
         "koishi-plugin-adapter-onebot": "^6.8.0",
-        "koishi-plugin-chatluna": "^1.3.9",
+        "koishi-plugin-chatluna": "^1.4.0-alpha.14",
         "koishi-plugin-cron": "^3.1.0",
         "koishi-plugin-puppeteer": "^3.9.0",
         "tsx": "^4.19.2",
@@ -91,7 +91,7 @@
     },
     "peerDependencies": {
         "koishi": "^4.18.9",
-        "koishi-plugin-chatluna": "^1.3.0-alpha.49",
+        "koishi-plugin-chatluna": "^1.4.0-alpha.14",
         "koishi-plugin-cron": "^3.1.0"
     },
     "peerDependenciesMeta": {
