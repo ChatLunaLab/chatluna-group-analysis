@@ -66,24 +66,17 @@ function scheduleAutoAnalysis(ctx: Context, config: GroupAnalysisConfig) {
         try {
             await executeAutoAnalysis(ctx, config)
         } catch (error) {
-            logger.warn(`?????????${formatError(error)}`)
+            logger.warn(`自动分析执行失败：${formatError(error)}`)
         }
     }, {
-        onMissingNextRun: () => logger.warn(
-            `???? cron ??????????????${formatCronExpression(config.autoAnalysisCron)}`
-        ),
-        onInvalidCron: (error) => logger.warn(
-            `???? cron ???${formatCronExpression(config.autoAnalysisCron)}?${formatError(error)}`
-        ),
-        onNextRun: (nextRunAt, initial) => {
-            if (initial) {
-                logger.info(
-                    `????????cron=${formatCronExpression(config.autoAnalysisCron)}?nextRunAt=${formatDateTime(nextRunAt)}`
-                )
-            } else {
-                logger.info(`??????????? ${formatDateTime(nextRunAt)}`)
-            }
-        }
+        label: '自动分析',
+        cronLabel: formatCronExpression(config.autoAnalysisCron),
+        warn: (message) => logger.warn(message),
+        info: (nextRunAt, initial) => logger.info(
+            initial
+                ? `自动分析已注册，cron=${formatCronExpression(config.autoAnalysisCron)}，nextRunAt=${formatDateTime(nextRunAt)}`
+                : `下一次自动分析已计划于 ${formatDateTime(nextRunAt)}`
+        )
     })
 
     return () => {
@@ -137,10 +130,11 @@ function createSafeCronTask(
     cron: string,
     onTrigger: () => Promise<void>,
     hooks: {
-        onMissingNextRun?: () => void
-        onInvalidCron?: (error: unknown) => void
-        onNextRun?: (nextRunAt: Date, initial: boolean) => void
-    } = {}
+        label: string
+        cronLabel: string
+        warn: (message: string) => void
+        info?: (nextRunAt: Date, initial: boolean) => void
+    }
 ) {
     let disposed = false
     let timer: ReturnType<typeof setTimeout> | undefined
@@ -152,16 +146,16 @@ function createSafeCronTask(
         try {
             nextRunAt = getNextCronRunAt(cron)
         } catch (error) {
-            hooks.onInvalidCron?.(error)
+            hooks.warn(`${hooks.label} cron 无效：${hooks.cronLabel}，${formatError(error)}`)
             return
         }
 
         if (!nextRunAt) {
-            hooks.onMissingNextRun?.()
+            hooks.warn(`${hooks.label} cron 没有找到有效的未来运行时间：${hooks.cronLabel}`)
             return
         }
 
-        hooks.onNextRun?.(nextRunAt, initial)
+        hooks.info?.(nextRunAt, initial)
         waitUntil(nextRunAt)
         return nextRunAt
     }
@@ -198,7 +192,7 @@ function normalizeCronExpression(expression: string) {
     const fields = expression.trim().split(/\s+/).filter(Boolean)
     if (fields.length === 5) return `0 ${fields.join(' ')}`
     if (fields.length === 6) return fields.join(' ')
-    throw new Error(`cron ?????? 5 ?? 6 ????? ${fields.length} ?`)
+    throw new Error(`cron 表达式必须是 5 位或 6 位，当前为 ${fields.length} 位`)
 }
 
 function formatCronExpression(cron?: string) {
@@ -206,14 +200,8 @@ function formatCronExpression(cron?: string) {
 }
 
 function formatDateTime(date: Date) {
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    const hour = String(date.getHours()).padStart(2, '0')
-    const minute = String(date.getMinutes()).padStart(2, '0')
-    const second = String(date.getSeconds()).padStart(2, '0')
-
-    return `${year}-${month}-${day} ${hour}:${minute}:${second}`
+    const pad = (value: number) => String(value).padStart(2, '0')
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
 }
 
 function formatError(error: unknown) {
