@@ -18,7 +18,7 @@ const GroupListener: Schema<GroupListener> = Schema.object({
 
 
 const AutoAnalysisCronSchema = Schema.string()
-    .description('自动分析的五位 cron 表达式：分钟 小时 日期 月份 星期。例如：0 22 * * *。')
+    .description('自动分析的五位或六位 cron 表达式。五位格式：分钟 小时 日期 月份 星期，例如 0 22 * * *；六位格式：秒 分钟 小时 日期 月份 星期，例如 30 0 22 * * *。')
 
 export interface Config {
     enableAllGroupsByDefault: boolean
