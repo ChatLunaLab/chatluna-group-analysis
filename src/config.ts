@@ -16,6 +16,10 @@ const GroupListener: Schema<GroupListener> = Schema.object({
     enabled: Schema.boolean().default(true).description('是否在此频道启用监听')
 })
 
+
+const AutoAnalysisCronSchema = Schema.string()
+    .description('自动分析的五位 cron 表达式：分钟 小时 日期 月份 星期。例如：0 22 * * *。')
+
 export interface Config {
     enableAllGroupsByDefault: boolean
     listenerGroups: GroupListener[]
@@ -42,7 +46,8 @@ export interface Config {
     maxUsersInReport: number
     userTitleAnalysis: boolean
     groupAnalysisCacheMinutes: number
-    cronSchedule: string
+    autoAnalysisCron?: string
+    autoAnalysisMinTriggerIntervalSeconds: number
     cronAnalysisDays: number
     personaAnalysisMessageInterval: number
     personaCacheLifetimeDays: number
@@ -67,9 +72,13 @@ export const Config: Schema<Config> = Schema.intersect([
             .role('table')
             .description('数据库监听规则列表。')
             .default([]),
-        cronSchedule: Schema.string().description(
-            '定时发送分析报告的 CRON 表达式。留空则禁用。例如 "0 22 * * *" 表示每天22点。'
-        ),
+        autoAnalysisCron: AutoAnalysisCronSchema,
+        autoAnalysisMinTriggerIntervalSeconds: Schema.number()
+            .min(0)
+            .max(86400)
+            .step(1)
+            .default(60)
+            .description('自动分析任务两次实际触发之间的全局最小间隔秒数，0 表示关闭。'),
         cronAnalysisDays: Schema.number()
             .description('定时任务分析的默认天数。')
             .default(1),
@@ -439,6 +448,5 @@ targetTime:
 export const name = 'chatluna-group-analysis'
 
 export const inject = {
-    required: ['puppeteer', 'chatluna', 'database'],
-    optional: ['cron']
+    required: ['puppeteer', 'chatluna', 'database']
 }

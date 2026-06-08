@@ -23,7 +23,7 @@ _Koishi 群聊分析插件_
 2. **智能话题总结** - 集成大语言模型（LLM），自动从聊天记录中总结出核心讨论话题
 3. **自然语言对话** - 基于 LLM 能力，用自然语言就可以从指定的时间，关注的话题等进行群分析（如 「群分析 过去三小时都聊了什么话题」）
 4. **图片报告** - 将分析结果渲染成美观的图片报告，直观易读（使用 Material Design 3 动态配色系统，支持明暗主题切换）
-5. **灵活触发** - 支持通过命令手动触发，也支持通过 CRON 表达式定时自动发送
+5. **灵活触发** - 支持通过命令手动触发，也支持通过五位 cron 表达式安全调度自动分析
 6. **高度可配置** - 支持群组白名单，自定义定时任务等配置选项
 
 ## 部署
@@ -43,9 +43,21 @@ _Koishi 群聊分析插件_
 ### 配置
 
 - `allowedGroups` - 允许使用此插件的群号列表
-- `cronSchedule` - 定时发送报告的 CRON 表达式
-- `cronAnalysisDays` - 定时任务分析的天数
+- `autoAnalysisCron` - 自动分析的五位 cron 表达式；留空则禁用自动分析
+- `autoAnalysisMinTriggerIntervalSeconds` - 自动分析任务两次实际触发之间的全局最小间隔秒数，默认 `60`，设置为 `0` 表示关闭
+- `cronAnalysisDays` - 自动分析任务分析的天数
 - `promptTopic` - 用于话题总结的 Prompt 模板
+
+#### 自动分析 Cron 示例
+
+```yaml
+autoAnalysisCron: '0 22 * * *'
+autoAnalysisMinTriggerIntervalSeconds: 60
+```
+
+支持的 cron 字段语法：`*`、数字、逗号列表、范围和步长，例如 `*/5`、`1,15`、`1-5`、`1-10/2`。
+
+`cronSchedule` 和 `autoAnalysisSchedule` 已不再支持。旧配置中残留这些字段时，插件只会输出迁移警告，不会注册自动分析任务。
 
 ## 感谢
 
