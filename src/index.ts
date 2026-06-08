@@ -61,48 +61,31 @@ function scheduleAutoAnalysis(ctx: Context, config: GroupAnalysisConfig) {
         return () => {}
     }
 
-    let disposed = false
-    let disposeTimer: (() => void) | undefined
-
-    const scheduleNext = (initial = false) => {
-        if (disposed || !config.autoAnalysisCron) return
-
-        const nextRunAt = getNextCronRunAt(config.autoAnalysisCron, new Date())
-        if (!nextRunAt) {
-            logger.warn(
-                `自动分析 cron 没有找到有效的未来运行时间：${formatCronExpression(config.autoAnalysisCron)}`
-            )
-            return
+    const task = createSafeCronTask(config.autoAnalysisCron, async () => {
+        try {
+            await executeAutoAnalysis(ctx, config)
+        } catch (error) {
+            logger.warn(`?????????${formatError(error)}`)
         }
-
-        disposeTimer = scheduleAt(nextRunAt, async () => {
-            try {
-                await executeAutoAnalysis(ctx, config)
-            } catch (error) {
-                logger.warn(`自动分析执行失败：${formatError(error)}`)
-            } finally {
-                if (!disposed) {
-                    scheduleNext()
-                }
+    }, {
+        onMissingNextRun: () => logger.warn(
+            `???? cron ??????????????${formatCronExpression(config.autoAnalysisCron)}`
+        ),
+        onNextRun: (nextRunAt, initial) => {
+            if (initial) {
+                logger.info(
+                    `????????cron=${formatCronExpression(config.autoAnalysisCron)}?nextRunAt=${formatDateTime(nextRunAt)}`
+                )
+            } else {
+                logger.info(`??????????? ${formatDateTime(nextRunAt)}`)
             }
-        })
-
-        if (!initial) {
-            logger.info(`下一次自动分析已计划于 ${formatDateTime(nextRunAt)}`)
-        } else {
-            logger.info(
-                `自动分析已注册，cron=${formatCronExpression(config.autoAnalysisCron)}，nextRunAt=${formatDateTime(nextRunAt)}`
-            )
         }
-    }
-
-    scheduleNext(true)
+    })
 
     return () => {
-        disposed = true
         autoAnalysisRunning = false
         lastAutoAnalysisTriggerAt = undefined
-        disposeTimer?.()
+        task?.dispose()
     }
 }
 
@@ -146,45 +129,70 @@ async function executeAutoAnalysis(ctx: Context, config: GroupAnalysisConfig) {
     }
 }
 
-function scheduleAt(targetTime: Date, callback: () => Promise<void>) {
-    let timer: ReturnType<typeof setTimeout> | undefined
+function createSafeCronTask(
+    cron: string,
+    onTrigger: () => Promise<void>,
+    hooks: {
+        onMissingNextRun?: () => void
+        onNextRun?: (nextRunAt: Date, initial: boolean) => void
+    } = {}
+) {
     let disposed = false
+    let timer: ReturnType<typeof setTimeout> | undefined
 
-    const tick = () => {
+    const scheduleNext = (initial = false): Date | undefined => {
+        if (disposed) return
+
+        const nextRunAt = getNextCronRunAt(cron, new Date())
+        if (!nextRunAt) {
+            hooks.onMissingNextRun?.()
+            return
+        }
+
+        hooks.onNextRun?.(nextRunAt, initial)
+        waitUntil(nextRunAt)
+        return nextRunAt
+    }
+
+    const waitUntil = (targetTime: Date) => {
         if (disposed) return
 
         const remainingMs = targetTime.getTime() - Date.now()
         if (remainingMs <= 0) {
-            void callback()
+            void onTrigger().finally(() => scheduleNext())
             return
         }
 
-        timer = setTimeout(tick, Math.min(remainingMs, MAX_SAFE_DELAY_MS))
+        timer = setTimeout(() => waitUntil(targetTime), Math.min(remainingMs, MAX_SAFE_DELAY_MS))
     }
 
-    tick()
+    const nextRunAt = scheduleNext(true)
+    if (!nextRunAt) return
 
-    return () => {
-        disposed = true
-        if (timer) clearTimeout(timer)
+    return {
+        nextRunAt,
+        dispose: () => {
+            disposed = true
+            if (timer) clearTimeout(timer)
+        }
     }
 }
 
-interface ParsedCronField {
-    values: number[]
+type CronField = {
+    values: Set<number>
     wildcard: boolean
 }
 
-interface ParsedCron {
-    minute: ParsedCronField
-    hour: ParsedCronField
-    dayOfMonth: ParsedCronField
-    month: ParsedCronField
-    dayOfWeek: ParsedCronField
+type ParsedCron = {
+    minute: CronField
+    hour: CronField
+    dayOfMonth: CronField
+    month: CronField
+    dayOfWeek: CronField
 }
 
 function getNextCronRunAt(cron: string, now: Date) {
-    const parsed = parseCronExpression(cron)
+    const parsed = parseCron(cron)
     const start = new Date(now.getTime() + 60 * 1000)
     start.setSeconds(0, 0)
 
@@ -197,94 +205,64 @@ function getNextCronRunAt(cron: string, now: Date) {
     }
 }
 
-function parseCronExpression(expression: string): ParsedCron {
+function parseCron(expression: string): ParsedCron {
     const fields = expression.trim().split(/\s+/).filter(Boolean)
     if (fields.length !== 5) {
-        throw new Error(`cron 表达式必须是 5 位：分钟 小时 日期 月份 星期，当前为 ${fields.length} 位`)
+        throw new Error(`cron ?????? 5 ???? ?? ?? ?? ?????? ${fields.length} ?`)
     }
 
     return {
-        minute: parseCronField(fields[0], 0, 59),
-        hour: parseCronField(fields[1], 0, 23),
-        dayOfMonth: parseCronField(fields[2], 1, 31),
-        month: parseCronField(fields[3], 1, 12),
-        dayOfWeek: parseCronField(fields[4], 0, 7, (value) => value === 7 ? 0 : value)
+        minute: parseField(fields[0], 0, 59),
+        hour: parseField(fields[1], 0, 23),
+        dayOfMonth: parseField(fields[2], 1, 31),
+        month: parseField(fields[3], 1, 12),
+        dayOfWeek: parseField(fields[4], 0, 7, (value) => value === 7 ? 0 : value)
     }
 }
 
-function parseCronField(
+function parseField(
     source: string,
     min: number,
     max: number,
     normalize: (value: number) => number = (value) => value
-): ParsedCronField {
-    const field = String(source).trim()
+): CronField {
+    const field = source.trim()
     if (!field) throw new Error('cron field cannot be empty')
 
     const values = new Set<number>()
-    const parts = field.split(',')
-    for (const part of parts) {
-        addCronPartValues(part.trim(), min, max, normalize, values)
+    for (const part of field.split(',')) {
+        const match = /^(\*|\d+|\d+-\d+)(?:\/(\d+))?$/.exec(part.trim())
+        if (!match) throw new Error(`unsupported cron field syntax: ${part}`)
+
+        const step = match[2] ? Number(match[2]) : 1
+        if (!Number.isInteger(step) || step <= 0) throw new Error(`invalid cron step: ${part}`)
+
+        const [start, end] = match[1] === '*'
+            ? [min, max]
+            : match[1].includes('-')
+                ? match[1].split('-').map(Number)
+                : [Number(match[1]), Number(match[1])]
+
+        if (!Number.isInteger(start) || !Number.isInteger(end) || start < min || end > max || start > end) {
+            throw new Error(`cron value out of range: ${part}`)
+        }
+
+        for (let value = start; value <= end; value += step) {
+            values.add(normalize(value))
+        }
     }
 
     if (!values.size) throw new Error(`cron field has no values: ${source}`)
-    return {
-        values: [...values].sort((left, right) => left - right),
-        wildcard: field === '*'
-    }
-}
-
-function addCronPartValues(
-    part: string,
-    min: number,
-    max: number,
-    normalize: (value: number) => number,
-    values: Set<number>
-) {
-    const match = /^(\*|\d+|\d+-\d+)(?:\/(\d+))?$/.exec(part)
-    if (!match) throw new Error(`unsupported cron field syntax: ${part}`)
-
-    const step = match[2] ? Number(match[2]) : 1
-    if (!Number.isInteger(step) || step <= 0) throw new Error(`invalid cron step: ${part}`)
-
-    const base = match[1]
-    let start: number
-    let end: number
-
-    if (base === '*') {
-        start = min
-        end = max
-    } else if (base.includes('-')) {
-        const [rangeStart, rangeEnd] = base.split('-').map(Number)
-        assertCronValue(rangeStart, min, max, part)
-        assertCronValue(rangeEnd, min, max, part)
-        if (rangeStart > rangeEnd) throw new Error(`invalid cron range: ${part}`)
-        start = rangeStart
-        end = rangeEnd
-    } else {
-        start = Number(base)
-        assertCronValue(start, min, max, part)
-        end = start
-    }
-
-    for (let value = start; value <= end; value += step) {
-        values.add(normalize(value))
-    }
-}
-
-function assertCronValue(value: number, min: number, max: number, source: string) {
-    if (!Number.isInteger(value) || value < min || value > max) {
-        throw new Error(`cron value out of range: ${source}`)
-    }
+    return { values, wildcard: field === '*' }
 }
 
 function matchesCron(date: Date, cron: ParsedCron) {
-    if (!cron.minute.values.includes(date.getMinutes())) return false
-    if (!cron.hour.values.includes(date.getHours())) return false
-    if (!cron.month.values.includes(date.getMonth() + 1)) return false
+    if (!cron.minute.values.has(date.getMinutes())) return false
+    if (!cron.hour.values.has(date.getHours())) return false
+    if (!cron.month.values.has(date.getMonth() + 1)) return false
 
-    const dayOfMonthMatches = cron.dayOfMonth.values.includes(date.getDate())
-    const dayOfWeekMatches = cron.dayOfWeek.values.includes(date.getDay())
+    const dayOfMonthMatches = cron.dayOfMonth.values.has(date.getDate())
+    const dayOfWeekMatches = cron.dayOfWeek.values.has(date.getDay())
 
     if (cron.dayOfMonth.wildcard && cron.dayOfWeek.wildcard) return true
     if (cron.dayOfMonth.wildcard) return dayOfWeekMatches
