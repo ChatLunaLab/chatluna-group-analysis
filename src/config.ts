@@ -43,6 +43,7 @@ export interface Config {
     userTitleAnalysis: boolean
     groupAnalysisCacheMinutes: number
     cronSchedule: string
+    autoAnalysisCooldown: number
     cronAnalysisDays: number
     personaAnalysisMessageInterval: number
     personaCacheLifetimeDays: number
@@ -70,6 +71,14 @@ export const Config: Schema<Config> = Schema.intersect([
         cronSchedule: Schema.string().description(
             '定时发送分析报告的 CRON 表达式。留空则禁用。例如 "0 22 * * *" 表示每天22点。'
         ),
+        autoAnalysisCooldown: Schema.number()
+            .min(0)
+            .max(1440)
+            .step(1)
+            .default(1)
+            .description(
+                '自动分析冷却时间（分钟）。冷却期间即使定时任务多次触发，也只会执行一次。'
+            ),
         cronAnalysisDays: Schema.number()
             .description('定时任务分析的默认天数。')
             .default(1),
@@ -153,8 +162,7 @@ export const Config: Schema<Config> = Schema.intersect([
             .default('md3')
     }).description('分析渲染设置'),
     Schema.object({
-        model: Schema.dynamic('model')
-            .description('使用的 LLM 模型。'),
+        model: Schema.dynamic('model').description('使用的 LLM 模型。'),
         smallModel: Schema.dynamic('model').description(
             '用于请求解析的小模型（未设置则使用默认模型）。'
         ),
@@ -439,6 +447,5 @@ targetTime:
 export const name = 'chatluna-group-analysis'
 
 export const inject = {
-    required: ['puppeteer', 'chatluna', 'database'],
-    optional: ['cron']
+    required: ['puppeteer', 'chatluna', 'database']
 }
