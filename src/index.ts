@@ -1,4 +1,3 @@
-import { parseExpression } from 'cron-parser'
 import { Context } from 'koishi'
 
 import { AnalysisService } from './service/analysis'
@@ -7,15 +6,14 @@ import { RendererService } from './service/renderer'
 import { MessageService } from './service/message'
 import { plugin } from './plugin'
 import type {} from 'koishi-plugin-puppeteer'
-import { Config } from './config'
 import type { Config as GroupAnalysisConfig } from './config'
 import { modelSchema } from 'koishi-plugin-chatluna/utils/schema'
+import { cron } from './cron'
 
 export * from './config'
 export * from './service/message'
 
-const MAX_SAFE_DELAY_MS = 24 * 60 * 60 * 1000
-const DEFAULT_MIN_TRIGGER_INTERVAL_SECONDS = 60
+const DEFAULT_AUTO_ANALYSIS_COOLDOWN_MINUTES = 1
 let autoAnalysisRunning = false
 let lastAutoAnalysisTriggerAt: number | undefined
 
@@ -45,44 +43,28 @@ export function apply(ctx: Context, config: GroupAnalysisConfig) {
 
 function scheduleAutoAnalysis(ctx: Context, config: GroupAnalysisConfig) {
     const logger = ctx.logger('chatluna-group-analysis')
-    const legacyCron = (config as { cronSchedule?: unknown }).cronSchedule
-    const legacySchedule = (config as { autoAnalysisSchedule?: unknown }).autoAnalysisSchedule
-    const legacyTupleCron = Array.isArray((config as { autoAnalysisCron?: unknown }).autoAnalysisCron)
 
-    if (!config.autoAnalysisCron || legacyTupleCron) {
-        if (legacyTupleCron) {
-            logger.warn('autoAnalysisCron 已从五元组改为字符串，请改为类似 0 22 * * * 的五位 cron 表达式')
-        } else if (typeof legacyCron === 'string' && legacyCron.trim()) {
-            logger.warn(
-                `cronSchedule 已不再支持，请迁移到 autoAnalysisCron，cronSchedule=${legacyCron}`
-            )
-        } else if (legacySchedule) {
-            logger.warn('autoAnalysisSchedule 已不再支持，请迁移到 autoAnalysisCron')
-        }
+    if (!config.cronSchedule?.trim()) {
         return () => {}
     }
 
-    const task = createSafeCronTask(config.autoAnalysisCron, async () => {
-        try {
-            await executeAutoAnalysis(ctx, config)
-        } catch (error) {
-            logger.warn(`自动分析执行失败：${formatError(error)}`)
-        }
-    }, {
-        label: '自动分析',
-        cronLabel: formatCronExpression(config.autoAnalysisCron),
-        warn: (message) => logger.warn(message),
-        info: (nextRunAt, initial) => logger.info(
-            initial
-                ? `自动分析已注册，cron=${formatCronExpression(config.autoAnalysisCron)}，nextRunAt=${formatDateTime(nextRunAt)}`
-                : `下一次自动分析已计划于 ${formatDateTime(nextRunAt)}`
-        )
-    })
+    const dispose = cron(
+        ctx,
+        config.cronSchedule,
+        async () => {
+            try {
+                await executeAutoAnalysis(ctx, config)
+            } catch (error) {
+                logger.warn(`自动分析执行失败：${formatError(error)}`)
+            }
+        },
+        getAutoAnalysisCooldownMinutes(config)
+    )
 
     return () => {
         autoAnalysisRunning = false
         lastAutoAnalysisTriggerAt = undefined
-        task?.dispose()
+        dispose()
     }
 }
 
@@ -94,27 +76,19 @@ async function executeAutoAnalysis(ctx: Context, config: GroupAnalysisConfig) {
         return
     }
 
-    const minTriggerIntervalSeconds = Math.max(
-        0,
-        config.autoAnalysisMinTriggerIntervalSeconds
-            ?? DEFAULT_MIN_TRIGGER_INTERVAL_SECONDS
-    )
+    const cooldownMinutes = getAutoAnalysisCooldownMinutes(config)
     const nowMs = Date.now()
 
-    if (minTriggerIntervalSeconds > 0 && lastAutoAnalysisTriggerAt !== undefined) {
-        const minIntervalMs = minTriggerIntervalSeconds * 1000
+    if (cooldownMinutes > 0 && lastAutoAnalysisTriggerAt !== undefined) {
+        const minIntervalMs = cooldownMinutes * 60 * 1000
         const elapsedMs = nowMs - lastAutoAnalysisTriggerAt
 
         if (elapsedMs < minIntervalMs) {
-            const remainingSeconds = Math.ceil((minIntervalMs - elapsedMs) / 1000)
-            logger.warn(
-                `自动分析已跳过：全局最小触发间隔仍在生效，remaining=${remainingSeconds}s，minInterval=${minTriggerIntervalSeconds}s`
-            )
             return
         }
     }
 
-    if (minTriggerIntervalSeconds > 0) {
+    if (cooldownMinutes > 0) {
         lastAutoAnalysisTriggerAt = nowMs
     }
 
@@ -126,82 +100,11 @@ async function executeAutoAnalysis(ctx: Context, config: GroupAnalysisConfig) {
     }
 }
 
-function createSafeCronTask(
-    cron: string,
-    onTrigger: () => Promise<void>,
-    hooks: {
-        label: string
-        cronLabel: string
-        warn: (message: string) => void
-        info?: (nextRunAt: Date, initial: boolean) => void
-    }
-) {
-    let disposed = false
-    let timer: ReturnType<typeof setTimeout> | undefined
-
-    const scheduleNext = (initial = false): Date | undefined => {
-        if (disposed) return
-
-        let nextRunAt: Date | undefined
-        try {
-            nextRunAt = getNextCronRunAt(cron)
-        } catch (error) {
-            hooks.warn(`${hooks.label} cron 无效：${hooks.cronLabel}，${formatError(error)}`)
-            return
-        }
-
-        if (!nextRunAt) {
-            hooks.warn(`${hooks.label} cron 没有找到有效的未来运行时间：${hooks.cronLabel}`)
-            return
-        }
-
-        hooks.info?.(nextRunAt, initial)
-        waitUntil(nextRunAt)
-        return nextRunAt
-    }
-
-    const waitUntil = (targetTime: Date) => {
-        if (disposed) return
-
-        const remainingMs = targetTime.getTime() - Date.now()
-        if (remainingMs <= 0) {
-            void onTrigger().finally(() => scheduleNext())
-            return
-        }
-
-        timer = setTimeout(() => waitUntil(targetTime), Math.min(remainingMs, MAX_SAFE_DELAY_MS))
-    }
-
-    const nextRunAt = scheduleNext(true)
-    if (!nextRunAt) return
-
-    return {
-        nextRunAt,
-        dispose: () => {
-            disposed = true
-            if (timer) clearTimeout(timer)
-        }
-    }
-}
-
-function getNextCronRunAt(cron: string) {
-    return parseExpression(normalizeCronExpression(cron)).next().toDate()
-}
-
-function normalizeCronExpression(expression: string) {
-    const fields = expression.trim().split(/\s+/).filter(Boolean)
-    if (fields.length === 5) return `0 ${fields.join(' ')}`
-    if (fields.length === 6) return fields.join(' ')
-    throw new Error(`cron 表达式必须是 5 位或 6 位，当前为 ${fields.length} 位`)
-}
-
-function formatCronExpression(cron?: string) {
-    return cron?.trim().replace(/\s+/g, '_') || 'missing-cron'
-}
-
-function formatDateTime(date: Date) {
-    const pad = (value: number) => String(value).padStart(2, '0')
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+function getAutoAnalysisCooldownMinutes(config: GroupAnalysisConfig) {
+    return Math.max(
+        0,
+        config.autoAnalysisCooldown ?? DEFAULT_AUTO_ANALYSIS_COOLDOWN_MINUTES
+    )
 }
 
 function formatError(error: unknown) {

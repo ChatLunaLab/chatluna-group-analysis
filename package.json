@@ -48,7 +48,7 @@
         "chrono-node": "^2.9.0",
         "js-yaml": "^4.1.0",
         "zod": "3.25.76",
-        "cron-parser": "^4.9.0"
+        "cron-parser": "^5.5.0"
     },
     "resolutions": {
         "@langchain/core": "^0.3.80",

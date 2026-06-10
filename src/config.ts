@@ -16,10 +16,6 @@ const GroupListener: Schema<GroupListener> = Schema.object({
     enabled: Schema.boolean().default(true).description('是否在此频道启用监听')
 })
 
-
-const AutoAnalysisCronSchema = Schema.string()
-    .description('配置 cron 表达式，兼容五位或六位格式')
-
 export interface Config {
     enableAllGroupsByDefault: boolean
     listenerGroups: GroupListener[]
@@ -46,8 +42,8 @@ export interface Config {
     maxUsersInReport: number
     userTitleAnalysis: boolean
     groupAnalysisCacheMinutes: number
-    autoAnalysisCron?: string
-    autoAnalysisMinTriggerIntervalSeconds: number
+    cronSchedule: string
+    autoAnalysisCooldown: number
     cronAnalysisDays: number
     personaAnalysisMessageInterval: number
     personaCacheLifetimeDays: number
@@ -72,13 +68,17 @@ export const Config: Schema<Config> = Schema.intersect([
             .role('table')
             .description('数据库监听规则列表。')
             .default([]),
-        autoAnalysisCron: AutoAnalysisCronSchema,
-        autoAnalysisMinTriggerIntervalSeconds: Schema.number()
+        cronSchedule: Schema.string().description(
+            '定时发送分析报告的 CRON 表达式。留空则禁用。例如 "0 22 * * *" 表示每天22点。'
+        ),
+        autoAnalysisCooldown: Schema.number()
             .min(0)
-            .max(86400)
+            .max(1440)
             .step(1)
-            .default(60)
-            .description('自动分析任务两次实际触发之间的全局最小间隔秒数，0 表示关闭。'),
+            .default(1)
+            .description(
+                '自动分析冷却时间（分钟）。冷却期间即使定时任务多次触发，也只会执行一次。'
+            ),
         cronAnalysisDays: Schema.number()
             .description('定时任务分析的默认天数。')
             .default(1),
@@ -162,8 +162,7 @@ export const Config: Schema<Config> = Schema.intersect([
             .default('md3')
     }).description('分析渲染设置'),
     Schema.object({
-        model: Schema.dynamic('model')
-            .description('使用的 LLM 模型。'),
+        model: Schema.dynamic('model').description('使用的 LLM 模型。'),
         smallModel: Schema.dynamic('model').description(
             '用于请求解析的小模型（未设置则使用默认模型）。'
         ),
