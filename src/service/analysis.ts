@@ -251,7 +251,7 @@ export class AnalysisService extends Service {
             this.ctx.logger.info(
                 `用户 ${record.userId} 在设定时间窗内仅收集到 ${historyMessages.length} 条消息，低于触发阈值 ${this.config.personaMinMessages}，跳过画像分析。`
             )
-            return
+            return false
         }
 
         const promptMessages = formatMessagesForPersona(historyMessages)
@@ -273,13 +273,14 @@ export class AnalysisService extends Service {
 
         if (!persona) {
             this.ctx.logger.warn(`LLM 未返回用户画像结果 (${record.userId})。`)
-            return
+            return false
         }
 
         const merged = mergePersona(cache.parsedPersona, persona)
         cache.parsedPersona = merged
 
         await this.persistPersona(record, merged)
+        return true
     }
 
     private async collectUserMessagesForPersona(
@@ -975,7 +976,10 @@ export class AnalysisService extends Service {
                     selfId: session.selfId
                 }
 
-                await this.runPersonaAnalysis(cache, sourceGroup)
+                const refreshed = await this.runPersonaAnalysis(
+                    cache,
+                    sourceGroup
+                )
 
                 if (!cache.parsedPersona) {
                     message = h.text(
@@ -983,6 +987,10 @@ export class AnalysisService extends Service {
                     )
                     await session.send(message)
                     return
+                }
+
+                if (!refreshed) {
+                    await session.send('本次未更新，展示旧画像。')
                 }
 
                 cache.pendingMessages = 0
