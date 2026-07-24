@@ -276,9 +276,17 @@ export function inferPlatformInfo(
     return {}
 }
 
-export function getStartTimeByDays(days: number): Date {
+export function getStartTimeByDays(
+    days: number,
+    useCalendarDayWindow = true
+): Date {
     const now = new Date()
     const millisecondsPerDay = 24 * 60 * 60 * 1000
+
+    if (!useCalendarDayWindow) {
+        return new Date(now.getTime() - days * millisecondsPerDay)
+    }
+
     const targetTime = now.getTime() - (days - 1) * millisecondsPerDay
     const startTime = new Date(targetTime)
     startTime.setHours(0, 0, 0, 0)
@@ -330,11 +338,7 @@ export function formatMessagesForPersona(messages: StoredMessage[]): string {
                     .map((text) => text.attrs.content)
                     .join('')
             )
-            const referenceId = message.messageId || message.id
-            const referenceLabel = referenceId
-                ? `msgid:${referenceId}`
-                : `msgid:${message.id}`
-            return `[${time}] ${scope} ${message.username} <${referenceLabel}>: ${normalized}`
+            return `[${time}] ${scope} ${message.username}: ${normalized}`
         })
         .join('\n')
 }

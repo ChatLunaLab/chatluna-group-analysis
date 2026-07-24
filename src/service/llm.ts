@@ -231,13 +231,20 @@ export class LLMService extends Service {
                 String(this.config.personaLookbackDays)
             )
 
-        const resultArray = await this._callLLM<UserPersonaProfile[]>(
-            filledPrompt,
-            '用户画像分析'
-        )
-        const result = resultArray[0] || null
+        const response = await this._callLLM<
+            UserPersonaProfile | UserPersonaProfile[]
+        >(filledPrompt, '用户画像分析')
+        const result = Array.isArray(response) ? response[0] : response
         if (!result) return null
+        result.userId = userId
         result.username = username
+        result.keyTraits = Array.isArray(result.keyTraits)
+            ? result.keyTraits
+            : []
+        result.interests = Array.isArray(result.interests)
+            ? result.interests
+            : []
+        result.evidence = Array.isArray(result.evidence) ? result.evidence : []
         return result
     }
 

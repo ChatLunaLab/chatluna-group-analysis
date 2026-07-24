@@ -45,6 +45,7 @@ export interface Config {
     cronSchedule: string
     autoAnalysisCooldown: number
     cronAnalysisDays: number
+    useCalendarDayWindow: boolean
     personaAnalysisMessageInterval: number
     personaCacheLifetimeDays: number
     personaLookbackDays: number
@@ -82,6 +83,11 @@ export const Config: Schema<Config> = Schema.intersect([
         cronAnalysisDays: Schema.number()
             .description('定时任务分析的默认天数。')
             .default(1),
+        useCalendarDayWindow: Schema.boolean()
+            .default(true)
+            .description(
+                '按自然日计算默认分析时间窗。开启时，1 天从当天 00:00 开始；关闭时，1 天表示从当前时间向前推 24 小时。'
+            ),
         registerTools: Schema.boolean()
             .default(true)
             .description('是否注册用户画像和群聊分析工具到 ChatLuna。')
@@ -326,33 +332,38 @@ export const Config: Schema<Config> = Schema.intersect([
             .description('跨群用户画像分析的提示词模板。')
             .role('textarea')
             .default(
-                `你是一名专业的社群观察员，请基于提供的用户聊天记录，给出该用户的最新画像总结，并在更新时严谨比对历史画像。
+                `请根据历史画像和最近聊天记录，更新这个用户的画像。
+
+用户：{username}（{userId}）
+角色：{roles}
+分析范围：最近 {personaLookbackDays} 天
+
+历史画像：
+{previousAnalysis}
+
+最近聊天记录：
+{messages}
 
 要求：
-1. 先阅读「历史画像」，理解已有结论。
-2. 再阅读「最新聊天记录」，分析过去 {personaLookbackDays} 天内该用户在多个群的活跃情况。
-3. 如果历史画像为空，则从零开始构建；否则基于历史画像。融合生成新的用户画像。
-4. 输出时请确保条理清晰、总结恰当，中性。输出的 yaml 内容里，为纯文本格式，不要包含 markdown 标记，如 ** 加粗。
-5. 注意 evidence，需要选出 15-25 句最具冲击力、最令人惊叹的"金句"。这些金句需满足，**逆天的神人发言**，即具备颠覆常识的脑洞、逻辑跳脱的表达或强烈反差感的原创内容。
+- 只根据提供的聊天记录分析，不要猜测。
+- 有历史画像时合并新旧信息，以最近记录为准。
+- summary 不超过 300 字，communicationStyle 不超过 150 字。
+- evidence 选择 5-15 条有代表性的聊天原文，直接复制原文，不要输出消息 ID。
+- 只返回下面格式的 YAML，不要添加其他内容。
 
-历史画像：{previousAnalysis}
-最新聊天记录：{messages}
-用户角色: {roles}
-
-请严格按照以下 YAML 格式返回，放在代码块中：
 \`\`\`yaml
-- userId: "{userId}"
-  summary: |-
-    对整体聊天记录的提炼（性格特点，发言语气等，几段话）（如果和之前的用户画像合一起，太多了的话，超过了300字，需要精简）
-  keyTraits:
-    - "核心性格特质（列出几点）" （如果和之前的用户画像合一起，太多了的话，需要精简，用字符串围起来）
-  interests:
-    - "关注的主题或爱好" （如果和之前的用户画像合一起，太多了的话，需要精简，用字符串围起来）
-  communicationStyle: |-
-    描述其发言风格和情绪倾向，几段话。（如果和之前的用户画像合一起，太多了的话，超过了150字，需要精简，用字符串围起来）
-  evidence:
-    - "对应上面聊天记录中提供的 id，输出纯 id 的引用"（加入多条组成数组，引用到的聊天消息或者你自己挑选的逆天语句）
-  lastMergedFromHistory: true/false（是否成功融合历史画像）
+userId: "{userId}"
+summary: |-
+  整体画像摘要
+keyTraits:
+  - "性格特质"
+interests:
+  - "兴趣或话题"
+communicationStyle: |-
+  发言风格
+evidence:
+  - "聊天原文"
+lastMergedFromHistory: false
 \`\`\``
             )
     }).description('高级设置'),

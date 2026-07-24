@@ -237,7 +237,8 @@ export class AnalysisService extends Service {
     ) {
         const { record } = cache
         const lookbackStart = getStartTimeByDays(
-            this.config.personaLookbackDays
+            this.config.personaLookbackDays,
+            this.config.useCalendarDayWindow
         )
 
         const historyMessages = await this.collectUserMessagesForPersona(
@@ -275,12 +276,7 @@ export class AnalysisService extends Service {
             return
         }
 
-        const personaWithEvidence = this.attachEvidenceMessageIds(
-            persona,
-            historyMessages
-        )
-
-        const merged = mergePersona(cache.parsedPersona, personaWithEvidence)
+        const merged = mergePersona(cache.parsedPersona, persona)
         cache.parsedPersona = merged
 
         await this.persistPersona(record, merged)
@@ -351,19 +347,21 @@ export class AnalysisService extends Service {
                         record.userId
                     )
                 }
-
-                if (userGroupInfo == null) {
-                    continue
-                }
             } catch (error) {
                 this.ctx.logger.warn(
-                    `获取用户 ${record.userId} 的群组信息失败 (${group.channelId || group.guildId})，可能是未加入该群聊。将跳过此群组的信息获取。`,
+                    `获取用户 ${record.userId} 的群组资料失败 (${group.channelId || group.guildId})，将继续尝试获取历史消息。`,
                     error
                 )
-                continue
             }
 
-            record.roles = userGroupInfo.roles
+            if (userGroupInfo) {
+                record.roles =
+                    userGroupInfo.roles?.map((role) => role.name || role.id) ??
+                    []
+            }
+
+            const remainingLimit = totalLimit - results.length
+            if (remainingLimit <= 0) break
 
             const history =
                 await this.ctx.chatluna_group_analysis_message.getHistoricalMessages(
@@ -374,7 +372,7 @@ export class AnalysisService extends Service {
                         selfId: group.selfId,
                         startTime,
                         endTime: new Date(),
-                        limit: totalLimit,
+                        limit: remainingLimit,
                         purpose: 'user-persona'
                     }
                 )
@@ -395,57 +393,6 @@ export class AnalysisService extends Service {
         results.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
 
         return results
-    }
-
-    private attachEvidenceMessageIds(
-        persona: UserPersonaProfile,
-        messages: StoredMessage[]
-    ): UserPersonaProfile {
-        if (!persona.evidence) {
-            return persona
-        }
-
-        const evidenceEntries = persona.evidence
-        const messageIndex: Record<string, StoredMessage> = {}
-
-        for (const message of messages) {
-            const key = message.messageId || message.id
-            if (key && !messageIndex[key]) {
-                messageIndex[message.messageId] = message
-                messageIndex[message.id] = message
-            }
-        }
-
-        const updated: string[] = []
-
-        for (const entry of evidenceEntries) {
-            const resolvedMessage: StoredMessage | undefined =
-                messageIndex[entry]
-
-            if (resolvedMessage) {
-                updated.push(
-                    h
-                        .select(
-                            resolvedMessage.elements || [
-                                h.text(resolvedMessage.content)
-                            ],
-                            'text'
-                        )
-                        .toString()
-                )
-            } else {
-                this.ctx.logger.warn(
-                    `无法找到画像证据 ${entry} 对应的消息，请检查消息服务是否正常。`
-                )
-            }
-        }
-
-        this.ctx.logger.info(`已解析 ${updated.length} 条画像证据。`)
-
-        return {
-            ...persona,
-            evidence: updated.length ? updated : []
-        }
     }
 
     private async persistPersona(
@@ -479,7 +426,10 @@ export class AnalysisService extends Service {
             `开始从消息服务获取群组 ${targetId} 近 ${days} 天的消息记录...`
         )
 
-        const startTime = getStartTimeByDays(days)
+        const startTime = getStartTimeByDays(
+            days,
+            this.config.useCalendarDayWindow
+        )
 
         const endTime = new Date()
 
@@ -588,7 +538,11 @@ export class AnalysisService extends Service {
         }
 
         if (!end) end = now
-        if (!start) start = getStartTimeByDays(fallbackDays)
+        if (!start)
+            start = getStartTimeByDays(
+                fallbackDays,
+                this.config.useCalendarDayWindow
+            )
 
         if (start > end) {
             const temp = start
@@ -903,7 +857,10 @@ export class AnalysisService extends Service {
                     try {
                         await this.executeGroupAnalysis(
                             group.selfId,
-                            { guildId: group.guildId, channelId: group.channelId },
+                            {
+                                guildId: group.guildId,
+                                channelId: group.channelId
+                            },
                             this.config.cronAnalysisDays
                         )
                     } catch (err) {
