@@ -409,7 +409,10 @@ export class AnalysisService extends Service {
         record.lastAnalysisAt = now
         record.updatedAt = now
 
-        await this.ctx.database.upsert('chatluna_user_personas', [record])
+        // 删除 roles 以适配其他适配器
+        const { roles: _roles, ...persistedRecord } = record
+
+        await this.ctx.database.upsert('chatluna_user_personas', [persistedRecord])
     }
 
     private async _getGroupHistoryFromMessageService(
