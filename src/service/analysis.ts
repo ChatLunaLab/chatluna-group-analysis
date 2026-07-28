@@ -410,8 +410,7 @@ export class AnalysisService extends Service {
         record.updatedAt = now
 
         // 删除 roles 以适配其他适配器
-        const persistedRecord: PersonaRecord = { ...record }
-        delete persistedRecord.roles
+        const { roles: _roles, ...persistedRecord } = record
 
         await this.ctx.database.upsert('chatluna_user_personas', [persistedRecord])
     }
