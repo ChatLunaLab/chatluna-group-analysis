@@ -1,108 +1,169 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>群聊分析报告</title>
-    <link rel="stylesheet" href="./css/template_group.css" />
-</head>
-<body class="${theme}-theme">
-
-    <div class="nahida-container">
-        <!-- Decorations -->
-        <img src="./images/decoration_tl.svg" class="deco-tl" alt="" />
-        <img src="./images/decoration_br.svg" class="deco-br" alt="" />
-        
-        <!-- Header -->
-        <div class="header-area">
-            <div class="header-title">
-                <h1>群聊分析报告</h1>
-                <div class="subtitle">Group Analysis Report</div>
-            </div>
-            <div class="header-meta">
-                <div class="date">${analysisDate}</div>
-                <div class="group-id">${groupName}</div>
-            </div>
-        </div>
-
-        <div class="main-content">
-            
-            <!-- Status Grid -->
-            <div class="grid-4">
-                <div class="stat-sticker">
-                    <div class="label">总消息</div>
-                    <div class="value">${totalMessages}</div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="color-scheme" content="light dark" />
+        <title>群聊分析报告</title>
+        <link rel="stylesheet" href="./css/template_group.css" />
+    </head>
+    <body class="${theme}-theme">
+        <main class="anime-container">
+            <header class="hero">
+                <div class="hero-topline">
+                    <div class="hero-label">
+                        <span class="mini-flower" aria-hidden="true"></span>
+                        群聊日常收藏计划
+                    </div>
+                    <div class="report-date">
+                        <span>记录日期</span>
+                        ${analysisDate}
+                    </div>
                 </div>
-                <div class="stat-sticker">
-                    <div class="label">参与人数</div>
-                    <div class="value">${totalParticipants}</div>
+
+                <div class="hero-main">
+                    <div class="hero-copy">
+                        <div class="hero-overline">群聊分析报告</div>
+                        <h1>我们的<br /><span>群聊小日常</span></h1>
+                        <p class="hero-description">
+                            把一起笑过、聊过的瞬间，<br />
+                            夹进今天这一页。
+                        </p>
+                        <div class="group-name">
+                            <span class="group-name-icon" aria-hidden="true">♡</span>
+                            <span>${groupName}</span>
+                        </div>
+                    </div>
+
+                    <div class="hero-art" aria-hidden="true">
+                        <span class="art-star star-one">✦</span>
+                        <span class="art-star star-two">✦</span>
+                        <div class="letter-card">
+                            <span class="washi-tape"></span>
+                            <div class="ribbon-bow"><i></i></div>
+                            <span class="letter-small">今日限定</span>
+                            <div class="heart-pair">
+                                <span class="heart-outline">♡</span>
+                                <span class="heart-filled">♥</span>
+                            </div>
+                            <p>
+                                平凡的小事<br />
+                                <strong>也值得被认真收藏</strong>
+                            </p>
+                            <div class="letter-divider"><span>✦</span></div>
+                            <span class="letter-footer">快乐正在发生</span>
+                        </div>
+                        <span class="pressed-flower flower-one"></span>
+                        <span class="pressed-flower flower-two"></span>
+                        <div class="art-note">可爱<br />加倍</div>
+                    </div>
                 </div>
-                <div class="stat-sticker">
-                    <div class="label">总字数</div>
-                    <div class="value">${totalChars}</div>
+
+                <div class="stats-grid">
+                    <div class="stat-sticker">
+                        <span class="stat-icon" aria-hidden="true">✉</span>
+                        <div class="stat-copy">
+                            <div class="label">总消息</div>
+                            <div class="value">${totalMessages}</div>
+                        </div>
+                    </div>
+                    <div class="stat-sticker">
+                        <span class="stat-icon" aria-hidden="true">♡</span>
+                        <div class="stat-copy">
+                            <div class="label">参与人数</div>
+                            <div class="value">${totalParticipants}</div>
+                        </div>
+                    </div>
+                    <div class="stat-sticker">
+                        <span class="stat-icon" aria-hidden="true">✎</span>
+                        <div class="stat-copy">
+                            <div class="label">总字数</div>
+                            <div class="value">${totalChars}</div>
+                        </div>
+                    </div>
+                    <div class="stat-sticker">
+                        <span class="stat-icon" aria-hidden="true">☼</span>
+                        <div class="stat-copy">
+                            <div class="label">活跃时段</div>
+                            <div class="value active-period">${mostActivePeriod}</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-sticker">
-                    <div class="label">活跃时段</div>
-                    <div class="value">${mostActivePeriod}</div>
-                </div>
-            </div>
+            </header>
 
-            <!-- Leaderboard -->
-            <div class="section-header">
-                <div class="section-icon">1</div>
-                <h2 class="section-title">龙王榜</h2>
-            </div>
-            <div class="grid-2">
-                ${userStats}
-            </div>
+            <div class="main-content">
+                <section class="report-section">
+                    <div class="section-header">
+                        <div class="section-heading">
+                            <span class="section-icon" aria-hidden="true">✿</span>
+                            <h2 class="section-title">群友活跃榜</h2>
+                        </div>
+                        <div class="section-note">每一次发言都有回响</div>
+                    </div>
+                    <div class="grid-2">${userStats}</div>
+                </section>
 
-            <!-- Titles -->
-            <div class="section-header">
-                <div class="section-icon">2</div>
-                <h2 class="section-title">群友称号</h2>
-            </div>
-            <div class="grid-2">
-                ${userTitles}
-            </div>
+                <section class="report-section">
+                    <div class="section-header">
+                        <div class="section-heading">
+                            <span class="section-icon" aria-hidden="true">❀</span>
+                            <h2 class="section-title">群友称号</h2>
+                        </div>
+                        <div class="section-note">给独一无二的你</div>
+                    </div>
+                    <div class="grid-2">${userTitles}</div>
+                </section>
 
-            <!-- Topics -->
-            <div class="section-header">
-                <div class="section-icon">3</div>
-                <h2 class="section-title">热门话题</h2>
-            </div>
-            <div class="bubble-container">
-                ${topics}
-            </div>
+                <section class="report-section">
+                    <div class="section-header">
+                        <div class="section-heading">
+                            <span class="section-icon" aria-hidden="true">☁</span>
+                            <h2 class="section-title">今天聊了什么</h2>
+                        </div>
+                        <div class="section-note">热门话题收藏夹</div>
+                    </div>
+                    <div class="topic-grid">${topics}</div>
+                </section>
 
-            <!-- Quotes -->
-            <div class="section-header">
-                <div class="section-icon">4</div>
-                <h2 class="section-title">本群圣经</h2>
-            </div>
-            <div class="bubble-container">
-                ${goldenQuotes}
-            </div>
+                <section class="report-section">
+                    <div class="section-header">
+                        <div class="section-heading">
+                            <span class="section-icon" aria-hidden="true">♡</span>
+                            <h2 class="section-title">值得收藏的发言</h2>
+                        </div>
+                        <div class="section-note">再看一次还是会笑</div>
+                    </div>
+                    <div class="quote-grid">${goldenQuotes}</div>
+                </section>
 
-            <!-- Chart -->
-            <div class="section-header">
-                <div class="section-icon">5</div>
-                <h2 class="section-title">活跃分布</h2>
-            </div>
-            ${activeHoursChart}
+                <section class="report-section">
+                    <div class="section-header">
+                        <div class="section-heading">
+                            <span class="section-icon" aria-hidden="true">✦</span>
+                            <h2 class="section-title">一整天的活跃足迹</h2>
+                        </div>
+                        <div class="section-note">从清晨到深夜</div>
+                    </div>
+                    ${activeHoursChart}
+                </section>
 
-            <div class="footer">
-                Generated by ChatLuna | Nahida Theme Ver. 3.0
+                <footer class="footer">
+                    <span class="footer-line"></span>
+                    <span class="footer-symbol" aria-hidden="true">♡</span>
+                    <p>由 ChatLuna 生成 · 把平凡日常收藏成甜甜的纪念</p>
+                    <span class="footer-symbol" aria-hidden="true">♡</span>
+                    <span class="footer-line"></span>
+                </footer>
             </div>
-        </div>
-    </div>
+        </main>
 
-    <script>
-        const body = document.body;
-        if (!body.className.includes('theme') || body.className.includes('auto')) {
-            const hour = new Date().getHours();
-            body.classList.remove('auto-theme');
-            body.classList.add(hour >= 19 || hour < 6 ? 'dark-theme' : 'light-theme');
-        }
-    </script>
-</body>
+        <script>
+            const body = document.body
+            if (body.classList.contains('auto-theme')) {
+                const hour = new Date().getHours()
+                body.classList.remove('auto-theme')
+                body.classList.add(hour >= 19 || hour < 6 ? 'dark-theme' : 'light-theme')
+            }
+        </script>
+    </body>
 </html>
