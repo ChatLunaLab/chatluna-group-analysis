@@ -1,99 +1,157 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>用户画像报告</title>
-    <link rel="stylesheet" href="./css/template_group.css" />
-</head>
-<body class="${theme}-theme">
-
-    <div class="nahida-container">
-        <!-- Decorations -->
-        <img src="./images/decoration_tl.svg" class="deco-tl" alt="" />
-        <img src="./images/decoration_br.svg" class="deco-br" alt="" />
-
-        <!-- Header -->
-        <div class="header-area">
-            <div class="header-title">
-                <h1>用户画像</h1>
-                <div class="subtitle">User Persona Report</div>
-            </div>
-            <div class="header-meta">
-                <div class="date">${analysisDate}</div>
-                <div class="group-id">ID: ${username}</div>
-            </div>
-        </div>
-
-        <div class="main-content">
-            
-            <!-- Profile Hero -->
-            <div class="profile-hero">
-                <img src="${avatar}" alt="User Avatar" class="profile-avatar-lg" />
-                <div class="profile-name">${username}</div>
-                <div class="tag-container" style="margin-top: 10px;">
-                   <span class="tag">生成于 ${analysisDate}</span>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="color-scheme" content="light dark" />
+        <title>用户画像报告</title>
+        <link rel="stylesheet" href="./css/template_group.css" />
+    </head>
+    <body class="${theme}-theme">
+        <main class="anime-container">
+            <header class="hero">
+                <div class="hero-topline">
+                    <div class="hero-label">
+                        <span class="mini-flower" aria-hidden="true"></span>
+                        用户日常收藏计划
+                    </div>
+                    <div class="report-date">
+                        <span>记录日期</span>
+                        ${analysisDate}
+                    </div>
                 </div>
-            </div>
 
-            <!-- Summary -->
-            <div class="section-header">
-                <div class="section-icon">A</div>
-                <h2 class="section-title">个性摘要</h2>
-            </div>
-            <div class="bubble">
-                <div class="bubble-text">${summary}</div>
-            </div>
+                <div class="hero-main">
+                    <div class="hero-copy">
+                        <div class="hero-overline">用户画像报告</div>
+                        <h1>你的<br /><span>可爱小档案</span></h1>
+                        <p class="hero-description">
+                            从聊天里拾起小小的线索，<br />
+                            拼凑出独一无二的你。
+                        </p>
+                        <div class="group-name">
+                            <span class="group-name-icon" aria-hidden="true">♡</span>
+                            <span>${username}</span>
+                        </div>
+                    </div>
 
-            <!-- Traits -->
-            <div class="section-header">
-                <div class="section-icon">B</div>
-                <h2 class="section-title">核心特质</h2>
-            </div>
-            <div class="tag-container">
-                ${keyTraits}
-            </div>
+                    <div class="hero-art" aria-hidden="true">
+                        <span class="art-star star-one">✦</span>
+                        <span class="art-star star-two">✦</span>
+                        <div class="letter-card">
+                            <span class="washi-tape"></span>
+                            <div class="ribbon-bow"><i></i></div>
+                            <span class="letter-small">关于你</span>
+                            <div class="heart-pair">
+                                <span class="heart-outline">♡</span>
+                                <span class="heart-filled">♥</span>
+                            </div>
+                            <p>
+                                每一件小事<br />
+                                <strong>都值得好好收藏</strong>
+                            </p>
+                            <div class="letter-divider"><span>✦</span></div>
+                            <span class="letter-footer">今天也想多了解你一点</span>
+                        </div>
+                        <span class="pressed-flower flower-one"></span>
+                        <span class="pressed-flower flower-two"></span>
+                        <div class="art-note">喜欢<br />自己</div>
+                    </div>
+                </div>
+            </header>
 
-            <!-- Interests -->
-            <div class="section-header">
-                <div class="section-icon">C</div>
-                <h2 class="section-title">兴趣领域</h2>
-            </div>
-            <div class="tag-container">
-                ${interests}
-            </div>
+            <div class="main-content">
+                <div class="profile-hero">
+                    <div class="profile-avatar-wrap">
+                        <img src="${avatar}" alt="${username} 的头像" class="profile-avatar-lg" />
+                    </div>
+                    <div class="profile-copy">
+                        <span class="profile-label">本次观察对象</span>
+                        <div class="profile-name">${username}</div>
+                        <p>从聊天里，认识更立体的你。</p>
+                    </div>
+                    <div class="profile-date">
+                        <span>生成于</span>
+                        ${analysisDate}
+                    </div>
+                </div>
 
-            <!-- Communication -->
-            <div class="section-header">
-                <div class="section-icon">D</div>
-                <h2 class="section-title">沟通风格</h2>
-            </div>
-            <div class="bubble">
-                <div class="bubble-text">${communicationStyle}</div>
-            </div>
+                <section class="report-section">
+                    <div class="section-header">
+                        <div class="section-heading">
+                            <span class="section-icon" aria-hidden="true">♡</span>
+                            <h2 class="section-title">个性摘要</h2>
+                        </div>
+                        <div class="section-note">关于你的第一印象</div>
+                    </div>
+                    <div class="bubble summary-card">
+                        <div class="bubble-text">${summary}</div>
+                    </div>
+                </section>
 
-            <!-- Evidence -->
-            <div class="section-header">
-                <div class="section-icon">E</div>
-                <h2 class="section-title">事实依据</h2>
-            </div>
-            <div class="evidence-list-container">
-                ${evidence}
-            </div>
+                <section class="report-section">
+                    <div class="section-header">
+                        <div class="section-heading">
+                            <span class="section-icon" aria-hidden="true">✿</span>
+                            <h2 class="section-title">核心特质</h2>
+                        </div>
+                        <div class="section-note">藏在字里行间的小个性</div>
+                    </div>
+                    <div class="tag-container">${keyTraits}</div>
+                </section>
 
-            <div class="footer">
-                Generated by ChatLuna | Nahida Theme Ver. 3.0
-            </div>
-        </div>
-    </div>
+                <section class="report-section">
+                    <div class="section-header">
+                        <div class="section-heading">
+                            <span class="section-icon" aria-hidden="true">❀</span>
+                            <h2 class="section-title">兴趣领域</h2>
+                        </div>
+                        <div class="section-note">让眼睛亮起来的事</div>
+                    </div>
+                    <div class="tag-container interest-tags">${interests}</div>
+                </section>
 
-    <script>
-        const body = document.body;
-        if (!body.className.includes('theme') || body.className.includes('auto')) {
-            const hour = new Date().getHours();
-            body.classList.remove('auto-theme');
-            body.classList.add(hour >= 19 || hour < 6 ? 'dark-theme' : 'light-theme');
-        }
-    </script>
-</body>
+                <section class="report-section">
+                    <div class="section-header">
+                        <div class="section-heading">
+                            <span class="section-icon" aria-hidden="true">☁</span>
+                            <h2 class="section-title">沟通风格</h2>
+                        </div>
+                        <div class="section-note">你和大家相处的方式</div>
+                    </div>
+                    <div class="bubble summary-card communication-card">
+                        <div class="bubble-text">${communicationStyle}</div>
+                    </div>
+                </section>
+
+                <section class="report-section">
+                    <div class="section-header">
+                        <div class="section-heading">
+                            <span class="section-icon" aria-hidden="true">✎</span>
+                            <h2 class="section-title">事实依据</h2>
+                        </div>
+                        <div class="section-note">这些观察都有迹可循</div>
+                    </div>
+                    <div class="evidence-list-container">${evidence}</div>
+                </section>
+
+                <footer class="footer">
+                    <span class="footer-line"></span>
+                    <span class="footer-symbol" aria-hidden="true">♡</span>
+                    <p>由 ChatLuna 生成 · 认真收藏每一个独一无二的你</p>
+                    <span class="footer-symbol" aria-hidden="true">♡</span>
+                    <span class="footer-line"></span>
+                </footer>
+            </div>
+        </main>
+
+        <script>
+            const body = document.body
+            if (body.classList.contains('auto-theme')) {
+                const hour = new Date().getHours()
+                body.classList.remove('auto-theme')
+                body.classList.add(hour >= 19 || hour < 6 ? 'dark-theme' : 'light-theme')
+            }
+        </script>
+    </body>
 </html>
