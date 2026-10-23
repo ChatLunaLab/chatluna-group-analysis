@@ -1,10 +1,9 @@
-import { h } from "koishi"
+import type { h } from 'koishi'
 
 export interface OneBotMessage {
     message_id: number
     message_seq: number
     time: number
-    message: string | OneBotMessageType[]
     raw_message: string
     sender: {
         user_id: number
@@ -13,12 +12,6 @@ export interface OneBotMessage {
     }
 }
 
-export interface OneBotMessageType {
-    type: string
-    data: Record<string, string>
-}
-
-// 用户统计信息
 export interface UserStats {
     userId: string
     nickname: string
@@ -37,14 +30,12 @@ export interface UserStats {
     activeHours: Record<number, number>
 }
 
-// 话题总结
 export interface SummaryTopic {
     topic: string
     contributors: string[]
     detail: string
 }
 
-// 用户称号
 export interface UserTitle {
     name: string
     id: number
@@ -54,7 +45,6 @@ export interface UserTitle {
     avatar?: string
 }
 
-// 金句
 export interface GoldenQuote {
     content: string
     sender: string
@@ -73,7 +63,6 @@ export interface UserPersonaProfile {
     lastMergedFromHistory?: boolean
 }
 
-// 最终的群聊分析报告数据结构
 export interface GroupAnalysisResult {
     totalMessages: number
     totalChars: number
@@ -85,13 +74,10 @@ export interface GroupAnalysisResult {
     topics: SummaryTopic[]
     userTitles: UserTitle[]
     goldenQuotes: GoldenQuote[]
-    activeHoursChart: string
     activeHoursData: Record<number, number>
     analysisDate: string
     groupName: string
 }
-
-export type QueryAction = '只分析' | '分析加对话' | '只对话'
 
 export interface QueryTargetTime {
     description?: string
@@ -100,7 +86,7 @@ export interface QueryTargetTime {
 }
 
 export interface QueryIntent {
-    action?: QueryAction
+    action?: '只分析' | '分析加对话' | '只对话'
     keywords?: string[]
     topics?: string[]
     nicknames?: string[]
@@ -114,8 +100,8 @@ export interface AnalysisPromptContext {
     nicknames?: string[]
     query?: string
     timeRange?: {
-        start?: Date
-        end?: Date
+        start: Date
+        end: Date
         description?: string
     }
 }
@@ -127,18 +113,8 @@ export interface BasicStatsResult {
     allMessagesText: string[]
 }
 
-export interface GroupMessageFetchFilter {
-    guildId?: string
-    channelId?: string
-    userId?: string[]
-    selfId?: string
-    startTime?: string
-    endTime?: string
-    limit?: number
-    offset?: number
-}
-
 export interface MessageFilter {
+    platform?: string
     guildId?: string
     channelId?: string
     userId?: string[]
@@ -190,5 +166,5 @@ export interface PersonaRecord {
 export interface PersonaCache {
     record: PersonaRecord
     pendingMessages: number
-    parsedPersona?: UserPersonaProfile | null
+    parsedPersona: UserPersonaProfile | null
 }
