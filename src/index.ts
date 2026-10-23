@@ -1,14 +1,14 @@
 import { Context } from 'koishi'
-
+import { modelSchema } from 'koishi-plugin-chatluna/utils/schema'
+import type {} from 'koishi-plugin-puppeteer'
 import { AnalysisService } from './service/analysis'
 import { LLMService } from './service/llm'
-import { RendererService } from './service/renderer'
 import { MessageService } from './service/message'
+import { PersonaService } from './service/persona'
+import { RendererService } from './service/renderer'
+import { Config as GroupAnalysisConfig } from './config'
 import { plugin } from './plugin'
-import type {} from 'koishi-plugin-puppeteer'
-import type { Config as GroupAnalysisConfig } from './config'
-import { modelSchema } from 'koishi-plugin-chatluna/utils/schema'
-import { cron } from './cron'
+import { cron } from './utils/cron'
 
 export * from './config'
 export * from './service/message'
@@ -16,19 +16,11 @@ export * from './service/message'
 export function apply(ctx: Context, config: GroupAnalysisConfig) {
     ctx.plugin(MessageService, config)
     ctx.plugin(LLMService, config)
-    ctx.plugin(AnalysisService, config)
     ctx.plugin(RendererService, config)
+    ctx.plugin(PersonaService, config)
+    ctx.plugin(AnalysisService, config)
 
-    ctx.inject(
-        [
-            'chatluna_group_analysis_message',
-            'chatluna_group_analysis_llm',
-            'chatluna_group_analysis_renderer'
-        ],
-        (ctx) => {
-            plugin(ctx, config)
-        }
-    )
+    plugin(ctx, config)
 
     ctx.inject(['chatluna_group_analysis'], (ctx) => {
         ctx.effect(() => scheduleAutoAnalysis(ctx, config))
@@ -38,9 +30,7 @@ export function apply(ctx: Context, config: GroupAnalysisConfig) {
 }
 
 function scheduleAutoAnalysis(ctx: Context, config: GroupAnalysisConfig) {
-    if (!config.cronSchedule?.trim()) {
-        return () => {}
-    }
+    if (!config.cronSchedule || !config.cronSchedule.trim()) return () => {}
 
     return cron(
         ctx,

@@ -9,12 +9,11 @@
         "composite": true,
         "incremental": true,
         "skipLibCheck": true,
+        "strictNullChecks": false,
         "esModuleInterop": true,
         "moduleResolution": "Bundler",
         "jsx": "react-jsx",
         "jsxImportSource": "@satorijs/element"
     },
-    "include": [
-        "src"
-    ]
+    "include": ["src"]
 }

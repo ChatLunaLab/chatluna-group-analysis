@@ -1,5 +1,5 @@
 import { Context } from 'koishi'
-import { Config } from '.'
+import { Config } from './config'
 import * as command from './plugins/command'
 import * as tool from './plugins/tool'
 import * as promptVariable from './plugins/prompt_variable'
