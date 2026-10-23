@@ -55,8 +55,6 @@ export function buildGroupAnalysisCacheKey(
     target: { guildId?: string; channelId?: string },
     days: number
 ) {
-    const targetId = target.guildId
-        ? `guild:${target.guildId}`
-        : `channel:${target.channelId}`
+    const targetId = `${target.guildId || ''}/${target.channelId || ''}`
     return `${selfId}:${targetId}:${days}`
 }

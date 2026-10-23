@@ -13,7 +13,7 @@ export function parseCQCode(source: string): h[] {
                 h('text', { content: unescape(source.slice(0, capture.index)) })
             )
 
-        const data: Record<string, string> = {}
+        const data: Record<string, string | number> = {}
         if (rawAttrs) {
             rawAttrs
                 .slice(1)
@@ -23,6 +23,8 @@ export function parseCQCode(source: string): h[] {
                     data[attr.slice(0, index)] = unescape(attr.slice(index + 1))
                 })
         }
+        if (type === 'image' && data.sub_type !== undefined)
+            data.subType = Number(data.sub_type)
         elements.push(h(type, data))
         source = source.slice(capture.index + capture[0].length)
     }

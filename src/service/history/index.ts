@@ -13,15 +13,23 @@ export async function readHistoricalMessages(
 ) {
     const listener = config.listenerGroups.find(
         (item) =>
+            (!filter.platform || item.platform === filter.platform) &&
+            (!filter.selfId || item.selfId === filter.selfId) &&
             (!filter.guildId || item.guildId === filter.guildId) &&
             (!filter.channelId || item.channelId === filter.channelId)
     )
-    const bot = ctx.bots.find((item) => item.selfId === filter.selfId)
+    const bot = ctx.bots.find(
+        (item) =>
+            (!filter.platform || item.platform === filter.platform) &&
+            item.selfId === filter.selfId
+    )
     const request: MessageFilter = {
         ...filter,
         limit: filter.limit || 100,
-        platform: listener ? listener.platform : bot && bot.platform,
-        selfId: listener ? listener.selfId : filter.selfId
+        platform:
+            filter.platform ||
+            (listener ? listener.platform : bot && bot.platform),
+        selfId: filter.selfId || (listener && listener.selfId)
     }
 
     try {

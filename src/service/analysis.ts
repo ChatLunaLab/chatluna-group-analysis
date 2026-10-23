@@ -296,10 +296,16 @@ export class AnalysisService extends Service {
             )
         ])
 
-        for (const result of results) {
-            if (result.status === 'rejected')
-                this.ctx.logger.warn('部分 LLM 分析失败:', result.reason)
+        const llmResults = this.config.userTitleAnalysis
+            ? results
+            : [results[0], results[2]]
+        const errors: unknown[] = []
+        for (const result of llmResults) {
+            if (result.status === 'fulfilled') continue
+            errors.push(result.reason)
+            this.ctx.logger.warn('部分 LLM 分析失败:', result.reason)
         }
+        if (errors.length === llmResults.length) throw errors[0]
         const [topicsResult, titlesResult, quotesResult] = results
         const topics =
             topicsResult.status === 'fulfilled' ? topicsResult.value : []

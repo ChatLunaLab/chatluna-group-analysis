@@ -10,18 +10,20 @@ export function apply(ctx: Context, config: Config) {
     const appContext = ctx.scope.parent
     const checkGroup = (
         session: Session,
-        target: { guildId?: string; channelId?: string } = {}
-    ) =>
-        shouldListenToMessage(
+        target?: { guildId?: string; channelId?: string }
+    ) => {
+        const scope = target || session
+        return shouldListenToMessage(
             {
-                guildId: target.guildId || session.guildId || undefined,
-                channelId: target.channelId || session.channelId || undefined,
+                guildId: scope.guildId,
+                channelId: scope.channelId,
                 platform: session.platform,
                 selfId: session.selfId
             },
             config.listenerGroups,
             config.enableAllGroupsByDefault
         )
+    }
 
     const findListener = (session: Session) =>
         config.listenerGroups.find(
@@ -59,8 +61,11 @@ export function apply(ctx: Context, config: Config) {
                 return '私聊中请使用 -g 或 -c 指定目标群或频道。'
             }
 
-            const guildId = options.group || session.guildId || undefined
-            const channelId = options.channel || session.channelId || undefined
+            const explicit = options.group || options.channel
+            const guildId =
+                options.group || (explicit ? undefined : session.guildId)
+            const channelId =
+                options.channel || (explicit ? undefined : session.channelId)
             if (!guildId && !channelId)
                 return '请使用 -g 或 -c 指定目标群或频道。'
             if (!checkGroup(session, { guildId, channelId })) {

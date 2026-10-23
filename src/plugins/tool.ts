@@ -109,6 +109,7 @@ class GroupMessageFetchTool extends StructuredTool {
         const filter: MessageFilter = {
             guildId: session.guildId,
             channelId: session.channelId,
+            platform: session.platform,
             userId: raw.userId,
             selfId: session.selfId,
             limit: Math.min(raw.limit || 100, 500),

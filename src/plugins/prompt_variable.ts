@@ -27,6 +27,7 @@ export function apply(ctx: Context, config: Config) {
                             {
                                 guildId: session.guildId,
                                 channelId: session.channelId,
+                                platform: session.platform,
                                 selfId: session.selfId,
                                 limit: Math.min(limit, 500),
                                 purpose: 'general'

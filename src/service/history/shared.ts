@@ -30,7 +30,8 @@ export function sortHistoryMessages(
     messages: StoredMessage[],
     filter: MessageFilter
 ) {
-    return messages
-        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-        .slice(0, filter.limit)
+    const sorted = messages.sort(
+        (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+    )
+    return filter.limit ? sorted.slice(-filter.limit) : sorted
 }

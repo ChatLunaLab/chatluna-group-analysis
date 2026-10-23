@@ -357,7 +357,9 @@ export class PersonaService extends Service {
         const results: StoredMessage[] = []
         for (const group of groups) {
             const bot = this.ctx.bots.find(
-                (item) => item.selfId === group.selfId
+                (item) =>
+                    item.platform === group.platform &&
+                    item.selfId === group.selfId
             )
             if (!bot) continue
 
@@ -392,6 +394,7 @@ export class PersonaService extends Service {
             const history =
                 await this.ctx.chatluna_group_analysis_message.getHistoricalMessages(
                     {
+                        platform: group.platform,
                         guildId: group.guildId,
                         channelId: group.channelId,
                         userId: [record.userId],
@@ -425,7 +428,11 @@ export class PersonaService extends Service {
         })
         record.lastAnalysisAt = now
         record.updatedAt = now
-        await this.ctx.database.upsert('chatluna_user_personas', [record])
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { roles: _roles, ...persistedRecord } = record
+        await this.ctx.database.upsert('chatluna_user_personas', [
+            persistedRecord
+        ])
     }
 }
 

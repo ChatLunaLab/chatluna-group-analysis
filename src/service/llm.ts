@@ -36,8 +36,8 @@ const goldenQuoteSchema = z.object({
 })
 
 const personaSchema = z.object({
-    userId: z.string(),
-    username: z.string(),
+    userId: z.string().optional(),
+    username: z.string().optional(),
     summary: z.string(),
     keyTraits: z.array(z.string()),
     interests: z.array(z.string()),
