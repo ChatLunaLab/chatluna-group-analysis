@@ -266,17 +266,21 @@ export class LLMService extends Service {
         taskName: string,
         modelName = this.config.model
     ): Promise<T | null> {
-        const content = await this.invoke(prompt, taskName, modelName)
-        if (content === null) return null
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            const content = await this.invoke(prompt, taskName, modelName)
+            if (content === null) return null
 
-        const match = content.match(/```ya?ml\s*([\s\S]*?)\s*```/)
-        if (!match) throw new Error('未找到 YAML 响应。')
-
-        try {
-            return schema.parse(load(match[1])) as T
-        } catch (error) {
-            this.ctx.logger.warn(`解析 ${taskName} 的 YAML 响应失败。`, error)
-            throw error
+            try {
+                const match = content.match(/```ya?ml\s*([\s\S]*?)\s*```/)
+                if (!match) throw new Error('未找到 YAML 响应。')
+                return schema.parse(load(match[1])) as T
+            } catch (error) {
+                this.ctx.logger.warn(
+                    `解析 ${taskName} 的 YAML 响应失败（第 ${attempt}/3 次）。`,
+                    error
+                )
+                if (attempt === 3) throw error
+            }
         }
     }
 
